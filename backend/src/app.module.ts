@@ -2,13 +2,17 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RedisModule } from './redis/redis.module';
+import { CategoryModule } from './category/category.module';
+import { UserModule } from './user/user.module';
+import { VocabularyModule } from './vocabulary/vocabulary.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,
-      ignoreEnvFile: process.env.NODE_ENV === 'production' ? true : false,
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
@@ -20,7 +24,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           username: configService.get<string>('DB_USERNAME'),
           password: configService.get<string>('DB_PASSWORD'),
           database: configService.get<string>('DB_DATABASE'),
-          synchronize: process.env.NODE_ENV === 'production' ? false : true,
+          synchronize: process.env.NODE_ENV !== 'production',
           autoLoadEntities: true,
         };
       },
@@ -42,6 +46,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         };
       },
     }),
+    RedisModule,
+    CategoryModule,
+    UserModule,
+    VocabularyModule,
   ],
   controllers: [],
   providers: [],
