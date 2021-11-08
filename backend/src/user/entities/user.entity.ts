@@ -17,9 +17,6 @@ export class User {
   @Column()
   nickname: string;
 
-  @Column({ default: false, name: 'is_active' })
-  isActive: boolean;
-
   @Column({ name: 'created_at' })
   createdAt: Date;
 
