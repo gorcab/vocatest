@@ -5,16 +5,13 @@ import { EmailService } from 'src/email/services/email.service';
 import { Connection, getConnection, Repository } from 'typeorm';
 import { AppModule } from 'src/app.module';
 import { User } from 'src/user/entities/user.entity';
-import { Cache, Store } from 'cache-manager';
-import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
-import { getConnectionToken, getRepositoryToken } from '@nestjs/typeorm';
-import { SendSignUpAuthCodeDto } from 'src/email/dtos/SendSignUpAuthCode.dto';
+import { Cache } from 'cache-manager';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { SignUpAuthRequestDto } from 'src/user/dtos/SignUpAuthRequest.dto';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
-
-declare module Store {
-  export function getClient(): Promise<void>;
-}
+import { useContainer } from 'class-validator';
+import { SIGN_UP_PREFIX, TTL } from 'src/user/constant';
+import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
@@ -26,10 +23,7 @@ describe('UserController (e2e)', () => {
 
   beforeEach(async () => {
     mockEmailService = {
-      sndSignUpAuthCode: (sendSignUpAuthCodeDto) => {
-        console.log('mcok emailservice');
-        return Promise.resolve();
-      },
+      sndSignUpAuthCode: (sendSignUpAuthCodeDto) => Promise.resolve(),
     };
 
     module = await Test.createTestingModule({
@@ -40,7 +34,9 @@ describe('UserController (e2e)', () => {
       .compile();
 
     app = module.createNestApplication();
+    useContainer(app.select(AppModule), { fallbackOnErrors: true });
     app.listen(3000);
+
     redisStore = module.get<Cache>(CACHE_MANAGER);
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
     // connection = module.get<Connection>(Connection);
@@ -64,7 +60,7 @@ describe('UserController (e2e)', () => {
         .expect(400);
 
       expect(response.body.message).toStrictEqual([
-        '이메일 형식이어야 합니다.',
+        '이메일은 이메일 형식이어야 합니다.',
       ]);
     });
 
@@ -85,7 +81,9 @@ describe('UserController (e2e)', () => {
         .send(signUpAuthRequestDto)
         .expect(400);
 
-      expect(response.body.message).toBe('이미 존재하는 이메일입니다.');
+      expect(response.body.message).toStrictEqual([
+        '이미 존재하는 이메일입니다.',
+      ]);
     });
 
     it('회원가입 인증번호 이메일 전송에 실패하면 503 에러를 반환한다.', async () => {
@@ -117,8 +115,161 @@ describe('UserController (e2e)', () => {
         .expect(201)
         .expect({
           email: signUpAuthRequestDto.email,
-          ttl: 300,
+          ttl: TTL,
         });
+    });
+
+    it('회원가입 시 이메일 형식이 올바르지 않으면 검증 에러 메시지를 반환한다.', async () => {
+      const createUserRequestDto: CreateUserRequestDto = {
+        email: 'tester123@',
+        password: 'test1234',
+        nickname: 'tester',
+        signUpAuthCode: 123456,
+      };
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserRequestDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe(
+        '이메일은 이메일 형식이어야 합니다.',
+      );
+    });
+
+    it('회원가입 시 회원가입용 인증 코드가 일치하지 않으면 검증 에러 메시지를 반환한다.', async () => {
+      const createUserRequestDto: CreateUserRequestDto = {
+        email: 'tester123@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+        signUpAuthCode: 123456,
+      };
+
+      redisStore.set(`${SIGN_UP_PREFIX}${createUserRequestDto.email}`, 132456);
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserRequestDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe('인증 번호가 올바르지 않습니다.');
+    });
+
+    it('회원가입 시 비밀번호가 8자 미만이면 검증 에러 메시지를 반환한다.', async () => {
+      const signUpAuthCode = 123456;
+      const createUserRequestDto: CreateUserRequestDto = {
+        email: 'tester123@gmail.com',
+        password: 'test123',
+        nickname: 'tester',
+        signUpAuthCode,
+      };
+      redisStore.set(
+        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        signUpAuthCode,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserRequestDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe(
+        '비밀번호는 최소 8자 이상이어야 합니다.',
+      );
+    });
+
+    it('회원가입 시 비밀번호가 13자 이상이면 검증 에러 메시지를 반환한다.', async () => {
+      const signUpAuthCode = 123456;
+      const createUserRequestDto: CreateUserRequestDto = {
+        email: 'tester123@gmail.com',
+        password: 'test123456789',
+        nickname: 'tester',
+        signUpAuthCode,
+      };
+      redisStore.set(
+        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        signUpAuthCode,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserRequestDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe(
+        '비밀번호는 최대 12자 이하여야 합니다.',
+      );
+    });
+
+    it('회원가입 시 닉네임이 공백으로만 구성된 문자열일 경우 검증 에러 메시지를 반환한다.', async () => {
+      const signUpAuthCode = 123456;
+      const createUserRequestDto: CreateUserRequestDto = {
+        email: 'tester123@gmail.com',
+        password: 'test1234',
+        nickname: '   ',
+        signUpAuthCode,
+      };
+      redisStore.set(
+        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        signUpAuthCode,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserRequestDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe(
+        '공백으로만 구성된 닉네임은 사용할 수 없습니다.',
+      );
+    });
+
+    it('회원가입 시 닉네임이 한 글자로만 구성된 문자일 경우 검증 에러 메시지를 반환한다.', async () => {
+      const signUpAuthCode = 123456;
+      const createUserRequestDto: CreateUserRequestDto = {
+        email: 'tester123@gmail.com',
+        password: 'test1234',
+        nickname: 'a',
+        signUpAuthCode,
+      };
+      redisStore.set(
+        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        signUpAuthCode,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserRequestDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe('닉네임은 2자 이상이어야 합니다.');
+    });
+
+    it('회원가입에 성공하면 사용자 정보와 access token을 반환한다.', async () => {
+      const signUpAuthCode = 123456;
+      const createUserRequestDto: CreateUserRequestDto = {
+        email: 'tester123@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+        signUpAuthCode,
+      };
+      redisStore.set(
+        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        signUpAuthCode,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users')
+        .send(createUserRequestDto)
+        .expect(201);
+
+      const { accessToken, id, ...result } = response.body;
+      expect(result).toStrictEqual({
+        email: createUserRequestDto.email,
+        nickname: createUserRequestDto.nickname,
+      });
+      expect(typeof accessToken).toBe('string');
+      expect(typeof id).toBe('number');
     });
   });
 });

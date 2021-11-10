@@ -28,6 +28,7 @@
 		DB_USERNAME=root
 		DB_PASSWORD=1234
 		DB_DATABASE=vocatest
+		JWT_SECRET=secret_key
 		SENDER_EMAIL=vocatest-emailauth@gmail.com # 회원가입, 비밀번호 재설정 이메일 인증을 위한 gmail 이메일 정보
 		SENDER_EMAIL_PASSWORD=emailauth1234
 		```
