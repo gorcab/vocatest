@@ -35,4 +35,14 @@ export class CategoryService {
 
     return category;
   }
+
+  public async find(user: User): Promise<Array<Category>> {
+    const categories = await this.categoryRepository.find({
+      where: {
+        user,
+      },
+    });
+
+    return categories;
+  }
 }

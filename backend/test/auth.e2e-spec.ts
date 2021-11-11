@@ -5,7 +5,7 @@ import { EmailService } from 'src/email/services/email.service';
 import { Connection, Repository } from 'typeorm';
 import { AppModule } from 'src/app.module';
 import { User } from 'src/user/entities/user.entity';
-import { Cache, Store } from 'cache-manager';
+import { Cache } from 'cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { useContainer } from 'class-validator';
 import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
@@ -49,15 +49,16 @@ describe('AuthController (e2e)', () => {
 
   describe('/auth/login (POST)', () => {
     it('로그인에 성공하면 access token과 사용자 정보를 response로 반환한다.', async () => {
+      // given
       const createUserDto: CreateUserRequestDto = {
         email: 'tester1234@gmail.com',
         password: 'test1234',
         nickname: 'tester',
         signUpAuthCode: 123456,
       };
-
       const user = await userService.save(createUserDto);
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
@@ -66,6 +67,7 @@ describe('AuthController (e2e)', () => {
         })
         .expect(201);
 
+      // then
       expect(response.body).toStrictEqual({
         id: user.id,
         email: user.email,
@@ -75,15 +77,16 @@ describe('AuthController (e2e)', () => {
     });
 
     it('로그인에 실패하면 401 에러를 반환한다.', async () => {
+      // given
       const createUserDto: CreateUserRequestDto = {
         email: 'tester1234@gmail.com',
         password: 'test1234',
         nickname: 'tester',
         signUpAuthCode: 123456,
       };
-
       const user = await userService.save(createUserDto);
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/auth/login')
         .send({
@@ -92,6 +95,7 @@ describe('AuthController (e2e)', () => {
         })
         .expect(401);
 
+      // then
       expect(response.body.message).toBe(
         '이메일 또는 비밀번호가 올바르지 않습니다.',
       );

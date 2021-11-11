@@ -51,20 +51,25 @@ describe('UserController (e2e)', () => {
 
   describe('/email-authentication (POST)', () => {
     it('이메일 형식이 올바르지 않으면 400 에러를 반환한다.', async () => {
+      // given
       const signUpAuthRequestDto: SignUpAuthRequestDto = {
         email: 'tester1234@',
       };
+
+      // when
       const response = await request(app.getHttpServer())
         .post('/users/email-authentication')
         .send(signUpAuthRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message).toStrictEqual([
         '이메일은 이메일 형식이어야 합니다.',
       ]);
     });
 
     it('이미 가입된 이메일이면 400 에러를 반환한다.', async () => {
+      // given
       const user = await userRepository.create({
         email: 'tester1234@gmail.com',
         password: 'test1234',
@@ -76,17 +81,20 @@ describe('UserController (e2e)', () => {
         email: user.email,
       };
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users/email-authentication')
         .send(signUpAuthRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message).toStrictEqual([
         '이미 존재하는 이메일입니다.',
       ]);
     });
 
     it('회원가입 인증번호 이메일 전송에 실패하면 503 에러를 반환한다.', async () => {
+      // given
       const signUpAuthRequestDto: SignUpAuthRequestDto = {
         email: 'tester1234@gmail.com',
       };
@@ -94,21 +102,25 @@ describe('UserController (e2e)', () => {
         throw new SendEmailFailedException();
       };
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users/email-authentication')
         .send(signUpAuthRequestDto)
         .expect(503);
 
+      // then
       expect(response.body.message).toBe(
         '이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.',
       );
     });
 
     it('회원가입 인증번호 이메일 전송에 성공하면 email과 ttl을 응답으로 반환한다.', async () => {
+      // given
       const signUpAuthRequestDto: SignUpAuthRequestDto = {
         email: 'tester1234@gmail.com',
       };
 
+      // when, then
       return request(app.getHttpServer())
         .post('/users/email-authentication')
         .send(signUpAuthRequestDto)
@@ -122,6 +134,7 @@ describe('UserController (e2e)', () => {
 
   describe('/users (POST)', () => {
     it('회원가입 시 이메일 형식이 올바르지 않으면 검증 에러 메시지를 반환한다.', async () => {
+      // given
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@',
         password: 'test1234',
@@ -129,35 +142,40 @@ describe('UserController (e2e)', () => {
         signUpAuthCode: 123456,
       };
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message[0]).toBe(
         '이메일은 이메일 형식이어야 합니다.',
       );
     });
 
     it('회원가입 시 회원가입용 인증 코드가 일치하지 않으면 검증 에러 메시지를 반환한다.', async () => {
+      // given
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@gmail.com',
         password: 'test1234',
         nickname: 'tester',
         signUpAuthCode: 123456,
       };
-
       redisStore.set(`${SIGN_UP_PREFIX}${createUserRequestDto.email}`, 132456);
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message[0]).toBe('인증 번호가 올바르지 않습니다.');
     });
 
     it('회원가입 시 비밀번호가 8자 미만이면 검증 에러 메시지를 반환한다.', async () => {
+      // given
       const signUpAuthCode = 123456;
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@gmail.com',
@@ -170,17 +188,20 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       );
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message[0]).toBe(
         '비밀번호는 최소 8자 이상이어야 합니다.',
       );
     });
 
     it('회원가입 시 비밀번호가 13자 이상이면 검증 에러 메시지를 반환한다.', async () => {
+      // given
       const signUpAuthCode = 123456;
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@gmail.com',
@@ -193,17 +214,20 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       );
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message[0]).toBe(
         '비밀번호는 최대 12자 이하여야 합니다.',
       );
     });
 
     it('회원가입 시 닉네임이 공백으로만 구성된 문자열일 경우 검증 에러 메시지를 반환한다.', async () => {
+      // given
       const signUpAuthCode = 123456;
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@gmail.com',
@@ -216,17 +240,20 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       );
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message[0]).toBe(
         '공백으로만 구성된 닉네임은 사용할 수 없습니다.',
       );
     });
 
     it('회원가입 시 닉네임이 한 글자로만 구성된 문자일 경우 검증 에러 메시지를 반환한다.', async () => {
+      // given
       const signUpAuthCode = 123456;
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@gmail.com',
@@ -239,15 +266,18 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       );
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(400);
 
+      // then
       expect(response.body.message[0]).toBe('닉네임은 2자 이상이어야 합니다.');
     });
 
     it('회원가입에 성공하면 사용자 정보와 access token을 반환한다.', async () => {
+      // given
       const signUpAuthCode = 123456;
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@gmail.com',
@@ -260,11 +290,13 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       );
 
+      // when
       const response = await request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(201);
 
+      // then
       const { accessToken, id, ...result } = response.body;
       expect(result).toStrictEqual({
         email: createUserRequestDto.email,

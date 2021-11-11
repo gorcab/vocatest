@@ -9,6 +9,7 @@ describe('CategoryController', () => {
   let controller: CategoryController;
   let user: User;
   let category: Category;
+  let categories: Array<Category>;
   let mockCategoryService: Partial<CategoryService>;
 
   beforeEach(async () => {
@@ -28,8 +29,16 @@ describe('CategoryController', () => {
       vocabularyLists: null,
     };
 
+    categories = Array.from({ length: 10 }).map((_, index) => ({
+      id: index + 1,
+      name: `toeic${index + 1}`,
+      user: user,
+      vocabularyLists: null,
+    }));
+
     mockCategoryService = {
       findByUserAndName: async () => category,
+      find: async () => categories,
       save: async () => category,
     };
 
@@ -62,5 +71,18 @@ describe('CategoryController', () => {
       id: category.id,
       name: category.name,
     });
+  });
+
+  it('회원의 모든 카테고리들을 CategoriesResponseDto로 반환한다.', async () => {
+    const result = await controller.getAll(user);
+
+    const expectedResult = {
+      categories: categories.map((category) => ({
+        id: category.id,
+        name: category.name,
+      })),
+    };
+
+    expect(result).toStrictEqual(expectedResult);
   });
 });

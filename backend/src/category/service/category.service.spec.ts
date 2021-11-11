@@ -10,6 +10,7 @@ describe('CategoryService', () => {
   let service: CategoryService;
   let user: User;
   let category: Category;
+  let categories: Array<Category>;
   let mockCategoryRepository: DeepPartial<Repository<Category>>;
 
   beforeEach(async () => {
@@ -29,8 +30,16 @@ describe('CategoryService', () => {
       vocabularyLists: null,
     };
 
+    categories = Array.from({ length: 10 }).map((_, index) => ({
+      id: index + 1,
+      name: `toeic${index + 1}`,
+      user,
+      vocabularyLists: null,
+    }));
+
     mockCategoryRepository = {
       findOne: async () => category,
+      find: async () => categories,
       create: async () => category,
       save: async () => category,
     };
@@ -58,7 +67,7 @@ describe('CategoryService', () => {
     expect(result).toStrictEqual(category);
   });
 
-  it('해당 사용자가 해당 카테고리를 가지고 있지 않다면 null을 반환한다.', async () => {
+  it('사용자가 해당 카테고리를 가지고 있지 않다면 null을 반환한다.', async () => {
     mockCategoryRepository.findOne = async () => null;
 
     const result = await service.findByUserAndName(user, category.name);
@@ -75,5 +84,11 @@ describe('CategoryService', () => {
     const result = await service.save(user, createCategoryDto);
 
     expect(result).toStrictEqual(category);
+  });
+
+  it('회원의 카테고리를 모두 반환한다.', async () => {
+    const result = await service.find(user);
+
+    expect(result).toStrictEqual(categories);
   });
 });
