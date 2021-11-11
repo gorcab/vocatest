@@ -22,6 +22,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
       );
     }
 
-    return user; // req.user로 userResponseDto를 참조가능
+    return user; // req.user로 User를 참조가능
   }
 }

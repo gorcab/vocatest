@@ -24,6 +24,10 @@ export class UserService {
     });
   }
 
+  public async findById(id: number): Promise<User> {
+    return this.userRepository.findOne(id);
+  }
+
   public async validateSignUpAuthCode(
     email: string,
     signUpAuthCode: number,

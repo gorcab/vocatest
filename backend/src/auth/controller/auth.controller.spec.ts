@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { RequestWithUser } from 'src/common/types';
 import { User } from 'src/user/entities/user.entity';
 import { AuthService } from '../service/auth.service';
 import { AuthController } from './auth.controller';
@@ -50,7 +51,7 @@ describe('AuthController', () => {
         email,
         nickname,
       },
-    };
+    } as RequestWithUser;
 
     const userResponseDto = controller.login(request);
 

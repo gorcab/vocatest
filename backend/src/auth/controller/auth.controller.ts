@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import { RequestWithUser } from 'src/common/types';
 import { UserResponseDto } from 'src/user/dtos/UserResponse.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { AuthService } from '../service/auth.service';
 
@@ -11,7 +10,7 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  public login(@Req() req): UserResponseDto {
+  public login(@Req() req: RequestWithUser): UserResponseDto {
     const accessToken = this.authService.login(req.user);
 
     const userResponseDto: UserResponseDto = {

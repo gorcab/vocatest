@@ -118,7 +118,9 @@ describe('UserController (e2e)', () => {
           ttl: TTL,
         });
     });
+  });
 
+  describe('/users (POST)', () => {
     it('회원가입 시 이메일 형식이 올바르지 않으면 검증 에러 메시지를 반환한다.', async () => {
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@',
