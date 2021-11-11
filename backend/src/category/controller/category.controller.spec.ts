@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from 'src/user/entities/user.entity';
-import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
+import { CreateCategoryRequestDto } from '../dtos/CreateCategoryRequest.dto';
+import { UpdateCategoryRequestDto } from '../dtos/UpdateCategoryRequest.dto';
+import { UpdateCategoryServiceDto } from '../dtos/UpdateCategoryService.dto';
 import { Category } from '../entities/category.entity';
 import { CategoryService } from '../service/category.service';
 import { CategoryController } from './category.controller';
@@ -22,24 +24,38 @@ describe('CategoryController', () => {
       categories: null,
     };
 
-    category = {
-      id: 1,
-      name: 'toeic',
-      user: user,
-      vocabularyLists: null,
-    };
+    category = new Category();
+    category.id = 1;
+    category.name = 'toeic';
+    category.user = user;
+    category.vocabularyLists = null;
 
-    categories = Array.from({ length: 10 }).map((_, index) => ({
-      id: index + 1,
-      name: `toeic${index + 1}`,
-      user: user,
-      vocabularyLists: null,
-    }));
+    categories = Array.from({ length: 10 }).map((_, index) => {
+      const category = new Category();
+      category.id = index + 1;
+      category.name = `toeic${index + 1}`;
+      category.user = user;
+      category.vocabularyLists = null;
+
+      return category;
+    });
 
     mockCategoryService = {
-      findByUserAndName: async () => category,
-      find: async () => categories,
-      save: async () => category,
+      findByUserAndName: async () => category as Category,
+      find: async () => categories as Array<Category>,
+      save: async () => category as Category,
+      update: async (
+        user: User,
+        updateCategoryServiceDto: UpdateCategoryServiceDto,
+      ) => {
+        const updatedCategory = new Category();
+        updatedCategory.id = category.id;
+        updatedCategory.name = updateCategoryServiceDto.name;
+        updatedCategory.user = user;
+        updatedCategory.vocabularyLists = null;
+
+        return updatedCategory;
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -60,12 +76,12 @@ describe('CategoryController', () => {
   });
 
   it('카테고리가 생성되면 CreateCategoryResponseDto를 반환한다.', async () => {
-    const createCategoryDto: CreateCategoryDto = {
+    const createCategoryRequestDto: CreateCategoryRequestDto = {
       name: category.name,
       userId: user.id,
     };
 
-    const result = await controller.create(user, createCategoryDto);
+    const result = await controller.create(user, createCategoryRequestDto);
 
     expect(result).toStrictEqual({
       id: category.id,
@@ -84,5 +100,20 @@ describe('CategoryController', () => {
     };
 
     expect(result).toStrictEqual(expectedResult);
+  });
+
+  it('업데이트된 CategoryResponseDto를 반환한다.', async () => {
+    const updateCategoryRequestDto: UpdateCategoryRequestDto = {
+      userId: user.id,
+      id: category.id,
+      name: 'teps',
+    };
+
+    const result = await controller.update(user, updateCategoryRequestDto);
+
+    expect(result).toStrictEqual({
+      id: updateCategoryRequestDto.id,
+      name: updateCategoryRequestDto.name,
+    });
   });
 });

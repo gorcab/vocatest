@@ -1,10 +1,10 @@
 import { IsInt, IsString } from 'class-validator';
 import { IsCategoryNameAlreadyExist } from 'src/common/validators/IsCategoryNameAlreadyExist';
-import { IsInvalidUser } from 'src/common/validators/IsInvalidUser';
+import { IsValidUser } from 'src/common/validators/IsvalidUser';
 
-export class CreateCategoryDto {
+export class CreateCategoryRequestDto {
   @IsInt({ message: 'ID는 정수형 숫자여야 합니다.' })
-  @IsInvalidUser()
+  @IsValidUser()
   userId: number;
 
   @IsString({ message: '카테고리명은 문자로 구성되어야 합니다.' })

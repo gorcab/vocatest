@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { DeepPartial, Repository } from 'typeorm';
-import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
+import { CreateCategoryServiceDto } from '../dtos/CreateCategoryService.dto';
+import { UpdateCategoryServiceDto } from '../dtos/UpdateCategoryService.dto';
 import { Category } from '../entities/category.entity';
 import { CategoryService } from './category.service';
 
@@ -23,25 +24,28 @@ describe('CategoryService', () => {
       categories: null,
     };
 
-    category = {
-      id: 1,
-      name: 'toeic',
-      user,
-      vocabularyLists: null,
-    };
+    category = new Category();
+    category.id = 1;
+    category.name = 'toeic';
+    category.user = user;
+    category.vocabularyLists = null;
 
-    categories = Array.from({ length: 10 }).map((_, index) => ({
-      id: index + 1,
-      name: `toeic${index + 1}`,
-      user,
-      vocabularyLists: null,
-    }));
+    categories = Array.from({ length: 10 }).map((_, index) => {
+      const category = new Category();
+      category.id = index + 1;
+      category.name = `toeic${index + 1}`;
+      category.user = user;
+      category.vocabularyLists = null;
+
+      return category;
+    });
 
     mockCategoryRepository = {
       findOne: async () => category,
       find: async () => categories,
       create: async () => category,
       save: async () => category,
+      update: async () => undefined,
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -76,12 +80,11 @@ describe('CategoryService', () => {
   });
 
   it('생성한 카테고리를 반환한다.', async () => {
-    const createCategoryDto: CreateCategoryDto = {
+    const createCategoryServiceDto: CreateCategoryServiceDto = {
       name: category.name,
-      userId: user.id,
     };
 
-    const result = await service.save(user, createCategoryDto);
+    const result = await service.save(user, createCategoryServiceDto);
 
     expect(result).toStrictEqual(category);
   });
@@ -90,5 +93,30 @@ describe('CategoryService', () => {
     const result = await service.find(user);
 
     expect(result).toStrictEqual(categories);
+  });
+
+  it('사용자가 해당 ID의 카테고리를 가지고 있으면 해당 카테고리를 반환한다.', async () => {
+    const result = await service.findByUserAndId(user, category.id);
+
+    expect(result).toStrictEqual(category);
+  });
+
+  it('사용자가 해당 ID의 카테고리를 가지고 있지 않다면 null을 반환한다.', async () => {
+    mockCategoryRepository.findOne = async () => null;
+
+    const result = await service.findByUserAndId(user, category.id);
+
+    expect(result).toBeNull();
+  });
+
+  it('업데이트된 카테고리를 반환한다.', async () => {
+    const updateCategoryServiceDto: UpdateCategoryServiceDto = {
+      id: 1,
+      name: 'teps',
+    };
+
+    const result = await service.update(user, updateCategoryServiceDto);
+
+    expect(result.name).toBe(updateCategoryServiceDto.name);
   });
 });

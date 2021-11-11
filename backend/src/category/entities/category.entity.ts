@@ -26,4 +26,8 @@ export class Category {
 
   @OneToMany(() => VocabularyList, (vocabularyList) => vocabularyList.category)
   vocabularyLists: Promise<VocabularyList[]>;
+
+  updateName(name: string) {
+    this.name = name;
+  }
 }

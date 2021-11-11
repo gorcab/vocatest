@@ -10,7 +10,7 @@ import { UserService } from 'src/user/service/user.service';
 
 @ValidatorConstraint({ async: true })
 @Injectable()
-export class IsInvalidUserConstraint implements ValidatorConstraintInterface {
+export class IsValidUserConstraint implements ValidatorConstraintInterface {
   constructor(private readonly userService: UserService) {}
 
   async validate(id: number, args: ValidationArguments) {
@@ -19,18 +19,18 @@ export class IsInvalidUserConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(args: ValidationArguments) {
-    return '존재하지 않는 회원입니다.';
+    return '올바르지 않은 사용자입니다.';
   }
 }
 
-export function IsInvalidUser(validationOptions?: ValidationOptions) {
+export function IsValidUser(validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       constraints: [],
-      validator: IsInvalidUserConstraint,
+      validator: IsValidUserConstraint,
     });
   };
 }

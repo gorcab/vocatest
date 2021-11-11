@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CACHE_MANAGER, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { EmailService } from 'src/email/services/email.service';
-import { Connection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AppModule } from 'src/app.module';
 import { User } from 'src/user/entities/user.entity';
 import { Cache } from 'cache-manager';
@@ -12,7 +12,8 @@ import { UserService } from 'src/user/service/user.service';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
-import { CreateCategoryDto } from 'src/category/dtos/CreateCategory.dto';
+import { CreateCategoryRequestDto } from 'src/category/dtos/CreateCategoryRequest.dto';
+import { CreateCategoryServiceDto } from 'src/category/dtos/CreateCategoryService.dto';
 
 describe('CategoryController (e2e)', () => {
   let app: INestApplication;
@@ -61,7 +62,7 @@ describe('CategoryController (e2e)', () => {
   describe('/categories (POST)', () => {
     it('인증되지 않은 사용자가 카테고리 생성 요청을 보내면 401 에러를 반환한다.', async () => {
       // given
-      const createCategoryDto: CreateCategoryDto = {
+      const createCategoryRequestDto: CreateCategoryRequestDto = {
         userId: 1,
         name: 'toeic',
       };
@@ -69,7 +70,7 @@ describe('CategoryController (e2e)', () => {
       // when, then
       return request(app.getHttpServer())
         .post('/categories')
-        .send(createCategoryDto)
+        .send(createCategoryRequestDto)
         .expect(401);
     });
 
@@ -82,12 +83,12 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryDto: CreateCategoryDto = {
+      const createCategoryRequestDto: CreateCategoryRequestDto = {
         userId: user.id,
         name: 'toeic',
       };
       const category = categoryRepository.create({
-        name: createCategoryDto.name,
+        name: createCategoryRequestDto.name,
         user: user,
       });
       await categoryRepository.save(category);
@@ -100,7 +101,7 @@ describe('CategoryController (e2e)', () => {
       const response = await agent
         .post('/categories')
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send(createCategoryDto)
+        .send(createCategoryRequestDto)
         .expect(400);
 
       // then
@@ -116,7 +117,7 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryDto: CreateCategoryDto = {
+      const createCategoryRequestDto: CreateCategoryRequestDto = {
         userId: user.id,
         name: 'toeic',
       };
@@ -129,11 +130,11 @@ describe('CategoryController (e2e)', () => {
       const response = await agent
         .post('/categories')
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send(createCategoryDto)
+        .send(createCategoryRequestDto)
         .expect(201);
 
       // then
-      expect(response.body.name).toBe(createCategoryDto.name);
+      expect(response.body.name).toBe(createCategoryRequestDto.name);
     });
   });
 
@@ -147,15 +148,16 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryDtos: Array<CreateCategoryDto> = Array.from({
-        length: 10,
-      }).map((_, index) => ({
-        name: `toeic${index + 1}`,
-        userId: user.id,
-      }));
+      const createCategoryServiceDtos: Array<CreateCategoryServiceDto> =
+        Array.from({
+          length: 10,
+        }).map((_, index) => ({
+          name: `toeic${index + 1}`,
+          userId: user.id,
+        }));
       await Promise.all(
-        createCategoryDtos.map(async (createCategoryDto) => {
-          await categoryService.save(user, createCategoryDto);
+        createCategoryServiceDtos.map(async (createCategoryServiceDto) => {
+          await categoryService.save(user, createCategoryServiceDto);
         }),
       );
       const accessTokenResponse = await agent.post('/auth/login').send({
@@ -170,20 +172,148 @@ describe('CategoryController (e2e)', () => {
         .expect(200);
 
       // then
-      expect(response.body.categories).toHaveLength(createCategoryDtos.length);
+      expect(response.body.categories).toHaveLength(
+        createCategoryServiceDtos.length,
+      );
     });
   });
 
-  describe('/categories/:id (GET)', () => {
-    it('해당 회원의 카테고리이면 해당 카테고리에 대한 정보를 반환한다.', async () => {});
+  describe('/categories/:id (PATCH)', () => {
+    it('특정 회원이 다른 회원의 카테고리 수정을 요청하면 400 에러를 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserDto);
+      const createCategoryServiceDto: CreateCategoryServiceDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(
+        user,
+        createCategoryServiceDto,
+      );
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserDto.email,
+        password: createUserDto.password,
+      });
 
-    it('해당 회원이 생성한 카테고리가 아니라면 403 에러를 반환한다.', async () => {});
-  });
+      // when, then
+      const response = await agent
+        .patch(`/categories/${category.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send({
+          userId: user.id + 1,
+          id: category.id,
+          name: 'teps',
+        })
+        .expect(400);
+    });
 
-  describe('/categories/:id?name=name (PATCH)', () => {
-    it('해당 회원의 카테고리이면 카테고리명을 변경하고 변경된 카테고리에 대한 정보를 반환한다.', async () => {});
+    it('해당 회원의 카테고리가 아니라면 400 에러를 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserDto);
+      const createCategoryServiceDto: CreateCategoryServiceDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(
+        user,
+        createCategoryServiceDto,
+      );
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserDto.email,
+        password: createUserDto.password,
+      });
 
-    it('해당 회원이 생성한 카테고리가 아니라면 403 에러를 반환한다.', async () => {});
+      // when, then
+      const response = await agent
+        .patch(`/categories/${category.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send({
+          userId: user.id,
+          id: category.id + 1,
+          name: 'teps',
+        })
+        .expect(400);
+    });
+
+    it('해당 회원이 동일한 이름의 카테고리를 가지고 있다면 400 에러를 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserDto);
+      const createCategoryServiceDto: CreateCategoryServiceDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(
+        user,
+        createCategoryServiceDto,
+      );
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserDto.email,
+        password: createUserDto.password,
+      });
+
+      // when, then
+      const response = await agent
+        .patch(`/categories/${category.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send({
+          userId: user.id,
+          id: category.id,
+          name: category.name,
+        })
+        .expect(400);
+    });
+
+    it('해당 회원의 카테고리이면 카테고리명을 변경하고 변경된 카테고리에 대한 정보를 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const updatedName = 'teps';
+      const createUserDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserDto);
+      const createCategoryServiceDto: CreateCategoryServiceDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(
+        user,
+        createCategoryServiceDto,
+      );
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserDto.email,
+        password: createUserDto.password,
+      });
+
+      // when
+      const response = await agent
+        .patch(`/categories/${category.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send({
+          userId: user.id,
+          id: category.id,
+          name: updatedName,
+        })
+        .expect(200);
+
+      // then
+      expect(response.body.name).toBe(updatedName);
+    });
   });
 
   describe('/categories/:id (DELETE)', () => {
