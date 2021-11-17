@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
-import { CreateCategoryServiceDto } from '../dtos/CreateCategoryService.dto';
-import { UpdateCategoryServiceDto } from '../dtos/UpdateCategoryService.dto';
+import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
+import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { Category } from '../entities/category.entity';
 
 @Injectable()
@@ -15,9 +15,9 @@ export class CategoryService {
 
   public async save(
     user: User,
-    createCategoryServiceDto: CreateCategoryServiceDto,
+    createCategoryDto: CreateCategoryDto,
   ): Promise<Category> {
-    const category = this.categoryRepository.create(createCategoryServiceDto);
+    const category = this.categoryRepository.create(createCategoryDto);
     category.user = user;
 
     return this.categoryRepository.save(category);
@@ -37,7 +37,7 @@ export class CategoryService {
     return category;
   }
 
-  public async find(user: User): Promise<Array<Category>> {
+  public async findByUser(user: User): Promise<Array<Category>> {
     const categories = await this.categoryRepository.find({
       where: {
         user,
@@ -63,7 +63,7 @@ export class CategoryService {
 
   public async update(
     user: User,
-    { id, name }: UpdateCategoryServiceDto,
+    { id, name }: UpdateCategoryDto,
   ): Promise<Category> {
     const category = await this.categoryRepository.findOne({
       where: {

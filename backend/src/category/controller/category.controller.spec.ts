@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from 'src/user/entities/user.entity';
-import { CreateCategoryRequestDto } from '../dtos/CreateCategoryRequest.dto';
-import { UpdateCategoryRequestDto } from '../dtos/UpdateCategoryRequest.dto';
-import { UpdateCategoryServiceDto } from '../dtos/UpdateCategoryService.dto';
+import { CategoryResponseDto } from '../dtos/CategoryResponse.dto';
+import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
+import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { Category } from '../entities/category.entity';
 import { CategoryService } from '../service/category.service';
 import { CategoryController } from './category.controller';
@@ -42,15 +42,12 @@ describe('CategoryController', () => {
 
     mockCategoryService = {
       findByUserAndName: async () => category as Category,
-      find: async () => categories as Array<Category>,
+      findByUser: async () => categories as Array<Category>,
       save: async () => category as Category,
-      update: async (
-        user: User,
-        updateCategoryServiceDto: UpdateCategoryServiceDto,
-      ) => {
+      update: async (user: User, updateCategoryDto: CategoryResponseDto) => {
         const updatedCategory = new Category();
         updatedCategory.id = category.id;
-        updatedCategory.name = updateCategoryServiceDto.name;
+        updatedCategory.name = updateCategoryDto.name;
         updatedCategory.user = user;
         updatedCategory.vocabularyLists = null;
 
@@ -76,12 +73,11 @@ describe('CategoryController', () => {
   });
 
   it('카테고리가 생성되면 CreateCategoryResponseDto를 반환한다.', async () => {
-    const createCategoryRequestDto: CreateCategoryRequestDto = {
+    const createCategoryDto: CreateCategoryDto = {
       name: category.name,
-      userId: user.id,
     };
 
-    const result = await controller.create(user, createCategoryRequestDto);
+    const result = await controller.create(user, createCategoryDto);
 
     expect(result).toStrictEqual({
       id: category.id,
@@ -103,17 +99,16 @@ describe('CategoryController', () => {
   });
 
   it('업데이트된 CategoryResponseDto를 반환한다.', async () => {
-    const updateCategoryRequestDto: UpdateCategoryRequestDto = {
-      userId: user.id,
+    const updateCategoryDto: UpdateCategoryDto = {
       id: category.id,
       name: 'teps',
     };
 
-    const result = await controller.update(user, updateCategoryRequestDto);
+    const result = await controller.update(user, updateCategoryDto);
 
     expect(result).toStrictEqual({
-      id: updateCategoryRequestDto.id,
-      name: updateCategoryRequestDto.name,
+      id: updateCategoryDto.id,
+      name: updateCategoryDto.name,
     });
   });
 });

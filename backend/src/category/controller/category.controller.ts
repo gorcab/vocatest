@@ -10,12 +10,15 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from 'src/common/decorators/user.decorator';
-import { User as UserEntity } from 'src/user/entities/user.entity';
-import { CreateCategoryRequestDto } from '../dtos/CreateCategoryRequest.dto';
+import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
 import { CategoryResponseDto } from '../dtos/CategoryResponse.dto';
 import { CategoryService } from '../service/category.service';
 import { CategoriesResponseDto } from '../dtos/CategoriesResponse.dto';
-import { UpdateCategoryRequestDto } from '../dtos/UpdateCategoryRequest.dto';
+import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
+import { UsersCategoryGuard } from '../guards/UsersCategory.guard';
+import { IsCategoryNameAlreadyExistGuard } from '../guards/IsCategoryNameAlreadyExist.guard';
+import { UserInfo } from 'src/auth/interfaces/UserInfo.interface';
+import { User as UserEntity } from 'src/user/entities/user.entity';
 
 @UseGuards(JwtAuthGuard)
 @Controller('categories')
@@ -23,14 +26,12 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
+  @UseGuards(IsCategoryNameAlreadyExistGuard)
   public async create(
     @User() user: UserEntity,
-    @Body() { userId, ...createCategoryServiceDto }: CreateCategoryRequestDto,
+    @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    const category = await this.categoryService.save(
-      user,
-      createCategoryServiceDto,
-    );
+    const category = await this.categoryService.save(user, createCategoryDto);
 
     const createCategoryResponseDto: CategoryResponseDto = {
       id: category.id,
@@ -44,7 +45,7 @@ export class CategoryController {
   public async getAll(
     @User() user: UserEntity,
   ): Promise<CategoriesResponseDto> {
-    const categories = await this.categoryService.find(user);
+    const categories = await this.categoryService.findByUser(user);
 
     const categoryResponseDtos: Array<CategoryResponseDto> = categories.map(
       ({ id, name }) => ({
@@ -59,14 +60,13 @@ export class CategoryController {
   }
 
   @Patch(':id')
+  @UseGuards(IsCategoryNameAlreadyExistGuard)
+  @UseGuards(UsersCategoryGuard)
   public async update(
     @User() user: UserEntity,
-    @Body() { userId, ...updateCategoryServiceDto }: UpdateCategoryRequestDto,
+    @Body() updateCategoryDto: UpdateCategoryDto,
   ) {
-    const category = await this.categoryService.update(
-      user,
-      updateCategoryServiceDto,
-    );
+    const category = await this.categoryService.update(user, updateCategoryDto);
 
     const categoryResponseDto: CategoryResponseDto = {
       id: category.id,

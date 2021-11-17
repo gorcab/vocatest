@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { DeepPartial, Repository } from 'typeorm';
-import { CreateCategoryServiceDto } from '../dtos/CreateCategoryService.dto';
-import { UpdateCategoryServiceDto } from '../dtos/UpdateCategoryService.dto';
+import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
+import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { Category } from '../entities/category.entity';
 import { CategoryService } from './category.service';
 
@@ -80,17 +80,17 @@ describe('CategoryService', () => {
   });
 
   it('생성한 카테고리를 반환한다.', async () => {
-    const createCategoryServiceDto: CreateCategoryServiceDto = {
+    const createCategoryDto: CreateCategoryDto = {
       name: category.name,
     };
 
-    const result = await service.save(user, createCategoryServiceDto);
+    const result = await service.save(user, createCategoryDto);
 
     expect(result).toStrictEqual(category);
   });
 
   it('회원의 카테고리를 모두 반환한다.', async () => {
-    const result = await service.find(user);
+    const result = await service.findByUser(user);
 
     expect(result).toStrictEqual(categories);
   });
@@ -110,13 +110,13 @@ describe('CategoryService', () => {
   });
 
   it('업데이트된 카테고리를 반환한다.', async () => {
-    const updateCategoryServiceDto: UpdateCategoryServiceDto = {
+    const updateCategoryDto: UpdateCategoryDto = {
       id: 1,
       name: 'teps',
     };
 
-    const result = await service.update(user, updateCategoryServiceDto);
+    const result = await service.update(user, updateCategoryDto);
 
-    expect(result.name).toBe(updateCategoryServiceDto.name);
+    expect(result.name).toBe(updateCategoryDto.name);
   });
 });

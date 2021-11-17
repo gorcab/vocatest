@@ -12,8 +12,8 @@ import { UserService } from 'src/user/service/user.service';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
-import { CreateCategoryRequestDto } from 'src/category/dtos/CreateCategoryRequest.dto';
-import { CreateCategoryServiceDto } from 'src/category/dtos/CreateCategoryService.dto';
+import { CreateCategoryDto } from 'src/category/dtos/CreateCategory.dto';
+import { UpdateCategoryDto } from 'src/category/dtos/UpdateCategory.dto';
 
 describe('CategoryController (e2e)', () => {
   let app: INestApplication;
@@ -62,15 +62,14 @@ describe('CategoryController (e2e)', () => {
   describe('/categories (POST)', () => {
     it('인증되지 않은 사용자가 카테고리 생성 요청을 보내면 401 에러를 반환한다.', async () => {
       // given
-      const createCategoryRequestDto: CreateCategoryRequestDto = {
-        userId: 1,
+      const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
 
       // when, then
       return request(app.getHttpServer())
         .post('/categories')
-        .send(createCategoryRequestDto)
+        .send(createCategoryDto)
         .expect(401);
     });
 
@@ -83,12 +82,11 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryRequestDto: CreateCategoryRequestDto = {
-        userId: user.id,
+      const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
       const category = categoryRepository.create({
-        name: createCategoryRequestDto.name,
+        name: createCategoryDto.name,
         user: user,
       });
       await categoryRepository.save(category);
@@ -101,11 +99,11 @@ describe('CategoryController (e2e)', () => {
       const response = await agent
         .post('/categories')
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send(createCategoryRequestDto)
+        .send(createCategoryDto)
         .expect(400);
 
       // then
-      expect(response.body.message[0]).toBe('이미 존재하는 카테고리명입니다.');
+      expect(response.body.message).toBe('이미 존재하는 카테고리명입니다.');
     });
 
     it('카테고리 생성을 완료하면 생성한 카테고리에 대한 정보를 반환한다.', async () => {
@@ -117,8 +115,7 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryRequestDto: CreateCategoryRequestDto = {
-        userId: user.id,
+      const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
       const accessTokenResponse = await agent.post('/auth/login').send({
@@ -130,11 +127,11 @@ describe('CategoryController (e2e)', () => {
       const response = await agent
         .post('/categories')
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send(createCategoryRequestDto)
+        .send(createCategoryDto)
         .expect(201);
 
       // then
-      expect(response.body.name).toBe(createCategoryRequestDto.name);
+      expect(response.body.name).toBe(createCategoryDto.name);
     });
   });
 
@@ -148,15 +145,14 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryServiceDtos: Array<CreateCategoryServiceDto> =
-        Array.from({
-          length: 10,
-        }).map((_, index) => ({
-          name: `toeic${index + 1}`,
-          userId: user.id,
-        }));
+      const createCategoryDtos: Array<CreateCategoryDto> = Array.from({
+        length: 10,
+      }).map((_, index) => ({
+        name: `toeic${index + 1}`,
+        userId: user.id,
+      }));
       await Promise.all(
-        createCategoryServiceDtos.map(async (createCategoryServiceDto) => {
+        createCategoryDtos.map(async (createCategoryServiceDto) => {
           await categoryService.save(user, createCategoryServiceDto);
         }),
       );
@@ -172,14 +168,12 @@ describe('CategoryController (e2e)', () => {
         .expect(200);
 
       // then
-      expect(response.body.categories).toHaveLength(
-        createCategoryServiceDtos.length,
-      );
+      expect(response.body.categories).toHaveLength(createCategoryDtos.length);
     });
   });
 
   describe('/categories/:id (PATCH)', () => {
-    it('특정 회원이 다른 회원의 카테고리 수정을 요청하면 400 에러를 반환한다.', async () => {
+    it('특정 회원이 다른 회원의 카테고리 수정을 요청하면 401 에러를 반환한다.', async () => {
       // given
       const agent = request.agent(app.getHttpServer());
       const createUserDto: CreateUserServiceDto = {
@@ -187,32 +181,43 @@ describe('CategoryController (e2e)', () => {
         password: 'test1234',
         nickname: 'tester',
       };
+      const anotherCreateUserDto: CreateUserServiceDto = {
+        email: 'test5678@gmail.com',
+        password: 'test5678',
+        nickname: 'tester2',
+      };
       const user = await userService.save(createUserDto);
-      const createCategoryServiceDto: CreateCategoryServiceDto = {
+      const anotherUser = await userService.save(anotherCreateUserDto);
+      const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
-      const category = await categoryService.save(
-        user,
-        createCategoryServiceDto,
+      const anotherCreateCategoryDto: CreateCategoryDto = {
+        name: 'teps',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+      const anotherCategory = await categoryService.save(
+        anotherUser,
+        anotherCreateCategoryDto,
       );
+
+      const updateCategoryDto: UpdateCategoryDto = {
+        id: anotherCategory.id,
+        name: 'toefl',
+      };
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
         password: createUserDto.password,
       });
 
       // when, then
-      const response = await agent
+      return agent
         .patch(`/categories/${category.id}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send({
-          userId: user.id + 1,
-          id: category.id,
-          name: 'teps',
-        })
-        .expect(400);
+        .send(updateCategoryDto)
+        .expect(401);
     });
 
-    it('해당 회원의 카테고리가 아니라면 400 에러를 반환한다.', async () => {
+    it('해당 회원의 카테고리가 아니라면 401 에러를 반환한다.', async () => {
       // given
       const agent = request.agent(app.getHttpServer());
       const createUserDto: CreateUserServiceDto = {
@@ -221,28 +226,25 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryServiceDto: CreateCategoryServiceDto = {
+      const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
-      const category = await categoryService.save(
-        user,
-        createCategoryServiceDto,
-      );
+      const category = await categoryService.save(user, createCategoryDto);
+      const updateCategoryDto: UpdateCategoryDto = {
+        id: category.id + 1,
+        name: 'teps',
+      };
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
         password: createUserDto.password,
       });
 
       // when, then
-      const response = await agent
+      return agent
         .patch(`/categories/${category.id}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send({
-          userId: user.id,
-          id: category.id + 1,
-          name: 'teps',
-        })
-        .expect(400);
+        .send(updateCategoryDto)
+        .expect(401);
     });
 
     it('해당 회원이 동일한 이름의 카테고리를 가지고 있다면 400 에러를 반환한다.', async () => {
@@ -254,27 +256,24 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryServiceDto: CreateCategoryServiceDto = {
+      const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
-      const category = await categoryService.save(
-        user,
-        createCategoryServiceDto,
-      );
+      const category = await categoryService.save(user, createCategoryDto);
+      const updateCategoryDto: UpdateCategoryDto = {
+        id: category.id,
+        name: category.name,
+      };
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
         password: createUserDto.password,
       });
 
       // when, then
-      const response = await agent
+      return agent
         .patch(`/categories/${category.id}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send({
-          userId: user.id,
-          id: category.id,
-          name: category.name,
-        })
+        .send(updateCategoryDto)
         .expect(400);
     });
 
@@ -288,13 +287,14 @@ describe('CategoryController (e2e)', () => {
         nickname: 'tester',
       };
       const user = await userService.save(createUserDto);
-      const createCategoryServiceDto: CreateCategoryServiceDto = {
+      const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
-      const category = await categoryService.save(
-        user,
-        createCategoryServiceDto,
-      );
+      const category = await categoryService.save(user, createCategoryDto);
+      const updateCategoryDto: UpdateCategoryDto = {
+        id: category.id,
+        name: updatedName,
+      };
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
         password: createUserDto.password,
@@ -304,11 +304,7 @@ describe('CategoryController (e2e)', () => {
       const response = await agent
         .patch(`/categories/${category.id}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send({
-          userId: user.id,
-          id: category.id,
-          name: updatedName,
-        })
+        .send(updateCategoryDto)
         .expect(200);
 
       // then
