@@ -7,7 +7,6 @@ import { UserModule } from './user/user.module';
 import { VocabularyModule } from './vocabulary/vocabulary.module';
 import { EmailModule } from './email/email.module';
 import { APP_PIPE } from '@nestjs/core';
-import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 
 @Module({
@@ -46,7 +45,6 @@ import { AuthModule } from './auth/auth.module';
         };
       },
     }),
-    CommonModule,
     CategoryModule,
     UserModule,
     VocabularyModule,

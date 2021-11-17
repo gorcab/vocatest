@@ -7,14 +7,12 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
-import { IsSignUpAuthCode } from 'src/common/validators/IsSignUpAuthCode';
 import { IsWhitespaceString } from 'src/common/validators/IsWhitespaceString';
 
 export class CreateUserRequestDto {
   @IsEmail({}, { message: '이메일은 이메일 형식이어야 합니다.' })
   email: string;
 
-  @IsSignUpAuthCode()
   signUpAuthCode: number;
 
   @IsString({ message: '비밀번호는 8 ~ 12자로 구성된 문자여야 합니다.' })

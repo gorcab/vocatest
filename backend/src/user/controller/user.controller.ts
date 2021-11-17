@@ -3,6 +3,7 @@ import {
   Controller,
   Post,
   ServiceUnavailableException,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/service/auth.service';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
@@ -11,6 +12,8 @@ import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
 import { SignUpAuthRequestDto } from '../dtos/SignUpAuthRequest.dto';
 import { SignUpAuthResponseDto } from '../dtos/SignUpAuthResponse.dto';
 import { UserResponseDto } from '../dtos/UserResponse.dto';
+import { AvailableEmailGuard } from '../guards/AvailableEmail.guard';
+import { ValidSignUpAuthCodeGuard } from '../guards/ValidSignUpAuthCode.guard';
 import { UserService } from '../service/user.service';
 
 @Controller('users')
@@ -22,6 +25,7 @@ export class UserController {
   ) {}
 
   @Post('email-authentication')
+  @UseGuards(AvailableEmailGuard)
   async sendSignUpAuthenticationEmail(
     @Body() signUpAuthRequestDto: SignUpAuthRequestDto,
   ): Promise<SignUpAuthResponseDto> {
@@ -54,6 +58,7 @@ export class UserController {
   }
 
   @Post()
+  @UseGuards(ValidSignUpAuthCodeGuard)
   public async signUp(
     @Body() createUserRequestDto: CreateUserRequestDto,
   ): Promise<UserResponseDto> {

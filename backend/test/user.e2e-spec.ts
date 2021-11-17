@@ -88,9 +88,9 @@ describe('UserController (e2e)', () => {
         .expect(400);
 
       // then
-      expect(response.body.message).toStrictEqual([
+      expect(response.body.message).toStrictEqual(
         '이미 존재하는 이메일입니다.',
-      ]);
+      );
     });
 
     it('회원가입 인증번호 이메일 전송에 실패하면 503 에러를 반환한다.', async () => {
@@ -133,7 +133,7 @@ describe('UserController (e2e)', () => {
   });
 
   describe('/users (POST)', () => {
-    it('회원가입 시 이메일 형식이 올바르지 않으면 검증 에러 메시지를 반환한다.', async () => {
+    it('회원가입 시 이메일 형식이 올바르지 않으면 400 에러를 반환한다.', async () => {
       // given
       const createUserRequestDto: CreateUserRequestDto = {
         email: 'tester123@',
@@ -142,16 +142,11 @@ describe('UserController (e2e)', () => {
         signUpAuthCode: 123456,
       };
 
-      // when
-      const response = await request(app.getHttpServer())
+      // when, then
+      return request(app.getHttpServer())
         .post('/users')
         .send(createUserRequestDto)
         .expect(400);
-
-      // then
-      expect(response.body.message[0]).toBe(
-        '이메일은 이메일 형식이어야 합니다.',
-      );
     });
 
     it('회원가입 시 회원가입용 인증 코드가 일치하지 않으면 검증 에러 메시지를 반환한다.', async () => {
@@ -171,7 +166,7 @@ describe('UserController (e2e)', () => {
         .expect(400);
 
       // then
-      expect(response.body.message[0]).toBe('인증 번호가 올바르지 않습니다.');
+      expect(response.body.message).toBe('인증 번호가 올바르지 않습니다.');
     });
 
     it('회원가입 시 비밀번호가 8자 미만이면 검증 에러 메시지를 반환한다.', async () => {

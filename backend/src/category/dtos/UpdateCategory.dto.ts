@@ -1,5 +1,4 @@
 import { IsInt, IsString } from 'class-validator';
-import { IsValidUser } from 'src/common/validators/IsvalidUser';
 
 export class UpdateCategoryDto {
   @IsInt({ message: '올바르지 않은 카테고리입니다.' })
