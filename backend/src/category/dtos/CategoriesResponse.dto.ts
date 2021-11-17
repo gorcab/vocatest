@@ -1,3 +1,5 @@
+import { CategoryResponseDto } from './CategoryResponse.dto';
+
 export class CategoriesResponseDto {
-  categories: Array<CategoryResponse>;
+  categories: Array<CategoryResponseDto>;
 }

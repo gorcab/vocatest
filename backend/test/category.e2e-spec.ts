@@ -14,6 +14,7 @@ import { CategoryService } from 'src/category/service/category.service';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
 import { CreateCategoryDto } from 'src/category/dtos/CreateCategory.dto';
 import { UpdateCategoryDto } from 'src/category/dtos/UpdateCategory.dto';
+import { DeleteCategoryDto } from 'src/category/dtos/DeleteCategory.dto';
 
 describe('CategoryController (e2e)', () => {
   let app: INestApplication;
@@ -313,8 +314,71 @@ describe('CategoryController (e2e)', () => {
   });
 
   describe('/categories/:id (DELETE)', () => {
-    it('해당 회원의 카테고리이면 카테고리를 삭제한다.', async () => {});
+    it('해당 회원의 카테고리가 아니라면 401 에러를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const anotherCreateUserDto: CreateUserServiceDto = {
+        email: 'test5678@gmail.com',
+        password: 'test5678',
+        nickname: 'tester2',
+      };
+      const user = await userService.save(createUserDto);
+      const anotherUser = await userService.save(anotherCreateUserDto);
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const anotherCreateCategoryDto: CreateCategoryDto = {
+        name: 'teps',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+      const anotherCategory = await categoryService.save(
+        anotherUser,
+        anotherCreateCategoryDto,
+      );
+      const deleteCategoryDto: DeleteCategoryDto = {
+        id: anotherCategory.id,
+      };
 
-    it('해당 회원이 생성한 카테고리가 아니라면 403 에러를 반환한다.', async () => {});
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserDto.email,
+        password: createUserDto.password,
+      });
+
+      return agent
+        .delete(`/categories/${deleteCategoryDto.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send(deleteCategoryDto)
+        .expect(401);
+    });
+
+    it('해당 회원의 카테고리이면 카테고리를 삭제한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserDto);
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+      const deleteCategoryDto: DeleteCategoryDto = {
+        id: category.id,
+      };
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserDto.email,
+        password: createUserDto.password,
+      });
+      return agent
+        .delete(`/categories/${deleteCategoryDto.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send(deleteCategoryDto)
+        .expect(204);
+    });
   });
 });

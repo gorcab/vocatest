@@ -77,4 +77,10 @@ export class CategoryService {
 
     return category;
   }
+
+  public async deleteById(id: number): Promise<boolean> {
+    const deleteResult = await this.categoryRepository.delete(id);
+
+    return deleteResult.affected > 0;
+  }
 }

@@ -1,7 +1,9 @@
+import { ServiceUnavailableException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from 'src/user/entities/user.entity';
 import { CategoryResponseDto } from '../dtos/CategoryResponse.dto';
 import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
+import { DeleteCategoryDto } from '../dtos/DeleteCategory.dto';
 import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { Category } from '../entities/category.entity';
 import { CategoryService } from '../service/category.service';
@@ -53,6 +55,7 @@ describe('CategoryController', () => {
 
         return updatedCategory;
       },
+      deleteById: async () => true,
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -110,5 +113,27 @@ describe('CategoryController', () => {
       id: updateCategoryDto.id,
       name: updateCategoryDto.name,
     });
+  });
+
+  it('카테고리 삭제에 성공하면 에러를 발생시키지 않는다.', async () => {
+    const deleteCategoryDto: DeleteCategoryDto = {
+      id: 1,
+    };
+
+    expect(async () => await controller.delete(deleteCategoryDto)).not.toThrow(
+      new ServiceUnavailableException('카테고리 삭제에 실패했습니다.'),
+    );
+  });
+
+  it('카테고리 삭제에 실패하면 ServiceUnavailableException이 발생한다.', async () => {
+    mockCategoryService.deleteById = async () => false;
+
+    const deleteCategoryDto: DeleteCategoryDto = {
+      id: 1,
+    };
+
+    await expect(controller.delete(deleteCategoryDto)).rejects.toThrow(
+      new ServiceUnavailableException('카테고리 삭제에 실패했습니다.'),
+    );
   });
 });

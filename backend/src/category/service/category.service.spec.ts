@@ -46,6 +46,10 @@ describe('CategoryService', () => {
       create: async () => category,
       save: async () => category,
       update: async () => undefined,
+      delete: async () => ({
+        affected: 1,
+        raw: '',
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -118,5 +122,25 @@ describe('CategoryService', () => {
     const result = await service.update(user, updateCategoryDto);
 
     expect(result.name).toBe(updateCategoryDto.name);
+  });
+
+  it('카테고리가 정상적으로 삭제되면 true를 반환한다.', async () => {
+    const id = 1;
+
+    const result = await service.deleteById(id);
+
+    expect(result).toBeTruthy();
+  });
+
+  it('카테고리가 삭제되지 않으면 false를 반환한다.', async () => {
+    mockCategoryRepository.delete = async () => ({
+      affected: 0,
+      raw: '',
+    });
+    const id = 1;
+
+    const result = await service.deleteById(id);
+
+    expect(result).toBeFalsy();
   });
 });
