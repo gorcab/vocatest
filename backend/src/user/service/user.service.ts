@@ -1,7 +1,7 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
-import { Connection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { SIGN_UP_PREFIX, TTL } from '../constant';
 import { SaveSignUpAuthCodeResultDto } from '../dtos/SaveSignUpAuthCodeResult.dto';
@@ -13,7 +13,6 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @Inject(CACHE_MANAGER) private readonly redisService: Cache,
-    private readonly connection: Connection,
   ) {}
 
   public async findByEmail(email: string): Promise<User> {

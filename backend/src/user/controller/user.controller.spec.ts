@@ -13,6 +13,7 @@ import { UserService } from '../service/user.service';
 import { TTL } from '../constant';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
 import { AuthService } from 'src/auth/service/auth.service';
+import { createUser } from 'src/common/mocks/utils';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -20,7 +21,6 @@ describe('UserController', () => {
   let mockAuthService: Partial<AuthService>;
   let mockUserRepository: Partial<Repository<User>>;
   let mockRedisService: Partial<Cache>;
-  let mockConnection = {};
   let mockEmailService: Partial<EmailService>;
   let mockMailerService: Partial<MailerService>;
   let user: User;
@@ -29,14 +29,7 @@ describe('UserController', () => {
   const accessToken = 'accesstoken';
 
   beforeEach(async () => {
-    user = {
-      id: 1,
-      email: 'tester@gmail.com',
-      password: 'test1234',
-      nickname: 'tester',
-      createdAt: new Date(),
-      categories: null,
-    };
+    user = createUser();
 
     mockUserRepository = {
       findOne: () => null,
@@ -84,10 +77,6 @@ describe('UserController', () => {
         {
           provide: CACHE_MANAGER,
           useValue: mockRedisService,
-        },
-        {
-          provide: Connection,
-          useValue: mockConnection,
         },
         {
           provide: EmailService,

@@ -7,6 +7,7 @@ import * as bcrypt from 'bcrypt';
 import { TTL } from '../constant';
 import { User } from '../entities/user.entity';
 import { UserService } from './user.service';
+import { createUser } from 'src/common/mocks/utils';
 
 describe('UserService', () => {
   let service: UserService;
@@ -16,14 +17,7 @@ describe('UserService', () => {
   const signUpAuthCode = 132426;
 
   beforeEach(async () => {
-    user = {
-      id: 1,
-      email: 'tester@gmail.com',
-      password: 'test1234',
-      nickname: 'tester',
-      createdAt: new Date(),
-      categories: null,
-    };
+    user = createUser();
 
     mockUserRepository = {
       findOne: () => Promise.resolve(user),
@@ -37,8 +31,6 @@ describe('UserService', () => {
       del: async (ket: string) => Promise.resolve(),
     };
 
-    const mockConnection = {};
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
@@ -49,10 +41,6 @@ describe('UserService', () => {
         {
           provide: CACHE_MANAGER,
           useValue: mockRedisService,
-        },
-        {
-          provide: Connection,
-          useValue: mockConnection,
         },
       ],
     }).compile();
@@ -140,7 +128,7 @@ describe('UserService', () => {
     );
 
     expect(compareSpy).toHaveBeenCalled();
-    expect(result).toStrictEqual({
+    expect(result).toMatchObject({
       ...user,
     });
   });
