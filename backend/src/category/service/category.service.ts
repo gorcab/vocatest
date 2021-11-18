@@ -83,4 +83,8 @@ export class CategoryService {
 
     return deleteResult.affected > 0;
   }
+
+  public async findById(id: number): Promise<Category> {
+    return this.categoryRepository.findOne(id);
+  }
 }

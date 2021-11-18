@@ -1,11 +1,14 @@
 import { Category } from 'src/category/entities/category.entity';
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Vocabulary } from './Vocabulary.entity';
 
 @Entity()
 export class VocabularyList {
@@ -15,7 +18,7 @@ export class VocabularyList {
   @Column()
   title: string;
 
-  @Column({ name: 'created_at' })
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @ManyToOne(() => Category, (category) => category.vocabularyLists, {
@@ -24,4 +27,7 @@ export class VocabularyList {
   })
   @JoinColumn({ name: 'category_id' })
   category: Category;
+
+  @OneToMany(() => Vocabulary, (vocabulary) => vocabulary.vocabularyList)
+  vocabularies: Promise<Array<Vocabulary>>;
 }

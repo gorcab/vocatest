@@ -9,7 +9,6 @@ import { Cache } from 'cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SignUpAuthRequestDto } from 'src/user/dtos/SignUpAuthRequest.dto';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
-import { useContainer } from 'class-validator';
 import { SIGN_UP_PREFIX, TTL } from 'src/user/constant';
 import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
 
@@ -34,7 +33,6 @@ describe('UserController (e2e)', () => {
       .compile();
 
     app = module.createNestApplication();
-    useContainer(app.select(AppModule), { fallbackOnErrors: true });
     app.listen(3000);
 
     redisStore = module.get<Cache>(CACHE_MANAGER);

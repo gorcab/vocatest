@@ -14,11 +14,15 @@ export class UsersCategoryGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const user = request.user as User;
-    const categoryRequestDto = request.body as { id: number };
+    const categoryId = request.body.id || request.body.categoryId;
+
+    if (categoryId == null) {
+      throw new UnauthorizedException('올바르지 않은 카테고리입니다.');
+    }
 
     const category = await this.categoryService.findByUserAndId(
       user,
-      categoryRequestDto.id,
+      categoryId,
     );
 
     if (!category) {

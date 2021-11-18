@@ -56,7 +56,7 @@ import { AuthModule } from './auth/auth.module';
     {
       provide: APP_PIPE,
       useValue: new ValidationPipe({
-        stopAtFirstError: true, // 각 프로퍼티마다 한 번의 검증 오류만 반환
+        // stopAtFirstError: true, // 각 프로퍼티마다 한 번의 검증 오류만 반환
         transform: true,
         whitelist: true,
       }),

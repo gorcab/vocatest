@@ -143,4 +143,10 @@ describe('CategoryService', () => {
 
     expect(result).toBeFalsy();
   });
+
+  it('id가 일치하는 카테고리를 반환한다.', async () => {
+    const result = await service.findById(category.id);
+
+    expect(result).toMatchObject(category);
+  });
 });

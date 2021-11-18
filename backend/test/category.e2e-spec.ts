@@ -7,7 +7,6 @@ import { AppModule } from 'src/app.module';
 import { User } from 'src/user/entities/user.entity';
 import { Cache } from 'cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { useContainer } from 'class-validator';
 import { UserService } from 'src/user/service/user.service';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
@@ -39,7 +38,6 @@ describe('CategoryController (e2e)', () => {
       .compile();
 
     app = module.createNestApplication();
-    useContainer(app.select(AppModule), { fallbackOnErrors: true });
     app.listen(3000);
 
     redisStore = module.get<Cache>(CACHE_MANAGER);
