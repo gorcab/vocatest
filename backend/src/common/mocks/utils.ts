@@ -25,7 +25,6 @@ export const createCategory = (user?: User) => {
   category.user = user;
   category.id = getRandomId();
   category.name = '카테고리 ' + getRandomId();
-  category.updateName = jest.fn();
   category.vocabularyLists = null;
 
   return category;

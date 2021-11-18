@@ -1,5 +1,6 @@
 import { ServiceUnavailableException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { createCategory, createUser } from 'src/common/mocks/utils';
 import { User } from 'src/user/entities/user.entity';
 import { CategoryResponseDto } from '../dtos/CategoryResponse.dto';
 import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
@@ -17,34 +18,13 @@ describe('CategoryController', () => {
   let mockCategoryService: Partial<CategoryService>;
 
   beforeEach(async () => {
-    user = {
-      id: 1,
-      email: 'tester@gmail.com',
-      password: 'test1234',
-      nickname: 'tester',
-      createdAt: new Date(),
-      categories: null,
-    };
-
-    category = new Category();
-    category.id = 1;
-    category.name = 'toeic';
-    category.user = user;
-    category.vocabularyLists = null;
-
-    categories = Array.from({ length: 10 }).map((_, index) => {
-      const category = new Category();
-      category.id = index + 1;
-      category.name = `toeic${index + 1}`;
-      category.user = user;
-      category.vocabularyLists = null;
-
-      return category;
-    });
+    user = createUser();
+    category = createCategory(user);
+    categories = Array.from({ length: 10 }).map(() => createCategory(user));
 
     mockCategoryService = {
-      findByUserAndName: async () => category as Category,
-      findByUser: async () => categories as Array<Category>,
+      findByUserAndName: async () => category,
+      findByUser: async () => categories,
       save: async () => category as Category,
       update: async (user: User, updateCategoryDto: CategoryResponseDto) => {
         const updatedCategory = new Category();

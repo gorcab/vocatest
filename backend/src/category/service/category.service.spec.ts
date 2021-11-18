@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { createCategory, createUser } from 'src/common/mocks/utils';
 import { User } from 'src/user/entities/user.entity';
 import { DeepPartial, Repository } from 'typeorm';
 import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
@@ -15,30 +16,9 @@ describe('CategoryService', () => {
   let mockCategoryRepository: DeepPartial<Repository<Category>>;
 
   beforeEach(async () => {
-    user = {
-      id: 1,
-      email: 'tester@gmail.com',
-      password: 'test1234',
-      nickname: 'tester',
-      createdAt: new Date(),
-      categories: null,
-    };
-
-    category = new Category();
-    category.id = 1;
-    category.name = 'toeic';
-    category.user = user;
-    category.vocabularyLists = null;
-
-    categories = Array.from({ length: 10 }).map((_, index) => {
-      const category = new Category();
-      category.id = index + 1;
-      category.name = `toeic${index + 1}`;
-      category.user = user;
-      category.vocabularyLists = null;
-
-      return category;
-    });
+    user = createUser();
+    category = createCategory(user);
+    categories = Array.from({ length: 10 }).map(() => createCategory(user));
 
     mockCategoryRepository = {
       findOne: async () => category,
