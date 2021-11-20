@@ -18,9 +18,11 @@ export class SameTitleVocabularyListInCategoryGuard implements CanActivate {
       [key: string]: any;
     };
 
-    const vocabularyList =
-      await this.vocabularyService.findByCategoryIdAndTitle(categoryId, title);
-    if (vocabularyList) {
+    const exists = await this.vocabularyService.existSameTitleInCategory(
+      categoryId,
+      title,
+    );
+    if (exists) {
       throw new BadRequestException(
         '동일한 이름의 단어장이 카테고리 내에 존재합니다.',
       );

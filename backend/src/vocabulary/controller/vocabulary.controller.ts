@@ -1,10 +1,12 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { UsersCategoryGuard } from 'src/category/guards/UsersCategory.guard';
+import { User } from 'src/common/decorators/user.decorator';
+import { Page } from 'src/common/dtos/Page.dto';
+import { User as UserEntity } from 'src/user/entities/user.entity';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
-import { ExampleResponse } from '../dtos/ExampleResponse.dto';
-import { VocabularyListResponseDto } from '../dtos/VocabularyListResponse.dto';
-import { VocabularyResponse } from '../dtos/VocabularyResponse.dto';
+import { GetPaginatedVocabularyListQueryDto } from '../dtos/GetPaginatedVocabularyListQuery.dto';
+import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { SameTitleVocabularyListInCategoryGuard } from '../guards/SameTitleVocabularyListInCategory.guard';
 import { VocabularyService } from '../service/vocabulary.service';
 
@@ -18,40 +20,15 @@ export class VocabularyController {
   @UseGuards(UsersCategoryGuard)
   public async create(
     @Body() createVocabularyListDto: CreateVocabularyListDto,
-  ) {
-    const { id, createdAt, title, vocabularies } =
-      await this.vocabularyService.save(createVocabularyListDto);
+  ): Promise<VocabularyListDto> {
+    return this.vocabularyService.save(createVocabularyListDto);
+  }
 
-    const vocabulariesResponse: Array<VocabularyResponse> = [];
-    for (const { id, english, korean, examples } of await vocabularies) {
-      const examplesResponse: Array<ExampleResponse> = [];
-      for (const { id, translation, sentence } of await examples) {
-        const exampleResponse: ExampleResponse = {
-          id,
-          sentence,
-          translation,
-        };
-        examplesResponse.push(exampleResponse);
-      }
-
-      const vocabularyResponse: VocabularyResponse = {
-        id,
-        english,
-        korean,
-      };
-      if (examplesResponse.length > 0) {
-        vocabularyResponse.examples = examplesResponse;
-      }
-      vocabulariesResponse.push(vocabularyResponse);
-    }
-
-    const vocabularyListResponseDto: VocabularyListResponseDto = {
-      id,
-      createdAt,
-      title,
-      vocabularies: vocabulariesResponse,
-    };
-
-    return vocabularyListResponseDto;
+  @Get()
+  public async getPaginatedVocabularyList(
+    @Query() { page, perPage }: GetPaginatedVocabularyListQueryDto,
+    @User() user: UserEntity,
+  ): Promise<Page<Array<VocabularyListDto>>> {
+    return this.vocabularyService.findByUserAndPageInfo(user, page, perPage);
   }
 }

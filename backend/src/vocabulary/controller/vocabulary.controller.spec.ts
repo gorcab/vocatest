@@ -1,8 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
+import { Page } from 'src/common/dtos/Page.dto';
+import {
+  createCategory,
+  createExample,
+  createUser,
+  createVocabulary,
+  createVocabularyList,
+} from 'src/common/mocks/utils';
 import { User } from 'src/user/entities/user.entity';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
+import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { Vocabulary } from '../entities/Vocabulary.entity';
 import { VocabularyList } from '../entities/VocabularyList.entity';
 import { VocabularyService } from '../service/vocabulary.service';
@@ -18,55 +27,38 @@ describe('VocabularyController', () => {
   let vocabularyList: VocabularyList;
 
   beforeEach(async () => {
-    user = {
-      id: 1,
-      createdAt: new Date(),
-      email: 'test1234@gmail.com',
-      password: 'test1234',
-      nickname: 'tester',
-      categories: Promise.resolve([category]),
-    };
-
-    category = {
-      id: 1,
-      name: 'toeic',
-      updateName: jest.fn(),
-      user: user,
-      vocabularyLists: Promise.resolve([vocabularyList]),
-    };
-
+    user = createUser();
+    category = createCategory(user);
     categoryService = {
       findByUserAndId: async () => category,
     };
-
     vocabularies = [
-      {
-        id: 1,
-        english: 'apple',
-        korean: '사과',
-        vocabularyList,
-        examples: Promise.resolve([]),
-      },
-      {
-        id: 2,
-        english: 'banana',
-        korean: '바나나',
-        vocabularyList,
-        examples: Promise.resolve([]),
-      },
+      createVocabulary([createExample(), createExample()]),
+      createVocabulary(),
     ];
-
-    vocabularyList = {
-      category,
-      createdAt: new Date(),
-      id: 1,
-      title: 'DAY 1',
-      vocabularies: Promise.resolve(vocabularies),
-    };
+    vocabularyList = createVocabularyList(category, vocabularies);
 
     vocabularyService = {
-      findByCategoryIdAndTitle: async () => vocabularyList,
-      save: async () => vocabularyList,
+      findByCategoryIdAndTitle: async () =>
+        Promise.resolve(
+          VocabularyListDto.create(
+            vocabularyList,
+            vocabularyList.vocabularies.length,
+          ),
+        ),
+      findByUserAndPageInfo: async (
+        user: User,
+        page: number,
+        perPage: number,
+      ) =>
+        new Page(
+          Array(VocabularyListDto.create(vocabularyList, vocabularies.length)),
+          page,
+          1,
+          perPage,
+        ),
+      save: async () =>
+        VocabularyListDto.create(vocabularyList, vocabularies.length),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -90,7 +82,8 @@ describe('VocabularyController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('단어장을 생성 완료하면 VocabularyListResponseDto를 반환한다.', async () => {
+  it('단어장을 생성 완료하면 VocabularyListDto를 반환한다.', async () => {
+    // given
     const createVocabularyListDto: CreateVocabularyListDto = {
       categoryId: category.id,
       title: vocabularyList.title,
@@ -106,24 +99,46 @@ describe('VocabularyController', () => {
       ],
     };
 
-    const vocabularyListResponseDto = await controller.create(
-      createVocabularyListDto,
-    );
+    // when
+    const result = await controller.create(createVocabularyListDto);
 
-    expect(vocabularyListResponseDto).toStrictEqual({
+    // then
+    expect(result).toStrictEqual({
       id: vocabularyList.id,
       createdAt: vocabularyList.createdAt,
+      category: {
+        id: category.id,
+        name: category.name,
+      },
       title: vocabularyList.title,
-      vocabularies: [
+      numOfVocabularies: createVocabularyListDto.vocabularies.length,
+    });
+  });
+
+  it('단어장을 조회하면 Page<Array<VocabularyListDto>>를 반환한다.', async () => {
+    const page = 1;
+    const perPage = 10;
+
+    const result = await controller.getPaginatedVocabularyList(
+      {
+        page,
+        perPage,
+      },
+      user,
+    );
+
+    expect(result).toMatchObject({
+      page,
+      perPage,
+      total: 1,
+      totalPage: 1,
+      data: [
         {
-          id: vocabularies[0].id,
-          english: vocabularies[0].english,
-          korean: vocabularies[0].korean,
-        },
-        {
-          id: vocabularies[1].id,
-          english: vocabularies[1].english,
-          korean: vocabularies[1].korean,
+          id: expect.any(Number),
+          title: vocabularyList.title,
+          category: expect.any(Object),
+          createdAt: expect.any(Date),
+          numOfVocabularies: vocabularyList.vocabularies.length,
         },
       ],
     });

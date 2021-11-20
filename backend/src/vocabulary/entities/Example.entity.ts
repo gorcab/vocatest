@@ -19,7 +19,6 @@ export class Example {
   translation: string;
 
   @ManyToOne(() => Vocabulary, (vocabulary) => vocabulary.examples, {
-    nullable: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'vocabulary_id' })

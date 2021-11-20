@@ -80,7 +80,7 @@ describe('VocabularyController (e2e)', () => {
   });
 
   describe('/vocabularies (POST)', () => {
-    it('해당 카테고리에 단어장을 추가한다.', async () => {
+    it('해당 카테고리에 단어장을 생성하고 생성된 단어장을 응답으로 받는다.', async () => {
       const agent = request.agent(app.getHttpServer());
       const createUserServiceDto: CreateUserServiceDto = {
         email: 'test@gmail.com',
@@ -146,42 +146,11 @@ describe('VocabularyController (e2e)', () => {
         id: expect.any(Number),
         createdAt: expect.any(String),
         title: createVocabularyListDto.title,
-        vocabularies: [
-          {
-            id: expect.any(Number),
-            english: vocabularies[0].english,
-            korean: vocabularies[0].korean,
-            examples: [
-              {
-                id: expect.any(Number),
-                sentence: vocabularies[0].examples[0].sentence,
-                translation: vocabularies[0].examples[0].translation,
-              },
-              {
-                id: expect.any(Number),
-                sentence: vocabularies[0].examples[1].sentence,
-                translation: vocabularies[0].examples[1].translation,
-              },
-            ],
-          },
-          {
-            id: expect.any(Number),
-            english: vocabularies[1].english,
-            korean: vocabularies[1].korean,
-            examples: [
-              {
-                id: expect.any(Number),
-                sentence: vocabularies[1].examples[0].sentence,
-                translation: vocabularies[1].examples[0].translation,
-              },
-            ],
-          },
-          {
-            id: expect.any(Number),
-            english: vocabularies[2].english,
-            korean: vocabularies[2].korean,
-          },
-        ],
+        category: {
+          id: category.id,
+          name: category.name,
+        },
+        numOfVocabularies: 3,
       });
     });
 
@@ -415,6 +384,152 @@ describe('VocabularyController (e2e)', () => {
       expect(response.body.message[0]).toBe(
         '단어장은 하나 이상의 단어들로 구성되어야 합니다.',
       );
+    });
+  });
+
+  describe('/vocabularies?page=${number}&perPage=${number} (GET)', () => {
+    it(`페이지에 대한 정보와 perPage개의 영단어장을 응답으로 받는다.`, async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+
+      const vocaLists: Array<Array<CreateVocabularyDto>> = [
+        [
+          {
+            english: 'apple',
+            korean: '사과',
+            examples: [
+              {
+                sentence: 'He ate the apple',
+                translation: '그는 사과를 먹었다.',
+              },
+              {
+                sentence: 'Sling me an apple, will you?',
+                translation: '나한테 사과를 던져줄래?',
+              },
+            ],
+          },
+        ],
+        [
+          {
+            english: 'banana',
+            korean: '바나나',
+            examples: [
+              {
+                sentence: 'I hate banana',
+                translation: '나는 바나나가 싫다.',
+              },
+            ],
+          },
+        ],
+        [
+          {
+            english: 'dog',
+            korean: '개',
+          },
+        ],
+        [
+          {
+            english: 'dictionary',
+            korean: '사전',
+          },
+        ],
+        [
+          {
+            english: 'word',
+            korean: '단어',
+          },
+        ],
+        [
+          {
+            english: 'grammar',
+            korean: '문법',
+          },
+        ],
+        [
+          {
+            english: 'pronounciation',
+            korean: '발음',
+          },
+        ],
+        [
+          {
+            english: 'confidence',
+            korean: '자신감',
+          },
+        ],
+        [
+          {
+            english: 'challenge',
+            korean: '도전',
+          },
+        ],
+        [
+          {
+            english: 'hope',
+            korean: '희망',
+          },
+        ],
+        [
+          {
+            english: 'future',
+            korean: '미래',
+          },
+        ],
+      ];
+
+      let day = 1;
+      const createVocabularyListDtos: Array<CreateVocabularyListDto> = [];
+      for (const vocabularies of vocaLists) {
+        const createVocabularyListDto: CreateVocabularyListDto = {
+          categoryId: category.id,
+          title: `DAY ${day}`,
+          vocabularies,
+        };
+        day++;
+        createVocabularyListDtos.push(createVocabularyListDto);
+
+        await vocabularyService.save(createVocabularyListDto);
+      }
+
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      const page = 1,
+        perPage = 10;
+
+      const response = await agent
+        .get(`/vocabularies?page=${page}&perPage=${perPage}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .expect(200);
+
+      expect(response.body).toStrictEqual({
+        page,
+        perPage,
+        total: vocaLists.length,
+        totalPage: Math.ceil(vocaLists.length / perPage),
+        data: createVocabularyListDtos
+          .reverse()
+          .map((element) => ({
+            id: expect.any(Number),
+            title: element.title,
+            category: expect.any(Object),
+            createdAt: expect.any(String),
+            numOfVocabularies: element.vocabularies.length,
+          }))
+          .slice(0, 10),
+      });
     });
   });
 });

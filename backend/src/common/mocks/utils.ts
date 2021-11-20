@@ -45,7 +45,7 @@ export const createVocabulary = (examples?: Array<Example>) => {
   vocabulary.id = getRandomId();
   vocabulary.english = '영단어 ' + getRandomId();
   vocabulary.korean = '뜻' + getRandomId();
-  examples?.length > 0 && (vocabulary.examples = Promise.resolve(examples));
+  vocabulary.examples = Promise.resolve(examples);
   vocabulary.vocabularyList = null;
 
   return vocabulary;
@@ -60,8 +60,7 @@ export const createVocabularyList = (
   vocabularyList.createdAt = new Date();
   vocabularyList.title = '영단어장 ' + getRandomId();
   vocabularyList.category = category;
-  vocabularies?.length > 0 &&
-    (vocabularyList.vocabularies = Promise.resolve(vocabularies));
+  vocabularyList.vocabularies = vocabularies;
 
   return vocabularyList;
 };

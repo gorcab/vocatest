@@ -28,6 +28,8 @@ export class VocabularyList {
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
-  @OneToMany(() => Vocabulary, (vocabulary) => vocabulary.vocabularyList)
-  vocabularies: Promise<Array<Vocabulary>>;
+  @OneToMany(() => Vocabulary, (vocabulary) => vocabulary.vocabularyList, {
+    cascade: ['insert'],
+  })
+  vocabularies: Array<Vocabulary>;
 }

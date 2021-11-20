@@ -24,13 +24,15 @@ export class Vocabulary {
     () => VocabularyList,
     (vocabularyList) => vocabularyList.vocabularies,
     {
-      nullable: false,
       onDelete: 'CASCADE',
     },
   )
   @JoinColumn({ name: 'vocabulary_list_id' })
   vocabularyList: VocabularyList;
 
-  @OneToMany(() => Example, (example) => example.vocabulary)
-  examples: Promise<Example[]>;
+  @OneToMany(() => Example, (example) => example.vocabulary, {
+    lazy: true,
+    cascade: ['insert'],
+  })
+  examples: Promise<Array<Example>>;
 }

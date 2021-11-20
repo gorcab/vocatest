@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
+import { Page } from 'src/common/dtos/Page.dto';
 import { Connection, Repository } from 'typeorm';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
+import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { Example } from '../entities/Example.entity';
 import { Vocabulary } from '../entities/Vocabulary.entity';
 import { VocabularyList } from '../entities/VocabularyList.entity';
@@ -19,7 +21,7 @@ export class VocabularyService {
 
   public async save(
     createVocabularyListDto: CreateVocabularyListDto,
-  ): Promise<VocabularyList> {
+  ): Promise<VocabularyListDto> {
     const queryRunner = this.connection.createQueryRunner();
 
     await queryRunner.connect();
@@ -36,11 +38,13 @@ export class VocabularyService {
       const category = await categoryRepository.findOne(
         createVocabularyListDto.categoryId,
       );
+
       const vocabularyList = vocabularyListRepository.create({
         category,
         title: createVocabularyListDto.title,
       });
       await vocabularyListRepository.save(vocabularyList);
+
       const vocabularies: Array<Vocabulary> = [];
       for (const {
         english,
@@ -53,9 +57,9 @@ export class VocabularyService {
           vocabularyList,
         });
         await vocabularyRepository.save(vocabulary);
-
-        const examplesArray: Array<Example> = [];
+        vocabularies.push(vocabulary);
         if (examples) {
+          const examplesArray: Array<Example> = [];
           for (const { sentence, translation } of examples) {
             const example = exampleRepository.create({
               sentence,
@@ -65,17 +69,17 @@ export class VocabularyService {
             await exampleRepository.save(example);
             examplesArray.push(example);
           }
+          vocabulary.examples = Promise.resolve(examplesArray);
         }
-
-        vocabulary.examples = Promise.resolve(examplesArray);
-        vocabularies.push(vocabulary);
+        vocabularyList.vocabularies = vocabularies;
       }
-
-      vocabularyList.vocabularies = Promise.resolve(vocabularies);
 
       await queryRunner.commitTransaction();
 
-      return vocabularyList;
+      return VocabularyListDto.create(
+        vocabularyList,
+        vocabularyList.vocabularies.length,
+      );
     } catch (error) {
       console.dir(error);
       await queryRunner.rollbackTransaction();
@@ -84,18 +88,72 @@ export class VocabularyService {
     }
   }
 
+  public async existSameTitleInCategory(
+    categoryId: number,
+    title: string,
+  ): Promise<boolean> {
+    const count = await this.vocabularyListRepository
+      .createQueryBuilder('vocabularyList')
+      .innerJoin(
+        'vocabularyList.category',
+        'category',
+        'category.id = :categoryId',
+        { categoryId },
+      )
+      .getCount();
+
+    return !!count;
+  }
+
   public async findByCategoryIdAndTitle(
     categoryId: number,
     title: string,
-  ): Promise<VocabularyList> {
+  ): Promise<VocabularyListDto> {
     const category = await this.categoryService.findById(categoryId);
     const vocabularyList = await this.vocabularyListRepository.findOne({
+      relations: ['category', 'vocabularies'],
       where: {
         category,
         title,
       },
     });
 
-    return vocabularyList;
+    return VocabularyListDto.create(
+      vocabularyList,
+      vocabularyList.vocabularies.length,
+    );
+  }
+
+  public async findByUserAndPageInfo(
+    user,
+    page,
+    perPage,
+  ): Promise<Page<Array<VocabularyListDto>>> {
+    const [vocabularyLists, total] = await this.vocabularyListRepository
+      .createQueryBuilder('vocabularyList')
+      .innerJoinAndSelect('vocabularyList.vocabularies', 'vocabulary')
+      .innerJoinAndSelect('vocabularyList.category', 'category')
+      .innerJoin('category.user', 'user', 'user.id = :userId', {
+        userId: user.id,
+      })
+      .orderBy('vocabularyList.createdAt', 'DESC')
+      .skip(perPage * (page - 1))
+      .take(perPage)
+      .getManyAndCount();
+
+    const vocabularyListDtos: Array<VocabularyListDto> = vocabularyLists.map(
+      (vocabularyList) =>
+        VocabularyListDto.create(
+          vocabularyList,
+          vocabularyList.vocabularies.length,
+        ),
+    );
+
+    return new Page<Array<VocabularyListDto>>(
+      vocabularyListDtos,
+      page,
+      total,
+      perPage,
+    );
   }
 }

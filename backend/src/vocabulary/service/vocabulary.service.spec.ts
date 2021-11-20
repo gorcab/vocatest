@@ -5,9 +5,11 @@ import { CategoryService } from 'src/category/service/category.service';
 import {
   createCategory,
   createExample,
+  createUser,
   createVocabulary,
   createVocabularyList,
 } from 'src/common/mocks/utils';
+import { User } from 'src/user/entities/user.entity';
 import { Connection, DeepPartial, Repository } from 'typeorm';
 import { CreateVocabularyDto } from '../dtos/CreateVocabulary.dto';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
@@ -24,12 +26,14 @@ describe('VocabularyService', () => {
   let exampleRepository: DeepPartial<Repository<Example>>;
   let vocabularyRepository: DeepPartial<Repository<Vocabulary>>;
   let vocabularyListRepository: DeepPartial<Repository<VocabularyList>>;
+  let user: User;
   let category: Category;
   let vocabularies: Array<Vocabulary>;
   let vocabularyList: VocabularyList;
 
   beforeEach(async () => {
-    category = createCategory();
+    user = createUser();
+    category = createCategory(user);
     vocabularies = [
       createVocabulary([createExample(), createExample()]),
       createVocabulary(),
@@ -60,6 +64,18 @@ describe('VocabularyService', () => {
       create: jest.fn().mockReturnValueOnce(vocabularyList),
       save: jest.fn(),
       findOne: async () => vocabularyList,
+      createQueryBuilder: jest.fn(() => {
+        return {
+          innerJoinAndSelect: jest.fn().mockReturnThis(),
+          innerJoin: jest.fn().mockReturnThis(),
+          orderBy: jest.fn().mockReturnThis(),
+          skip: jest.fn().mockReturnThis(),
+          take: jest.fn().mockReturnThis(),
+          getManyAndCount: jest.fn(() =>
+            Promise.resolve([[vocabularyList], 1]),
+          ),
+        };
+      }),
     };
 
     categoryService = {
@@ -111,7 +127,7 @@ describe('VocabularyService', () => {
     expect(service).toBeDefined();
   });
 
-  it('영단어장을 생성하면 VocabularyList를 반환한다.', async () => {
+  it('단어장을 생성하면 VocabularyListDto를 반환한다.', async () => {
     // given
     const createVocabularyDtos: Array<CreateVocabularyDto> = [];
     for (const {
@@ -137,21 +153,71 @@ describe('VocabularyService', () => {
     const result = await service.save(createVocabularyListDto);
 
     // then
-    expect(result.title).toBe(createVocabularyListDto.title);
-    expect(await result.vocabularies).toHaveLength(vocabularies.length);
+    expect(result).toStrictEqual({
+      id: expect.any(Number),
+      title: vocabularyList.title,
+      createdAt: expect.any(Date),
+      category: {
+        id: category.id,
+        name: category.name,
+      },
+      numOfVocabularies: createVocabularyDtos.length,
+    });
   });
 
-  it('카테고리 내에 있는 특정 이름의 단어장을 반환한다.', async () => {
+  it('카테고리 내에 동일한 이름의 단어장이 있는지 여부를 반환한다.', async () => {
+    const exists = false;
+    vocabularyListRepository.createQueryBuilder = jest.fn(() => ({
+      innerJoin: jest.fn().mockReturnThis(),
+      getCount: jest.fn(() => Promise.resolve(exists)),
+    }));
+
+    const result = await service.existSameTitleInCategory(1, 'DAY 10');
+
+    expect(result).toBeFalsy();
+  });
+
+  it('카테고리 내에 있는 단어장을 VocabularyListDto로 반환한다.', async () => {
     const result = await service.findByCategoryIdAndTitle(
       category.id,
       vocabularyList.title,
     );
 
-    expect(result.id).toBe(vocabularyList.id);
-    expect(result.title).toBe(vocabularyList.title);
-    expect(await result.vocabularies).toMatchObject([
-      { ...vocabularyList.vocabularies[0] },
-      { ...vocabularyList.vocabularies[1] },
-    ]);
+    expect(result).toStrictEqual({
+      id: expect.any(Number),
+      title: vocabularyList.title,
+      category: {
+        id: category.id,
+        name: category.name,
+      },
+      createdAt: expect.any(Date),
+      numOfVocabularies: vocabularyList.vocabularies.length,
+    });
+  });
+
+  it('해당 사용자와 페이지 정보를 토대로 Page<Array<VocabularyListDto>>를 반환한다.', async () => {
+    const page = 1,
+      perPage = 10;
+
+    const result = await service.findByUserAndPageInfo(user, page, perPage);
+
+    expect(result).toMatchObject({
+      page,
+      perPage,
+      total: 1,
+      totalPage: 1,
+      data: [
+        {
+          id: expect.any(Number),
+          title: vocabularyList.title,
+          category: {
+            id: expect.any(Number),
+            name: category.name,
+          },
+          createdAt: expect.any(Date),
+          numOfVocabularies: vocabularyList.vocabularies.length,
+        },
+      ],
+    });
   });
 });

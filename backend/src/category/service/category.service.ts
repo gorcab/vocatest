@@ -23,10 +23,7 @@ export class CategoryService {
     return this.categoryRepository.save(category);
   }
 
-  public async findByUserAndName(
-    user: User,
-    name: string,
-  ): Promise<Category | null> {
+  public async findByUserAndName(user: User, name: string): Promise<Category> {
     const category = await this.categoryRepository.findOne({
       where: {
         name,
@@ -47,10 +44,7 @@ export class CategoryService {
     return categories;
   }
 
-  public async findByUserAndId(
-    user: User,
-    id: number,
-  ): Promise<Category | null> {
+  public async findByUserAndId(user: User, id: number): Promise<Category> {
     const category = await this.categoryRepository.findOne({
       where: {
         id,
