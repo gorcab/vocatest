@@ -46,27 +46,33 @@ export class VocabularyService {
       await vocabularyListRepository.save(vocabularyList);
 
       const vocabularies: Array<Vocabulary> = [];
+      let vocabularyId = 1;
       for (const {
         english,
         korean,
         examples,
       } of createVocabularyListDto.vocabularies) {
         const vocabulary = vocabularyRepository.create({
+          id: vocabularyId,
           english,
           korean,
           vocabularyList,
         });
         await vocabularyRepository.save(vocabulary);
+        vocabularyId++;
         vocabularies.push(vocabulary);
         if (examples) {
+          let exampleId = 1;
           const examplesArray: Array<Example> = [];
           for (const { sentence, translation } of examples) {
             const example = exampleRepository.create({
+              id: exampleId,
               sentence,
               translation,
               vocabulary,
             });
             await exampleRepository.save(example);
+            exampleId++;
             examplesArray.push(example);
           }
           vocabulary.examples = Promise.resolve(examplesArray);

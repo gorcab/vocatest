@@ -484,6 +484,10 @@ describe('VocabularyController (e2e)', () => {
             english: 'future',
             korean: '미래',
           },
+          {
+            english: 'korea',
+            korean: '대한민국',
+          },
         ],
       ];
 

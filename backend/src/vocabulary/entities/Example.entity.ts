@@ -1,15 +1,11 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Category } from 'src/category/entities/category.entity';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { Vocabulary } from './Vocabulary.entity';
+import { VocabularyList } from './VocabularyList.entity';
 
 @Entity()
 export class Example {
-  @PrimaryGeneratedColumn()
+  @PrimaryColumn()
   id: number;
 
   @Column()
@@ -20,7 +16,17 @@ export class Example {
 
   @ManyToOne(() => Vocabulary, (vocabulary) => vocabulary.examples, {
     onDelete: 'CASCADE',
+    primary: true,
   })
-  @JoinColumn({ name: 'vocabulary_id' })
+  @JoinColumn([
+    {
+      name: 'vocabulary_id',
+      referencedColumnName: 'id',
+    },
+    {
+      name: 'vocabulary_list_id',
+      referencedColumnName: 'vocabularyListId',
+    },
+  ])
   vocabulary: Vocabulary;
 }

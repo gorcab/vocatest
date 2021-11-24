@@ -19,7 +19,6 @@ import { CategoriesResponseDto } from '../dtos/CategoriesResponse.dto';
 import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { UsersCategoryGuard } from '../guards/UsersCategory.guard';
 import { IsCategoryNameAlreadyExistGuard } from '../guards/IsCategoryNameAlreadyExist.guard';
-import { UserInfo } from 'src/auth/interfaces/UserInfo.interface';
 import { User as UserEntity } from 'src/user/entities/user.entity';
 import { DeleteCategoryDto } from '../dtos/DeleteCategory.dto';
 
