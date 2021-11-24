@@ -18,6 +18,11 @@ import { Vocabulary } from 'src/vocabulary/entities/Vocabulary.entity';
 import { VocabularyList } from 'src/vocabulary/entities/VocabularyList.entity';
 import { Repository } from 'typeorm';
 import { VocabularyService } from 'src/vocabulary/service/vocabulary.service';
+import { VocabularyListDto } from 'src/vocabulary/dtos/VocabularyList.dto';
+import {
+  createCreateVocabularyDtos,
+  createVocabularyLists,
+} from 'src/common/mocks/utils';
 
 describe('VocabularyController (e2e)', () => {
   let app: INestApplication;
@@ -94,36 +99,8 @@ describe('VocabularyController (e2e)', () => {
       };
       const category = await categoryService.save(user, createCategoryDto);
 
-      const vocabularies: Array<CreateVocabularyDto> = [
-        {
-          english: 'apple',
-          korean: '사과',
-          examples: [
-            {
-              sentence: 'He ate the apple',
-              translation: '그는 사과를 먹었다.',
-            },
-            {
-              sentence: 'Sling me an apple, will you?',
-              translation: '나한테 사과를 던져줄래?',
-            },
-          ],
-        },
-        {
-          english: 'banana',
-          korean: '바나나',
-          examples: [
-            {
-              sentence: 'I hate banana',
-              translation: '나는 바나나가 싫다.',
-            },
-          ],
-        },
-        {
-          english: 'dog',
-          korean: '개',
-        },
-      ];
+      const vocabularies: Array<CreateVocabularyDto> =
+        createCreateVocabularyDtos();
 
       const createVocabularyListDto: CreateVocabularyListDto = {
         categoryId: category.id,
@@ -184,36 +161,8 @@ describe('VocabularyController (e2e)', () => {
         anotherCreateCategoryDto,
       );
 
-      const vocabularies: Array<CreateVocabularyDto> = [
-        {
-          english: 'apple',
-          korean: '사과',
-          examples: [
-            {
-              sentence: 'He ate the apple',
-              translation: '그는 사과를 먹었다.',
-            },
-            {
-              sentence: 'Sling me an apple, will you?',
-              translation: '나한테 사과를 던져줄래?',
-            },
-          ],
-        },
-        {
-          english: 'banana',
-          korean: '바나나',
-          examples: [
-            {
-              sentence: 'I hate banana',
-              translation: '나는 바나나가 싫다.',
-            },
-          ],
-        },
-        {
-          english: 'dog',
-          korean: '개',
-        },
-      ];
+      const vocabularies: Array<CreateVocabularyDto> =
+        createCreateVocabularyDtos();
 
       const createVocabularyListDto: CreateVocabularyListDto = {
         categoryId: anotherCategory.id,
@@ -247,36 +196,8 @@ describe('VocabularyController (e2e)', () => {
       };
       const category = await categoryService.save(user, createCategoryDto);
 
-      const vocabularies: Array<CreateVocabularyDto> = [
-        {
-          english: 'apple',
-          korean: '사과',
-          examples: [
-            {
-              sentence: 'He ate the apple',
-              translation: '그는 사과를 먹었다.',
-            },
-            {
-              sentence: 'Sling me an apple, will you?',
-              translation: '나한테 사과를 던져줄래?',
-            },
-          ],
-        },
-        {
-          english: 'banana',
-          korean: '바나나',
-          examples: [
-            {
-              sentence: 'I hate banana',
-              translation: '나는 바나나가 싫다.',
-            },
-          ],
-        },
-        {
-          english: 'dog',
-          korean: '개',
-        },
-      ];
+      const vocabularies: Array<CreateVocabularyDto> =
+        createCreateVocabularyDtos();
 
       const createVocabularyListDto: CreateVocabularyListDto = {
         categoryId: category.id,
@@ -402,94 +323,8 @@ describe('VocabularyController (e2e)', () => {
       };
       const category = await categoryService.save(user, createCategoryDto);
 
-      const vocaLists: Array<Array<CreateVocabularyDto>> = [
-        [
-          {
-            english: 'apple',
-            korean: '사과',
-            examples: [
-              {
-                sentence: 'He ate the apple',
-                translation: '그는 사과를 먹었다.',
-              },
-              {
-                sentence: 'Sling me an apple, will you?',
-                translation: '나한테 사과를 던져줄래?',
-              },
-            ],
-          },
-        ],
-        [
-          {
-            english: 'banana',
-            korean: '바나나',
-            examples: [
-              {
-                sentence: 'I hate banana',
-                translation: '나는 바나나가 싫다.',
-              },
-            ],
-          },
-        ],
-        [
-          {
-            english: 'dog',
-            korean: '개',
-          },
-        ],
-        [
-          {
-            english: 'dictionary',
-            korean: '사전',
-          },
-        ],
-        [
-          {
-            english: 'word',
-            korean: '단어',
-          },
-        ],
-        [
-          {
-            english: 'grammar',
-            korean: '문법',
-          },
-        ],
-        [
-          {
-            english: 'pronounciation',
-            korean: '발음',
-          },
-        ],
-        [
-          {
-            english: 'confidence',
-            korean: '자신감',
-          },
-        ],
-        [
-          {
-            english: 'challenge',
-            korean: '도전',
-          },
-        ],
-        [
-          {
-            english: 'hope',
-            korean: '희망',
-          },
-        ],
-        [
-          {
-            english: 'future',
-            korean: '미래',
-          },
-          {
-            english: 'korea',
-            korean: '대한민국',
-          },
-        ],
-      ];
+      const vocaLists: Array<Array<CreateVocabularyDto>> =
+        createVocabularyLists();
 
       let day = 1;
       const createVocabularyListDtos: Array<CreateVocabularyListDto> = [];
@@ -533,6 +368,87 @@ describe('VocabularyController (e2e)', () => {
             numOfVocabularies: element.vocabularies.length,
           }))
           .slice(0, 10),
+      });
+    });
+  });
+
+  describe('/vocabularies/:vocabularyListId', () => {
+    it('특정 id의 영단어장을 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+
+      const vocaLists: Array<Array<CreateVocabularyDto>> =
+        createVocabularyLists();
+
+      let day = 1;
+      let vocabularyListDto: VocabularyListDto;
+      const createVocabularyListDtos: Array<CreateVocabularyListDto> = [];
+      for (const vocabularies of vocaLists) {
+        const createVocabularyListDto: CreateVocabularyListDto = {
+          categoryId: category.id,
+          title: `DAY ${day}`,
+          vocabularies,
+        };
+        createVocabularyListDtos.push(createVocabularyListDto);
+
+        const result = await vocabularyService.save(createVocabularyListDto);
+        if (day === 1) {
+          vocabularyListDto = result;
+        }
+
+        day++;
+      }
+
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      // when
+      const response = await agent
+        .get(`/vocabularies/${vocabularyListDto.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .expect(200);
+
+      // then
+      expect(response.body).toStrictEqual({
+        id: vocabularyListDto.id,
+        title: vocabularyListDto.title,
+        category: {
+          id: vocabularyListDto.category.id,
+          name: vocabularyListDto.category.name,
+        },
+        createdAt: vocabularyListDto.createdAt.toISOString(),
+        vocabularies: [
+          {
+            id: expect.any(Number),
+            english: vocaLists[0][0].english,
+            korean: vocaLists[0][0].korean,
+            examples: [
+              {
+                id: expect.any(Number),
+                sentence: vocaLists[0][0].examples[0].sentence,
+                translation: vocaLists[0][0].examples[0].translation,
+              },
+              {
+                id: expect.any(Number),
+                sentence: vocaLists[0][0].examples[1].sentence,
+                translation: vocaLists[0][0].examples[1].translation,
+              },
+            ],
+          },
+        ],
       });
     });
   });

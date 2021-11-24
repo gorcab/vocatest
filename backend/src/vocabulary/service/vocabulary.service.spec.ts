@@ -220,4 +220,43 @@ describe('VocabularyService', () => {
       ],
     });
   });
+
+  it('vocabularyListId를 토대로 DetailedVocabularyListDto를 반환한다.', async () => {
+    const result = await service.findById(vocabularyList.id);
+
+    const examples = await vocabularies[0].examples;
+    expect(result).toStrictEqual({
+      id: vocabularyList.id,
+      title: vocabularyList.title,
+      category: {
+        id: category.id,
+        name: category.name,
+      },
+      createdAt: vocabularyList.createdAt,
+      vocabularies: [
+        {
+          id: vocabularies[0].id,
+          english: vocabularies[0].english,
+          korean: vocabularies[0].korean,
+          examples: [
+            {
+              id: examples[0].id,
+              sentence: examples[0].sentence,
+              translation: examples[0].translation,
+            },
+            {
+              id: examples[1].id,
+              sentence: examples[1].sentence,
+              translation: examples[1].translation,
+            },
+          ],
+        },
+        {
+          id: vocabularies[1].id,
+          english: vocabularies[1].english,
+          korean: vocabularies[1].korean,
+        },
+      ],
+    });
+  });
 });

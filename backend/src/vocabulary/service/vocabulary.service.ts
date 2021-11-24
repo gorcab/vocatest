@@ -5,6 +5,7 @@ import { CategoryService } from 'src/category/service/category.service';
 import { Page } from 'src/common/dtos/Page.dto';
 import { Connection, Repository } from 'typeorm';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
+import { DetailedVocabularyListDto } from '../dtos/DetailedVocabularyList.dto';
 import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { Example } from '../entities/Example.entity';
 import { Vocabulary } from '../entities/Vocabulary.entity';
@@ -161,5 +162,18 @@ export class VocabularyService {
       total,
       perPage,
     );
+  }
+
+  public async findById(
+    vocabularyListId: number,
+  ): Promise<DetailedVocabularyListDto> {
+    const vocabularyList = await this.vocabularyListRepository.findOne(
+      vocabularyListId,
+      {
+        relations: ['category', 'vocabularies'],
+      },
+    );
+
+    return DetailedVocabularyListDto.create(vocabularyList);
   }
 }
