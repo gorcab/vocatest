@@ -1,7 +1,11 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Query,
@@ -17,6 +21,7 @@ import { DetailedVocabularyListDto } from '../dtos/DetailedVocabularyList.dto';
 import { GetPaginatedVocabularyListQueryDto } from '../dtos/GetPaginatedVocabularyListQuery.dto';
 import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { SameTitleVocabularyListInCategoryGuard } from '../guards/SameTitleVocabularyListInCategory.guard';
+import { UsersVocabularyListGuard } from '../guards/UsersVocabularyList.guard';
 import { VocabularyService } from '../service/vocabulary.service';
 
 @UseGuards(JwtAuthGuard)
@@ -46,5 +51,16 @@ export class VocabularyController {
     @Param('id') vocabularyListId: number,
   ): Promise<DetailedVocabularyListDto> {
     return this.vocabularyService.findById(vocabularyListId);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(UsersVocabularyListGuard)
+  public async deleteOne(@Param('id') vocabularyListId: number): Promise<void> {
+    const isDeleted = await this.vocabularyService.deleteById(vocabularyListId);
+
+    if (!isDeleted) {
+      throw new BadRequestException('단어장 삭제에 실패했습니다.');
+    }
   }
 }

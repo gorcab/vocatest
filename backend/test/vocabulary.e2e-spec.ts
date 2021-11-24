@@ -21,6 +21,8 @@ import { VocabularyService } from 'src/vocabulary/service/vocabulary.service';
 import { VocabularyListDto } from 'src/vocabulary/dtos/VocabularyList.dto';
 import {
   createCreateVocabularyDtos,
+  createVocabulary,
+  createVocabularyList,
   createVocabularyLists,
 } from 'src/common/mocks/utils';
 
@@ -450,6 +452,128 @@ describe('VocabularyController (e2e)', () => {
           },
         ],
       });
+    });
+  });
+
+  describe('/vocabularies/:vocabularyListId (DELETE)', () => {
+    it('vocabularyListId를 토대로 특정 단어장을 삭제한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+
+      const vocaLists: Array<Array<CreateVocabularyDto>> =
+        createVocabularyLists();
+
+      let day = 1;
+      let vocabularyListDto: VocabularyListDto;
+      const createVocabularyListDtos: Array<CreateVocabularyListDto> = [];
+      for (const vocabularies of vocaLists) {
+        const createVocabularyListDto: CreateVocabularyListDto = {
+          categoryId: category.id,
+          title: `DAY ${day}`,
+          vocabularies,
+        };
+        createVocabularyListDtos.push(createVocabularyListDto);
+
+        const result = await vocabularyService.save(createVocabularyListDto);
+        if (day === 1) {
+          vocabularyListDto = result;
+        }
+
+        day++;
+      }
+
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      // when
+      return await agent
+        .delete(`/vocabularies/${vocabularyListDto.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .expect(204);
+    });
+
+    it('해당 사용자의 단어장이 아니면 401 에러를 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      // user
+      const user = await userService.save(createUserServiceDto);
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+      const vocaList = createVocabularyList(category, [createVocabulary()]);
+      const createVocabularyListDto: CreateVocabularyListDto = {
+        categoryId: category.id,
+        title: 'vocaList1',
+        vocabularies: [
+          {
+            english: vocaList.vocabularies[0].english,
+            korean: vocaList.vocabularies[0].korean,
+          },
+        ],
+      };
+      const result = await vocabularyService.save(createVocabularyListDto);
+
+      // another user
+      const createAnotherServiceDto: CreateUserServiceDto = {
+        email: 'anotherTest1234@gmail.com',
+        password: 'anothertest1234',
+        nickname: 'anotherTester',
+      };
+      const anotherUser = await userService.save(createAnotherServiceDto);
+      const anotherCreateCategoryDto: CreateCategoryDto = {
+        name: 'teps',
+      };
+      const anotherCategory = await categoryService.save(
+        anotherUser,
+        anotherCreateCategoryDto,
+      );
+      const anotherVocaList = createVocabularyList(anotherCategory, [
+        createVocabulary(),
+      ]);
+      const anotherCreateVocabularyListDto: CreateVocabularyListDto = {
+        categoryId: anotherCategory.id,
+        title: 'vocaList2',
+        vocabularies: [
+          {
+            english: anotherVocaList.vocabularies[0].english,
+            korean: anotherVocaList.vocabularies[0].korean,
+          },
+        ],
+      };
+      const anotherResult = await vocabularyService.save(
+        anotherCreateVocabularyListDto,
+      );
+
+      // get access token
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      // when, then
+      return await agent
+        .delete(`/vocabularies/${anotherResult.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .expect(401);
     });
   });
 });

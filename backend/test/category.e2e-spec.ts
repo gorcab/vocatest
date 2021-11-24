@@ -13,7 +13,6 @@ import { CategoryService } from 'src/category/service/category.service';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
 import { CreateCategoryDto } from 'src/category/dtos/CreateCategory.dto';
 import { UpdateCategoryDto } from 'src/category/dtos/UpdateCategory.dto';
-import { DeleteCategoryDto } from 'src/category/dtos/DeleteCategory.dto';
 
 describe('CategoryController (e2e)', () => {
   let app: INestApplication;
@@ -337,9 +336,7 @@ describe('CategoryController (e2e)', () => {
         anotherUser,
         anotherCreateCategoryDto,
       );
-      const deleteCategoryDto: DeleteCategoryDto = {
-        id: anotherCategory.id,
-      };
+      const deleteCategoryId = anotherCategory.id;
 
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
@@ -347,9 +344,8 @@ describe('CategoryController (e2e)', () => {
       });
 
       return agent
-        .delete(`/categories/${deleteCategoryDto.id}`)
+        .delete(`/categories/${deleteCategoryId}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send(deleteCategoryDto)
         .expect(401);
     });
 
@@ -365,17 +361,16 @@ describe('CategoryController (e2e)', () => {
         name: 'toeic',
       };
       const category = await categoryService.save(user, createCategoryDto);
-      const deleteCategoryDto: DeleteCategoryDto = {
-        id: category.id,
-      };
+
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
         password: createUserDto.password,
       });
+
+      const deleteCategoryId = category.id;
       return agent
-        .delete(`/categories/${deleteCategoryDto.id}`)
+        .delete(`/categories/${deleteCategoryId}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
-        .send(deleteCategoryDto)
         .expect(204);
     });
   });

@@ -1,13 +1,14 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Patch,
   Post,
-  ServiceUnavailableException,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -20,7 +21,6 @@ import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { UsersCategoryGuard } from '../guards/UsersCategory.guard';
 import { IsCategoryNameAlreadyExistGuard } from '../guards/IsCategoryNameAlreadyExist.guard';
 import { User as UserEntity } from 'src/user/entities/user.entity';
-import { DeleteCategoryDto } from '../dtos/DeleteCategory.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('categories')
@@ -81,15 +81,11 @@ export class CategoryController {
   @Delete(':id')
   @UseGuards(UsersCategoryGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  public async delete(
-    @Body() deleteCategoryDto: DeleteCategoryDto,
-  ): Promise<void> {
-    const isDeleted = await this.categoryService.deleteById(
-      deleteCategoryDto.id,
-    );
+  public async delete(@Param('id') categoryId: number): Promise<void> {
+    const isDeleted = await this.categoryService.deleteById(categoryId);
 
     if (!isDeleted) {
-      throw new ServiceUnavailableException('카테고리 삭제에 실패했습니다.');
+      throw new BadRequestException('카테고리 삭제에 실패했습니다.');
     }
   }
 }

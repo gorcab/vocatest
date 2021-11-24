@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
 import { Page } from 'src/common/dtos/Page.dto';
+import { User } from 'src/user/entities/user.entity';
 import { Connection, Repository } from 'typeorm';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
 import { DetailedVocabularyListDto } from '../dtos/DetailedVocabularyList.dto';
@@ -175,5 +176,29 @@ export class VocabularyService {
     );
 
     return DetailedVocabularyListDto.create(vocabularyList);
+  }
+
+  public async findByUserAndId(
+    user: User,
+    vocabularyListId: number,
+  ): Promise<VocabularyList> {
+    const vocabularyList = this.vocabularyListRepository
+      .createQueryBuilder('vocabularyList')
+      .where('vocabularyList.id = :id', { id: vocabularyListId })
+      .innerJoin('vocabularyList.category', 'category')
+      .innerJoin('category.user', 'user', 'user.id = :userId', {
+        userId: user.id,
+      })
+      .getOne();
+
+    return vocabularyList;
+  }
+
+  public async deleteById(vocabularyListId: number): Promise<boolean> {
+    const deleteResult = await this.vocabularyListRepository.delete(
+      vocabularyListId,
+    );
+
+    return deleteResult.affected > 0;
   }
 }

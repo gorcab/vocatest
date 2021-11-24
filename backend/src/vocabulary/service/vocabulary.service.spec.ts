@@ -64,6 +64,10 @@ describe('VocabularyService', () => {
       create: jest.fn().mockReturnValueOnce(vocabularyList),
       save: jest.fn(),
       findOne: async () => vocabularyList,
+      delete: async () => ({
+        affected: 1,
+        raw: '',
+      }),
       createQueryBuilder: jest.fn(() => {
         return {
           innerJoinAndSelect: jest.fn().mockReturnThis(),
@@ -258,5 +262,11 @@ describe('VocabularyService', () => {
         },
       ],
     });
+  });
+
+  it('단어장을 삭제하면 삭제 여부를 boolean 값으로 반환한다.', async () => {
+    const result = await service.deleteById(vocabularyList.id);
+
+    expect(result).toBeTruthy();
   });
 });

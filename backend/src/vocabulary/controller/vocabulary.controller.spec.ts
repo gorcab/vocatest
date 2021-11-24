@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
@@ -62,6 +63,7 @@ describe('VocabularyController', () => {
         VocabularyListDto.create(vocabularyList, vocabularies.length),
       findById: async (vocabularyListId: number) =>
         DetailedVocabularyListDto.create(vocabularyList),
+      deleteById: async (vocabularyListId: number) => true,
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -188,5 +190,19 @@ describe('VocabularyController', () => {
         },
       ],
     });
+  });
+
+  it('단어장 삭제에 성공하면 에러를 반환하지 않는다.', async () => {
+    const result = await controller.deleteOne(vocabularyList.id);
+
+    expect(result).toBeUndefined();
+  });
+
+  it('단어장 삭제에 실패하면 BadRequest 에러를 반환한다.', async () => {
+    vocabularyService.deleteById = async () => false;
+
+    await expect(controller.deleteOne(vocabularyList.id)).rejects.toThrow(
+      new BadRequestException('단어장 삭제에 실패했습니다.'),
+    );
   });
 });
