@@ -9,7 +9,7 @@ import {
 import { CreateVocabularyDto } from './CreateVocabulary.dto';
 
 export class CreateVocabularyListDto {
-  @IsInt({ message: '올바르자 않은 카테고리입니다.' })
+  @IsInt({ message: '올바르지 않은 카테고리입니다.' })
   categoryId: number;
 
   @IsString({ message: '단어장 제목은 문자열로 구성되어야 합니다.' })

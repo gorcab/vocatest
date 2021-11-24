@@ -10,9 +10,10 @@ import {
   createVocabularyList,
 } from 'src/common/mocks/utils';
 import { User } from 'src/user/entities/user.entity';
-import { Connection, DeepPartial, Repository } from 'typeorm';
+import { Connection, DeepPartial, QueryRunner, Repository } from 'typeorm';
 import { CreateVocabularyDto } from '../dtos/CreateVocabulary.dto';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
+import { UpdateVocabularyListDto } from '../dtos/UpdateVocabularyList.dto';
 import { Example } from '../entities/Example.entity';
 import { Vocabulary } from '../entities/Vocabulary.entity';
 import { VocabularyList } from '../entities/VocabularyList.entity';
@@ -30,6 +31,7 @@ describe('VocabularyService', () => {
   let category: Category;
   let vocabularies: Array<Vocabulary>;
   let vocabularyList: VocabularyList;
+  let queryRunner: DeepPartial<QueryRunner>;
 
   beforeEach(async () => {
     user = createUser();
@@ -56,8 +58,9 @@ describe('VocabularyService', () => {
       create: jest
         .fn()
         .mockReturnValueOnce(vocabularies[0])
-        .mockReturnValue(vocabularies[1]),
+        .mockReturnValueOnce(vocabularies[1]),
       save: jest.fn(),
+      delete: jest.fn(),
     };
 
     vocabularyListRepository = {
@@ -82,27 +85,29 @@ describe('VocabularyService', () => {
       }),
     };
 
+    queryRunner = {
+      connect: jest.fn(),
+      manager: {
+        getRepository: jest
+          .fn()
+          .mockReturnValueOnce(vocabularyListRepository)
+          .mockReturnValueOnce(vocabularyRepository)
+          .mockReturnValueOnce(exampleRepository)
+          .mockReturnValueOnce(categoryRepository),
+      },
+      startTransaction: jest.fn(),
+      commitTransaction: jest.fn(),
+      rollbackTransaction: jest.fn(),
+      release: jest.fn(),
+    };
+
     categoryService = {
       findById: async () => category,
     };
 
     connection = {
       createQueryRunner: jest.fn().mockImplementation(() => {
-        return {
-          connect: jest.fn(),
-          manager: {
-            getRepository: jest
-              .fn()
-              .mockReturnValueOnce(categoryRepository)
-              .mockReturnValueOnce(exampleRepository)
-              .mockReturnValueOnce(vocabularyRepository)
-              .mockReturnValueOnce(vocabularyListRepository),
-          },
-          startTransaction: jest.fn(),
-          commitTransaction: jest.fn(),
-          rollbackTransaction: jest.fn(),
-          release: jest.fn(),
-        };
+        return queryRunner;
       }),
     };
 
@@ -157,6 +162,8 @@ describe('VocabularyService', () => {
     const result = await service.save(createVocabularyListDto);
 
     // then
+    expect(queryRunner.startTransaction).toBeCalled();
+    expect(queryRunner.commitTransaction).toBeCalled();
     expect(result).toStrictEqual({
       id: expect.any(Number),
       title: vocabularyList.title,
@@ -268,5 +275,48 @@ describe('VocabularyService', () => {
     const result = await service.deleteById(vocabularyList.id);
 
     expect(result).toBeTruthy();
+  });
+
+  it('단어장을 수정하면 수정된 단어장 정보를 반환한다.', async () => {
+    // given
+    const updateVocabularyListDto: UpdateVocabularyListDto = {
+      title: 'updatedVocabularyList',
+      vocabularies: [
+        {
+          english: vocabularyList.vocabularies[0].english,
+          korean: vocabularyList.vocabularies[0].korean,
+        },
+      ],
+    };
+
+    vocabularyRepository.create = jest.fn().mockReturnValueOnce({
+      id: 1,
+      english: updateVocabularyListDto.vocabularies[0].english,
+      korean: updateVocabularyListDto.vocabularies[0].korean,
+    });
+
+    // when
+    const result = await service.update(
+      vocabularyList.id,
+      updateVocabularyListDto,
+    );
+
+    // then
+    expect(result).toStrictEqual({
+      id: vocabularyList.id,
+      title: updateVocabularyListDto.title,
+      category: {
+        id: category.id,
+        name: category.name,
+      },
+      createdAt: vocabularyList.createdAt,
+      vocabularies: [
+        {
+          id: 1,
+          english: updateVocabularyListDto.vocabularies[0].english,
+          korean: updateVocabularyListDto.vocabularies[0].korean,
+        },
+      ],
+    });
   });
 });

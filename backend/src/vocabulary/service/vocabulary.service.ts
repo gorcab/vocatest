@@ -7,6 +7,7 @@ import { User } from 'src/user/entities/user.entity';
 import { Connection, Repository } from 'typeorm';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
 import { DetailedVocabularyListDto } from '../dtos/DetailedVocabularyList.dto';
+import { UpdateVocabularyListDto } from '../dtos/UpdateVocabularyList.dto';
 import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { Example } from '../entities/Example.entity';
 import { Vocabulary } from '../entities/Vocabulary.entity';
@@ -28,11 +29,11 @@ export class VocabularyService {
 
     await queryRunner.connect();
 
-    const categoryRepository = queryRunner.manager.getRepository(Category);
-    const exampleRepository = queryRunner.manager.getRepository(Example);
-    const vocabularyRepository = queryRunner.manager.getRepository(Vocabulary);
     const vocabularyListRepository =
       queryRunner.manager.getRepository(VocabularyList);
+    const vocabularyRepository = queryRunner.manager.getRepository(Vocabulary);
+    const exampleRepository = queryRunner.manager.getRepository(Example);
+    const categoryRepository = queryRunner.manager.getRepository(Category);
 
     await queryRunner.startTransaction();
 
@@ -83,7 +84,6 @@ export class VocabularyService {
       }
 
       await queryRunner.commitTransaction();
-
       return VocabularyListDto.create(
         vocabularyList,
         vocabularyList.vocabularies.length,
@@ -200,5 +200,78 @@ export class VocabularyService {
     );
 
     return deleteResult.affected > 0;
+  }
+
+  public async update(
+    id: number,
+    updateVocabularyListDto: UpdateVocabularyListDto,
+  ): Promise<DetailedVocabularyListDto> {
+    const queryRunner = this.connection.createQueryRunner();
+
+    await queryRunner.connect();
+
+    const vocabularyListRepository =
+      queryRunner.manager.getRepository(VocabularyList);
+    const vocabularyRepository = queryRunner.manager.getRepository(Vocabulary);
+    const exampleRepository = queryRunner.manager.getRepository(Example);
+
+    await queryRunner.startTransaction();
+
+    try {
+      vocabularyRepository.delete({ vocabularyListId: id });
+
+      let vocabularyList = await vocabularyListRepository.findOne(id);
+      vocabularyList.title = updateVocabularyListDto.title;
+      await vocabularyListRepository.save(vocabularyList);
+
+      const vocabularies: Array<Vocabulary> = [];
+      let vocabularyId = 1;
+      for (const {
+        english,
+        korean,
+        examples,
+      } of updateVocabularyListDto.vocabularies) {
+        const vocabulary = vocabularyRepository.create({
+          id: vocabularyId,
+          english,
+          korean,
+          vocabularyList,
+        });
+        await vocabularyRepository.save(vocabulary);
+        vocabularyId++;
+        vocabularies.push(vocabulary);
+        if (examples) {
+          let exampleId = 1;
+          const examplesArray: Array<Example> = [];
+          for (const { sentence, translation } of examples) {
+            const example = exampleRepository.create({
+              id: exampleId,
+              sentence,
+              translation,
+              vocabulary,
+            });
+            await exampleRepository.save(example);
+            exampleId++;
+            examplesArray.push(example);
+          }
+          vocabulary.examples = Promise.resolve(examplesArray);
+        }
+        vocabularyList.vocabularies = vocabularies;
+      }
+      vocabularyList = await vocabularyListRepository.findOne(
+        vocabularyList.id,
+        {
+          relations: ['category', 'vocabularies'],
+        },
+      );
+      await queryRunner.commitTransaction();
+
+      return DetailedVocabularyListDto.create(vocabularyList);
+    } catch (error) {
+      console.error(error);
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

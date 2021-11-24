@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,7 @@ import { User as UserEntity } from 'src/user/entities/user.entity';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
 import { DetailedVocabularyListDto } from '../dtos/DetailedVocabularyList.dto';
 import { GetPaginatedVocabularyListQueryDto } from '../dtos/GetPaginatedVocabularyListQuery.dto';
+import { UpdateVocabularyListDto } from '../dtos/UpdateVocabularyList.dto';
 import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { SameTitleVocabularyListInCategoryGuard } from '../guards/SameTitleVocabularyListInCategory.guard';
 import { UsersVocabularyListGuard } from '../guards/UsersVocabularyList.guard';
@@ -51,6 +53,18 @@ export class VocabularyController {
     @Param('id') vocabularyListId: number,
   ): Promise<DetailedVocabularyListDto> {
     return this.vocabularyService.findById(vocabularyListId);
+  }
+
+  @Put(':id')
+  @UseGuards(UsersVocabularyListGuard)
+  public async updateOne(
+    @Param('id') vocabularyListId: number,
+    @Body() updateVocabularyListDto: UpdateVocabularyListDto,
+  ): Promise<DetailedVocabularyListDto> {
+    return this.vocabularyService.update(
+      vocabularyListId,
+      updateVocabularyListDto,
+    );
   }
 
   @Delete(':id')

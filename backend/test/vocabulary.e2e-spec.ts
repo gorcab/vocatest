@@ -21,10 +21,12 @@ import { VocabularyService } from 'src/vocabulary/service/vocabulary.service';
 import { VocabularyListDto } from 'src/vocabulary/dtos/VocabularyList.dto';
 import {
   createCreateVocabularyDtos,
+  createExample,
   createVocabulary,
   createVocabularyList,
   createVocabularyLists,
 } from 'src/common/mocks/utils';
+import { UpdateVocabularyListDto } from 'src/vocabulary/dtos/UpdateVocabularyList.dto';
 
 describe('VocabularyController (e2e)', () => {
   let app: INestApplication;
@@ -573,6 +575,192 @@ describe('VocabularyController (e2e)', () => {
       return await agent
         .delete(`/vocabularies/${anotherResult.id}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .expect(401);
+    });
+  });
+
+  describe('/vocabularies/:vocabularyListId (PUT)', () => {
+    it('업데이트된 단어장 정보를 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      // user
+      const user = await userService.save(createUserServiceDto);
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+      const vocaList = createVocabularyList(category, [
+        createVocabulary(),
+        createVocabulary([createExample(), createExample()]),
+      ]);
+      const examples = await vocaList.vocabularies[1].examples;
+      const createVocabularyListDto: CreateVocabularyListDto = {
+        categoryId: category.id,
+        title: 'vocaList1',
+        vocabularies: [
+          {
+            english: vocaList.vocabularies[0].english,
+            korean: vocaList.vocabularies[0].korean,
+          },
+          {
+            english: vocaList.vocabularies[1].english,
+            korean: vocaList.vocabularies[1].korean,
+            examples: [
+              {
+                sentence: examples[0].sentence,
+                translation: examples[0].translation,
+              },
+              {
+                sentence: examples[1].sentence,
+                translation: examples[1].translation,
+              },
+            ],
+          },
+        ],
+      };
+      const vocabularyList = await vocabularyService.save(
+        createVocabularyListDto,
+      );
+
+      // get access token
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      const updateVocabularyListDto: UpdateVocabularyListDto = {
+        title: createVocabularyListDto.title,
+        vocabularies: createVocabularyListDto.vocabularies,
+      };
+      updateVocabularyListDto.title = 'updatedVocaList1';
+      updateVocabularyListDto.vocabularies[1].english = 'update';
+      updateVocabularyListDto.vocabularies[1].korean = '갱신하다';
+      updateVocabularyListDto.vocabularies[1].examples = [
+        {
+          sentence: 'I need to update the file.',
+          translation: '파일을 새로 갱신할 필요가 있겠어요.',
+        },
+      ];
+
+      const response = await agent
+        .put(`/vocabularies/${vocabularyList.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send(updateVocabularyListDto)
+        .expect(200);
+
+      expect(response.body).toStrictEqual({
+        id: vocabularyList.id,
+        title: updateVocabularyListDto.title,
+        category: {
+          id: category.id,
+          name: category.name,
+        },
+        createdAt: vocabularyList.createdAt.toISOString(),
+        vocabularies: [
+          {
+            id: expect.any(Number),
+            english: updateVocabularyListDto.vocabularies[0].english,
+            korean: updateVocabularyListDto.vocabularies[0].korean,
+          },
+          {
+            id: expect.any(Number),
+            english: updateVocabularyListDto.vocabularies[1].english,
+            korean: updateVocabularyListDto.vocabularies[1].korean,
+            examples: [
+              {
+                id: expect.any(Number),
+                sentence:
+                  updateVocabularyListDto.vocabularies[1].examples[0].sentence,
+                translation:
+                  updateVocabularyListDto.vocabularies[1].examples[0]
+                    .translation,
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('해당 사용자의 단어장이 아니면 수정을 할 수 없고 401 에러를 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      // user
+      const user = await userService.save(createUserServiceDto);
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+      const vocaList = createVocabularyList(category, [createVocabulary()]);
+      const createVocabularyListDto: CreateVocabularyListDto = {
+        categoryId: category.id,
+        title: 'vocaList1',
+        vocabularies: [
+          {
+            english: vocaList.vocabularies[0].english,
+            korean: vocaList.vocabularies[0].korean,
+          },
+        ],
+      };
+      const result = await vocabularyService.save(createVocabularyListDto);
+
+      // another user
+      const createAnotherServiceDto: CreateUserServiceDto = {
+        email: 'anotherTest1234@gmail.com',
+        password: 'anothertest1234',
+        nickname: 'anotherTester',
+      };
+      const anotherUser = await userService.save(createAnotherServiceDto);
+      const anotherCreateCategoryDto: CreateCategoryDto = {
+        name: 'teps',
+      };
+      const anotherCategory = await categoryService.save(
+        anotherUser,
+        anotherCreateCategoryDto,
+      );
+      const anotherVocaList = createVocabularyList(anotherCategory, [
+        createVocabulary(),
+      ]);
+      const anotherCreateVocabularyListDto: CreateVocabularyListDto = {
+        categoryId: anotherCategory.id,
+        title: 'vocaList2',
+        vocabularies: [
+          {
+            english: anotherVocaList.vocabularies[0].english,
+            korean: anotherVocaList.vocabularies[0].korean,
+          },
+        ],
+      };
+      const anotherResult = await vocabularyService.save(
+        anotherCreateVocabularyListDto,
+      );
+
+      const updateVocabularyListDto: UpdateVocabularyListDto = {
+        title: createVocabularyListDto.title,
+        vocabularies: createVocabularyListDto.vocabularies,
+      };
+      updateVocabularyListDto.title = 'updatedVocabularyList';
+
+      // get access token
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      // when, then
+      return await agent
+        .put(`/vocabularies/${anotherResult.id}`)
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .send(updateVocabularyListDto)
         .expect(401);
     });
   });

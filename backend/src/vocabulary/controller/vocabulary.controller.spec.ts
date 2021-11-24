@@ -13,6 +13,7 @@ import {
 import { User } from 'src/user/entities/user.entity';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
 import { DetailedVocabularyListDto } from '../dtos/DetailedVocabularyList.dto';
+import { UpdateVocabularyListDto } from '../dtos/UpdateVocabularyList.dto';
 import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { Vocabulary } from '../entities/Vocabulary.entity';
 import { VocabularyList } from '../entities/VocabularyList.entity';
@@ -64,6 +65,23 @@ describe('VocabularyController', () => {
       findById: async (vocabularyListId: number) =>
         DetailedVocabularyListDto.create(vocabularyList),
       deleteById: async (vocabularyListId: number) => true,
+      update: async (
+        vocabularyListId: number,
+        updateVocabularyListDto: UpdateVocabularyListDto,
+      ) => {
+        const newVocabularyList: VocabularyList = { ...vocabularyList };
+        newVocabularyList.title = updateVocabularyListDto.title;
+        newVocabularyList.vocabularies =
+          updateVocabularyListDto.vocabularies.map((vocabulary, index) => ({
+            id: index + 1,
+            english: vocabulary.english,
+            korean: vocabulary.korean,
+            vocabularyListId: vocabularyList.id,
+            examples: undefined,
+            vocabularyList: vocabularyList,
+          }));
+        return DetailedVocabularyListDto.create(newVocabularyList);
+      },
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -187,6 +205,40 @@ describe('VocabularyController', () => {
           id: vocabularies[1].id,
           english: vocabularies[1].english,
           korean: vocabularies[1].korean,
+        },
+      ],
+    });
+  });
+
+  it('단어장을 수정하면 수정된 단어장 정보를 반환한다.', async () => {
+    const updateVocabularyListDto: UpdateVocabularyListDto = {
+      title: 'updatedVocabularyList',
+      vocabularies: vocabularyList.vocabularies.map((vocabulary) => ({
+        english: vocabulary.english,
+        korean: vocabulary.korean,
+      })),
+    };
+    const updatedVocabularyList: DetailedVocabularyListDto =
+      await controller.updateOne(vocabularyList.id, updateVocabularyListDto);
+
+    expect(updatedVocabularyList).toStrictEqual({
+      id: vocabularyList.id,
+      title: updateVocabularyListDto.title,
+      category: {
+        id: category.id,
+        name: category.name,
+      },
+      createdAt: vocabularyList.createdAt,
+      vocabularies: [
+        {
+          id: expect.any(Number),
+          english: updateVocabularyListDto.vocabularies[0].english,
+          korean: updateVocabularyListDto.vocabularies[0].korean,
+        },
+        {
+          id: expect.any(Number),
+          english: updateVocabularyListDto.vocabularies[1].english,
+          korean: updateVocabularyListDto.vocabularies[1].korean,
         },
       ],
     });
