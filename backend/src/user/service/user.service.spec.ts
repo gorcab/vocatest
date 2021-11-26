@@ -26,6 +26,7 @@ describe('UserService', () => {
       create: () => user,
       save: async () => user,
       update: () => Promise.resolve(),
+      delete: jest.fn(),
     };
 
     mockRedisService = {
@@ -195,5 +196,11 @@ describe('UserService', () => {
       email: user.email,
       nickname: updateUserDto.newNickname,
     });
+  });
+
+  it('회원탈퇴를 하면 user repository의 delete 메소드를 호출한다.', async () => {
+    await service.delete(user);
+
+    expect(mockUserRepository.delete).toBeCalled();
   });
 });

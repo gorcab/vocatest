@@ -7,7 +7,7 @@ import { SendEmailFailedException } from '../exceptions/SendEmailFailed.exceptio
 export class EmailService {
   constructor(private readonly mailerService: MailerService) {}
 
-  public async sndSignUpAuthCode({
+  public async sendSignUpAuthCode({
     email,
     signUpAuthCode,
   }: SendSignUpAuthCodeDto) {

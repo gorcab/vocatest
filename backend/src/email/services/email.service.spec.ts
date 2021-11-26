@@ -40,7 +40,7 @@ describe('EmailService', () => {
     };
 
     await expect(
-      service.sndSignUpAuthCode(sendSignUpAuthCodeDto),
+      service.sendSignUpAuthCode(sendSignUpAuthCodeDto),
     ).rejects.toThrow(new SendEmailFailedException());
   });
 
@@ -50,7 +50,7 @@ describe('EmailService', () => {
       signUpAuthCode: 123456,
     };
 
-    const result = await service.sndSignUpAuthCode(sendSignUpAuthCodeDto);
+    const result = await service.sendSignUpAuthCode(sendSignUpAuthCodeDto);
 
     expect(result).toBeUndefined();
   });

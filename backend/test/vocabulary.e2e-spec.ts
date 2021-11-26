@@ -44,7 +44,7 @@ describe('VocabularyController (e2e)', () => {
 
   beforeEach(async () => {
     mockEmailService = {
-      sndSignUpAuthCode: (sendSignUpAuthCodeDto) => Promise.resolve(),
+      sendSignUpAuthCode: (sendSignUpAuthCodeDto) => Promise.resolve(),
     };
 
     module = await Test.createTestingModule({

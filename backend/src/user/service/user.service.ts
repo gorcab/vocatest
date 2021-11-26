@@ -115,6 +115,10 @@ export class UserService {
     return UpdatedUserResponseDto.create(updatedUser);
   }
 
+  public async delete(user: User): Promise<void> {
+    await this.userRepository.delete(user.id);
+  }
+
   private async encryptPassword(password: string): Promise<string> {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);

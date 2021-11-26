@@ -1,6 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -13,12 +16,13 @@ import { AuthService } from 'src/auth/service/auth.service';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
 import { EmailService } from 'src/email/services/email.service';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
+import { DeleteUserDto } from '../dtos/DeleteUser.dto';
 import { SignUpAuthRequestDto } from '../dtos/SignUpAuthRequest.dto';
 import { SignUpAuthResponseDto } from '../dtos/SignUpAuthResponse.dto';
 import { UpdateUserDto } from '../dtos/UpdateUser.dto';
 import { UserResponseDto } from '../dtos/UserResponse.dto';
 import { AvailableEmailGuard } from '../guards/AvailableEmail.guard';
-import { SameUserIdInTokenAndParamGuard } from '../guards/SameUserIdInTokenAndBody.guard';
+import { SameUserIdInTokenAndParamGuard } from '../guards/SameUserIdInTokenAndParam.guard';
 import { ValidSignUpAuthCodeGuard } from '../guards/ValidSignUpAuthCode.guard';
 import { UserService } from '../service/user.service';
 
@@ -41,7 +45,7 @@ export class UserController {
         await this.userService.saveSignUpAuthCode(signUpAuthRequestDto.email);
 
       // 2. 인증번호를 이메일로 전송
-      await this.emailService.sndSignUpAuthCode({
+      await this.emailService.sendSignUpAuthCode({
         email: saveSignUpAuthCodeResultDto.email,
         signUpAuthCode: saveSignUpAuthCodeResultDto.signUpAuthCode,
       });
@@ -100,5 +104,24 @@ export class UserController {
     }
 
     return this.userService.update(user, updateUserDto);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(SameUserIdInTokenAndParamGuard)
+  @UseGuards(JwtAuthGuard)
+  public async delete(
+    @Param('id') userId: number,
+    @Body() deleteUserDto: DeleteUserDto,
+  ) {
+    const user = await this.userService.findOneByEmailAndPassword(
+      deleteUserDto.email,
+      deleteUserDto.password,
+    );
+    if (!user) {
+      throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
+    }
+
+    await this.userService.delete(user);
   }
 }

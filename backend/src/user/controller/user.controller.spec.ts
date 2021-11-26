@@ -20,6 +20,7 @@ import { AuthService } from 'src/auth/service/auth.service';
 import { createUser } from 'src/common/mocks/utils';
 import { UpdatedUserResponseDto } from '../dtos/UpdatedUserResponse.dto';
 import { UpdateUserDto } from '../dtos/UpdateUser.dto';
+import { DeleteUserDto } from '../dtos/DeleteUser.dto';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -61,6 +62,7 @@ describe('UserController', () => {
 
         return UpdatedUserResponseDto.create(user);
       },
+      delete: (user: User) => Promise.resolve(),
     };
 
     mockAuthService = {
@@ -69,7 +71,7 @@ describe('UserController', () => {
     };
 
     mockEmailService = {
-      sndSignUpAuthCode: (sendSignUpAuthCodeDto) => Promise.resolve(),
+      sendSignUpAuthCode: (sendSignUpAuthCodeDto) => Promise.resolve(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -110,7 +112,7 @@ describe('UserController', () => {
   });
 
   it('회원가입 인증 이메일 전송에 실패하면 ServiceUnavailableException이 발생한다.', async () => {
-    mockEmailService.sndSignUpAuthCode = (sendSignUpAuthCodeDto) => {
+    mockEmailService.sendSignUpAuthCode = (sendSignUpAuthCodeDto) => {
       throw new SendEmailFailedException();
     };
     const signUpAuthRequestDto: SignUpAuthRequestDto = {
@@ -188,6 +190,28 @@ describe('UserController', () => {
     };
 
     await expect(controller.update(user.id, updateUserDto)).rejects.toThrow(
+      new UnauthorizedException('비밀번호가 올바르지 않습니다.'),
+    );
+  });
+
+  it('회원탈퇴에 성공하면 에러가 발생하지 않는다.', async () => {
+    const deleteUserDto: DeleteUserDto = {
+      email: user.email,
+      password: user.password,
+    };
+    const result = await controller.delete(user.id, deleteUserDto);
+
+    expect(result).toBeUndefined();
+  });
+
+  it('회원탈퇴에 할 때 비밀번호가 올바르지 않으면 UnauthorizedException이 발생한다.', async () => {
+    mockUserService.findOneByEmailAndPassword = async () => null;
+    const deleteUserDto: DeleteUserDto = {
+      email: user.email,
+      password: user.password,
+    };
+
+    await expect(controller.delete(user.id, deleteUserDto)).rejects.toThrow(
       new UnauthorizedException('비밀번호가 올바르지 않습니다.'),
     );
   });
