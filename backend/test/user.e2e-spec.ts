@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CACHE_MANAGER, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { EmailService } from 'src/email/services/email.service';
-import { Connection, getConnection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { AppModule } from 'src/app.module';
 import { User } from 'src/user/entities/user.entity';
 import { Cache } from 'cache-manager';
@@ -11,13 +11,16 @@ import { SignUpAuthRequestDto } from 'src/user/dtos/SignUpAuthRequest.dto';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
 import { SIGN_UP_PREFIX, TTL } from 'src/user/constant';
 import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
+import { UserService } from 'src/user/service/user.service';
+import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
+import { UpdateUserDto } from 'src/user/dtos/UpdateUser.dto';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
   let mockEmailService: Partial<EmailService>;
   let redisStore: Cache;
   let userRepository: Repository<User>;
-  let connection: Connection;
+  let userService: UserService;
   let module: TestingModule;
 
   beforeEach(async () => {
@@ -37,7 +40,7 @@ describe('UserController (e2e)', () => {
 
     redisStore = module.get<Cache>(CACHE_MANAGER);
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    // connection = module.get<Connection>(Connection);
+    userService = module.get<UserService>(UserService);
     await app.init();
   });
 
@@ -297,6 +300,154 @@ describe('UserController (e2e)', () => {
       });
       expect(typeof accessToken).toBe('string');
       expect(typeof id).toBe('number');
+    });
+  });
+
+  describe('/users (PATCH)', () => {
+    it('닉네임을 변경하면 변경된 사용자 정보를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester1234',
+      };
+      const user = await userService.save(createUserServiceDto);
+      const updateUserDto: UpdateUserDto = {
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+        newNickname: 'newTester',
+      };
+
+      const accessToken = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      const response = await agent
+        .patch(`/users/${user.id}`)
+        .auth(accessToken.body.accessToken, { type: 'bearer' })
+        .send(updateUserDto)
+        .expect(200);
+
+      expect(response.body).toStrictEqual({
+        id: user.id,
+        email: user.email,
+        nickname: updateUserDto.newNickname,
+      });
+    });
+
+    it('비밀번호를 변경하면 새로운 비밀번호로 로그인할 수 있다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester1234',
+      };
+      const user = await userService.save(createUserServiceDto);
+      const updateUserDto: UpdateUserDto = {
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+        newPassword: 'newtest1234',
+        newNickname: 'newTester',
+      };
+
+      const accessToken = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      const response = await agent
+        .patch(`/users/${user.id}`)
+        .auth(accessToken.body.accessToken, { type: 'bearer' })
+        .send(updateUserDto)
+        .expect(200);
+
+      const newAccessToken = await agent.post('/auth/login').send({
+        email: updateUserDto.email,
+        password: updateUserDto.newPassword,
+      });
+
+      expect(newAccessToken.body.accessToken).toStrictEqual(expect.any(String));
+    });
+
+    it('비밀번호가 틀리면 401 에러를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester1234',
+      };
+      const user = await userService.save(createUserServiceDto);
+      const updateUserDto: UpdateUserDto = {
+        email: createUserServiceDto.email,
+        password: 'wrongpwd',
+        newPassword: 'newtest1234',
+        newNickname: 'newTester',
+      };
+
+      const accessToken = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      return agent
+        .patch(`/users/${user.id}`)
+        .auth(accessToken.body.accessToken, { type: 'bearer' })
+        .send(updateUserDto)
+        .expect(401);
+    });
+
+    it('다른 회원의 정보를 수정하려고 하면 401 에러를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester1234',
+      };
+      const user = await userService.save(createUserServiceDto);
+      const anotherCreateUserServiceDto: CreateUserServiceDto = {
+        email: 'another@gmail.com',
+        password: 'another123',
+        nickname: 'another',
+      };
+      const anotherUser = await userService.save(anotherCreateUserServiceDto);
+
+      const updateUserDto: UpdateUserDto = {
+        email: anotherCreateUserServiceDto.email,
+        password: anotherCreateUserServiceDto.password,
+        newPassword: 'newtest1234',
+        newNickname: 'newTester',
+      };
+
+      const accessToken = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      return agent
+        .patch(`/users/${anotherUser.id}`)
+        .auth(accessToken.body.accessToken, { type: 'bearer' })
+        .send(updateUserDto)
+        .expect(401);
+    });
+
+    it('로그인하지 않은 상태에서 회원정보를 수정하려고 하면 401 에러를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester1234',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const updateUserDto: UpdateUserDto = {
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+        newPassword: 'newtest1234',
+        newNickname: 'newTester',
+      };
+
+      return agent.patch(`/users/${user.id}`).send(updateUserDto).expect(401);
     });
   });
 });

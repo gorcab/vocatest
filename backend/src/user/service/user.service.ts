@@ -7,6 +7,8 @@ import { SIGN_UP_PREFIX, TTL } from '../constant';
 import { SaveSignUpAuthCodeResultDto } from '../dtos/SaveSignUpAuthCodeResult.dto';
 import { User } from '../entities/user.entity';
 import { CreateUserServiceDto } from '../dtos/CreateUserService.dto';
+import { UpdateUserDto } from '../dtos/UpdateUser.dto';
+import { UpdatedUserResponseDto } from '../dtos/UpdatedUserResponse.dto';
 
 @Injectable()
 export class UserService {
@@ -97,6 +99,20 @@ export class UserService {
     }
 
     return user;
+  }
+
+  public async update(
+    user: User,
+    { newNickname, newPassword }: UpdateUserDto,
+  ): Promise<UpdatedUserResponseDto> {
+    const partialUser: Partial<User> = {
+      ...(newNickname && { nickname: newNickname }),
+      ...(newPassword && { password: await this.encryptPassword(newPassword) }),
+    };
+
+    await this.userRepository.update(user.id, partialUser);
+    const updatedUser = await this.userRepository.findOne(user.id);
+    return UpdatedUserResponseDto.create(updatedUser);
   }
 
   private async encryptPassword(password: string): Promise<string> {

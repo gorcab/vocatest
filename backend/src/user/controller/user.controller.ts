@@ -1,18 +1,24 @@
 import {
   Body,
   Controller,
+  Param,
+  Patch,
   Post,
   ServiceUnavailableException,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthService } from 'src/auth/service/auth.service';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
 import { EmailService } from 'src/email/services/email.service';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
 import { SignUpAuthRequestDto } from '../dtos/SignUpAuthRequest.dto';
 import { SignUpAuthResponseDto } from '../dtos/SignUpAuthResponse.dto';
+import { UpdateUserDto } from '../dtos/UpdateUser.dto';
 import { UserResponseDto } from '../dtos/UserResponse.dto';
 import { AvailableEmailGuard } from '../guards/AvailableEmail.guard';
+import { SameUserIdInTokenAndParamGuard } from '../guards/SameUserIdInTokenAndBody.guard';
 import { ValidSignUpAuthCodeGuard } from '../guards/ValidSignUpAuthCode.guard';
 import { UserService } from '../service/user.service';
 
@@ -76,5 +82,23 @@ export class UserController {
     };
 
     return userResponseDto;
+  }
+
+  @Patch(':id')
+  @UseGuards(SameUserIdInTokenAndParamGuard)
+  @UseGuards(JwtAuthGuard)
+  public async update(
+    @Param('id') userId: number,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    const user = await this.userService.findOneByEmailAndPassword(
+      updateUserDto.email,
+      updateUserDto.password,
+    );
+    if (!user) {
+      throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
+    }
+
+    return this.userService.update(user, updateUserDto);
   }
 }

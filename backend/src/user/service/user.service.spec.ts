@@ -2,12 +2,14 @@ import { CACHE_MANAGER } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Connection, DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { TTL } from '../constant';
 import { User } from '../entities/user.entity';
 import { UserService } from './user.service';
 import { createUser } from 'src/common/mocks/utils';
+import { UpdateUserDto } from '../dtos/UpdateUser.dto';
+import { UpdatedUserResponseDto } from '../dtos/UpdatedUserResponse.dto';
 
 describe('UserService', () => {
   let service: UserService;
@@ -23,6 +25,7 @@ describe('UserService', () => {
       findOne: () => Promise.resolve(user),
       create: () => user,
       save: async () => user,
+      update: () => Promise.resolve(),
     };
 
     mockRedisService = {
@@ -159,5 +162,38 @@ describe('UserService', () => {
     );
 
     expect(result).toBeNull();
+  });
+
+  it('회원정보를 업데이트하면 UpdatedUserResponseDto를 반환한다.', async () => {
+    // given
+    const encryptPasswordSpy = jest
+      .spyOn(UserService.prototype as any, 'encryptPassword')
+      .mockImplementation(() => Promise.resolve(user.password));
+
+    const updateUserDto: UpdateUserDto = {
+      email: user.email,
+      password: user.password,
+      newNickname: 'newnickname',
+      newPassword: 'newpwd',
+    };
+    mockUserRepository.findOne = async () => {
+      const updatedUser = { ...user };
+      updatedUser.nickname = updateUserDto.newNickname;
+      updatedUser.password = updateUserDto.newPassword;
+      return updatedUser;
+    };
+
+    //when
+    const updatedUserResponseDto: UpdatedUserResponseDto = await service.update(
+      user,
+      updateUserDto,
+    );
+
+    // then
+    expect(updatedUserResponseDto).toStrictEqual({
+      id: user.id,
+      email: user.email,
+      nickname: updateUserDto.newNickname,
+    });
   });
 });

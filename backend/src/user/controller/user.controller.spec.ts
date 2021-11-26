@@ -1,11 +1,15 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Cache } from 'cache-manager';
-import { CACHE_MANAGER, ServiceUnavailableException } from '@nestjs/common';
+import {
+  CACHE_MANAGER,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
 import { EmailService } from 'src/email/services/email.service';
-import { Connection, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { UserController } from './user.controller';
 import { SignUpAuthRequestDto } from '../dtos/SignUpAuthRequest.dto';
@@ -14,6 +18,8 @@ import { TTL } from '../constant';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
 import { AuthService } from 'src/auth/service/auth.service';
 import { createUser } from 'src/common/mocks/utils';
+import { UpdatedUserResponseDto } from '../dtos/UpdatedUserResponse.dto';
+import { UpdateUserDto } from '../dtos/UpdateUser.dto';
 
 describe('UserController', () => {
   let controller: UserController;
@@ -47,7 +53,14 @@ describe('UserController', () => {
         signUpAuthCode,
         ttl: TTL,
       }),
+      findOneByEmailAndPassword: async () => user,
       save: async () => user,
+      update: async (user: User, updateUserDto: UpdateUserDto) => {
+        user.nickname = updateUserDto.newNickname;
+        user.password = updateUserDto.newPassword;
+
+        return UpdatedUserResponseDto.create(user);
+      },
     };
 
     mockAuthService = {
@@ -144,5 +157,38 @@ describe('UserController', () => {
       nickname: user.nickname,
       accessToken,
     });
+  });
+
+  it('회원정보 수정에 성공하면 UpdatedUserResonseDto를 반환한다.', async () => {
+    const updateUserDto: UpdateUserDto = {
+      email: user.email,
+      password: user.password,
+      newNickname: 'newnickname',
+      newPassword: 'newpwd',
+    };
+
+    const updatedUserDto = await controller.update(user.id, updateUserDto);
+
+    expect(updatedUserDto).toStrictEqual({
+      id: user.id,
+      email: updateUserDto.email,
+      nickname: updateUserDto.newNickname,
+    });
+  });
+
+  it('회원정보 수정 시, 비밀번호가 올바르지 않으면 UnauthorizedException이 발생한다.', async () => {
+    mockUserService.findOneByEmailAndPassword = async () =>
+      Promise.resolve(null);
+
+    const updateUserDto: UpdateUserDto = {
+      email: user.email,
+      password: user.password,
+      newNickname: 'newnickname',
+      newPassword: 'newpwd',
+    };
+
+    await expect(controller.update(user.id, updateUserDto)).rejects.toThrow(
+      new UnauthorizedException('비밀번호가 올바르지 않습니다.'),
+    );
   });
 });
