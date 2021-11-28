@@ -51,7 +51,7 @@ describe('UserController (e2e)', () => {
     await app.close(); // automatically close connection.
   });
 
-  describe('/email-authentication (POST)', () => {
+  describe('/users/email-authentication (POST)', () => {
     it('이메일 형식이 올바르지 않으면 400 에러를 반환한다.', async () => {
       // given
       const signUpAuthRequestDto: SignUpAuthRequestDto = {

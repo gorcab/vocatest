@@ -1,5 +1,7 @@
+import { CACHE_MANAGER } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Cache } from 'cache-manager';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/service/user.service';
 import { JwtPayloadDto } from '../dtos/jwt-payload.dto';
@@ -8,6 +10,7 @@ import { AuthService } from './auth.service';
 describe('AuthService', () => {
   let service: AuthService;
   let userService: Partial<UserService>;
+  let redisService: Partial<Cache>;
   let jwtService: Partial<JwtService>;
   let user: User;
 
@@ -25,6 +28,11 @@ describe('AuthService', () => {
       findOneByEmailAndPassword: () => Promise.resolve(user),
     };
 
+    redisService = {
+      get: jest.fn(),
+      set: jest.fn(),
+    };
+
     jwtService = {
       sign: (payload: JwtPayloadDto) => 'accesstoken',
     };
@@ -39,6 +47,10 @@ describe('AuthService', () => {
         {
           provide: JwtService,
           useValue: jwtService,
+        },
+        {
+          provide: CACHE_MANAGER,
+          useValue: redisService,
         },
       ],
     }).compile();
@@ -74,5 +86,20 @@ describe('AuthService', () => {
 
     expect(signSpy).toHaveBeenCalled();
     expect(result).toBe(accessToken);
+  });
+
+  it('email과 생성된 인증 코드를 통해 SaveResetPasswordAuthCodeDto를 반환한다.', async () => {
+    const resetPasswordAuthCode = 123456;
+    jest
+      .spyOn(AuthService.prototype as any, 'createAuthCode')
+      .mockImplementation(() => resetPasswordAuthCode);
+
+    const result = await service.saveResetPasswordAuthCode(user.email);
+
+    expect(redisService.set).toBeCalled();
+    expect(result).toStrictEqual({
+      email: user.email,
+      resetPasswordAuthCode,
+    });
   });
 });

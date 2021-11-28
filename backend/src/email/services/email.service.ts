@@ -23,4 +23,21 @@ export class EmailService {
       throw new SendEmailFailedException();
     }
   }
+
+  public async sendResetPasswordAuthCode(
+    email: string,
+    resetPasswordAuthCode: number,
+  ) {
+    try {
+      await this.mailerService.sendMail({
+        from: `"Vocatest Auth" <${process.env.SENDER_EMAIL}>`,
+        to: email,
+        subject: 'Vocatest 비밀번호 재설정 인증번호 안내 메일',
+        html: `<p>다음 인증번호를 입력하여 비밀번호 재설정을 진행해주세요.</p>
+        <p>인증번호: <strong>${resetPasswordAuthCode}</strong></p>`,
+      });
+    } catch (error) {
+      throw new SendEmailFailedException();
+    }
+  }
 }

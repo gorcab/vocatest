@@ -6,10 +6,13 @@ import { AuthService } from './service/auth.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { AuthController } from './controller/auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { EmailModule } from 'src/email/email.module';
+import { RegisteredEmailGuard } from './guards/RegisteredEmail.guard';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
+    EmailModule,
     PassportModule,
     JwtModule.registerAsync({
       useFactory: () => {
@@ -23,7 +26,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, RegisteredEmailGuard],
   exports: [AuthService],
 })
 export class AuthModule {}
