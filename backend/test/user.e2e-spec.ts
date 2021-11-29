@@ -7,8 +7,6 @@ import { AppModule } from 'src/app.module';
 import { User } from 'src/user/entities/user.entity';
 import { Cache } from 'cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { SignUpAuthRequestDto } from 'src/user/dtos/SignUpAuthRequest.dto';
-import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
 import { SIGN_UP_PREFIX, TTL } from 'src/user/constant';
 import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
 import { UserService } from 'src/user/service/user.service';
@@ -26,7 +24,8 @@ describe('UserController (e2e)', () => {
 
   beforeEach(async () => {
     mockEmailService = {
-      sendSignUpAuthCode: (sendSignUpAuthCodeDto) => Promise.resolve(),
+      sendSignUpAuthCode: jest.fn(),
+      sendResetPasswordAuthCode: jest.fn(),
     };
 
     module = await Test.createTestingModule({
@@ -49,89 +48,6 @@ describe('UserController (e2e)', () => {
     await redisStore.reset();
     await userRepository.delete({});
     await app.close(); // automatically close connection.
-  });
-
-  describe('/users/email-authentication (POST)', () => {
-    it('이메일 형식이 올바르지 않으면 400 에러를 반환한다.', async () => {
-      // given
-      const signUpAuthRequestDto: SignUpAuthRequestDto = {
-        email: 'tester1234@',
-      };
-
-      // when
-      const response = await request(app.getHttpServer())
-        .post('/users/email-authentication')
-        .send(signUpAuthRequestDto)
-        .expect(400);
-
-      // then
-      expect(response.body.message).toStrictEqual([
-        '이메일은 이메일 형식이어야 합니다.',
-      ]);
-    });
-
-    it('이미 가입된 이메일이면 400 에러를 반환한다.', async () => {
-      // given
-      const user = await userRepository.create({
-        email: 'tester1234@gmail.com',
-        password: 'test1234',
-        nickname: 'tester',
-        createdAt: new Date(),
-      });
-      await userRepository.save(user);
-      const signUpAuthRequestDto: SignUpAuthRequestDto = {
-        email: user.email,
-      };
-
-      // when
-      const response = await request(app.getHttpServer())
-        .post('/users/email-authentication')
-        .send(signUpAuthRequestDto)
-        .expect(400);
-
-      // then
-      expect(response.body.message).toStrictEqual(
-        '이미 존재하는 이메일입니다.',
-      );
-    });
-
-    it('회원가입 인증번호 이메일 전송에 실패하면 503 에러를 반환한다.', async () => {
-      // given
-      const signUpAuthRequestDto: SignUpAuthRequestDto = {
-        email: 'tester1234@gmail.com',
-      };
-      mockEmailService.sendSignUpAuthCode = (SendSignUpAuthCodeDto) => {
-        throw new SendEmailFailedException();
-      };
-
-      // when
-      const response = await request(app.getHttpServer())
-        .post('/users/email-authentication')
-        .send(signUpAuthRequestDto)
-        .expect(503);
-
-      // then
-      expect(response.body.message).toBe(
-        '이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.',
-      );
-    });
-
-    it('회원가입 인증번호 이메일 전송에 성공하면 email과 ttl을 응답으로 반환한다.', async () => {
-      // given
-      const signUpAuthRequestDto: SignUpAuthRequestDto = {
-        email: 'tester1234@gmail.com',
-      };
-
-      // when, then
-      return request(app.getHttpServer())
-        .post('/users/email-authentication')
-        .send(signUpAuthRequestDto)
-        .expect(201)
-        .expect({
-          email: signUpAuthRequestDto.email,
-          ttl: TTL,
-        });
-    });
   });
 
   describe('/users (POST)', () => {

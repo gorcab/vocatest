@@ -7,12 +7,10 @@ import {
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
 import { EmailService } from 'src/email/services/email.service';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { UserController } from './user.controller';
-import { SignUpAuthRequestDto } from '../dtos/SignUpAuthRequest.dto';
 import { UserService } from '../service/user.service';
 import { TTL } from '../constant';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
@@ -71,7 +69,8 @@ describe('UserController', () => {
     };
 
     mockEmailService = {
-      sendSignUpAuthCode: (sendSignUpAuthCodeDto) => Promise.resolve(),
+      sendSignUpAuthCode: jest.fn(),
+      sendResetPasswordAuthCode: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -109,38 +108,6 @@ describe('UserController', () => {
 
   it('정의되어야 한다.', () => {
     expect(controller).toBeDefined();
-  });
-
-  it('회원가입 인증 이메일 전송에 실패하면 ServiceUnavailableException이 발생한다.', async () => {
-    mockEmailService.sendSignUpAuthCode = (sendSignUpAuthCodeDto) => {
-      throw new SendEmailFailedException();
-    };
-    const signUpAuthRequestDto: SignUpAuthRequestDto = {
-      email: user.email,
-    };
-
-    await expect(
-      controller.sendSignUpAuthenticationEmail(signUpAuthRequestDto),
-    ).rejects.toThrow(
-      new ServiceUnavailableException(
-        '이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.',
-      ),
-    );
-  });
-
-  it('회원가입 인증 이메일 전송에 성공하면 SignUpAuthResponseDto를 반환한다.', async () => {
-    const signUpAuthRequestDto: SignUpAuthRequestDto = {
-      email: user.email,
-    };
-
-    const result = await controller.sendSignUpAuthenticationEmail(
-      signUpAuthRequestDto,
-    );
-
-    expect(result).toStrictEqual({
-      email: user.email,
-      ttl: TTL,
-    });
   });
 
   it('회원가입에 성공하면 UserResponseDto를 반환한다.', async () => {

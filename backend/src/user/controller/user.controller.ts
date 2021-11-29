@@ -34,39 +34,6 @@ export class UserController {
     private readonly authService: AuthService,
   ) {}
 
-  @Post('email-authentication')
-  @UseGuards(AvailableEmailGuard)
-  async sendSignUpAuthenticationEmail(
-    @Body() signUpAuthRequestDto: SignUpAuthRequestDto,
-  ): Promise<SignUpAuthResponseDto> {
-    try {
-      // 1. Redis Store에 인증 번호를 저장한다.
-      const saveSignUpAuthCodeResultDto =
-        await this.userService.saveSignUpAuthCode(signUpAuthRequestDto.email);
-
-      // 2. 인증번호를 이메일로 전송
-      await this.emailService.sendSignUpAuthCode({
-        email: saveSignUpAuthCodeResultDto.email,
-        signUpAuthCode: saveSignUpAuthCodeResultDto.signUpAuthCode,
-      });
-
-      const signUpAuthResponseDto: SignUpAuthResponseDto = {
-        email: saveSignUpAuthCodeResultDto.email,
-        ttl: saveSignUpAuthCodeResultDto.ttl,
-      };
-
-      return signUpAuthResponseDto;
-    } catch (error) {
-      if (error instanceof SendEmailFailedException) {
-        throw new ServiceUnavailableException(
-          '이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.',
-        );
-      }
-
-      throw error;
-    }
-  }
-
   @Post()
   @UseGuards(ValidSignUpAuthCodeGuard)
   public async signUp(

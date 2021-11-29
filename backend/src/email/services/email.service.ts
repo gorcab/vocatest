@@ -7,10 +7,7 @@ import { SendEmailFailedException } from '../exceptions/SendEmailFailed.exceptio
 export class EmailService {
   constructor(private readonly mailerService: MailerService) {}
 
-  public async sendSignUpAuthCode({
-    email,
-    signUpAuthCode,
-  }: SendSignUpAuthCodeDto) {
+  public async sendSignUpAuthCode(email: string, signUpAuthCode: number) {
     try {
       await this.mailerService.sendMail({
         from: `"Vocatest Auth" <${process.env.SENDER_EMAIL}>`,

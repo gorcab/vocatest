@@ -3,9 +3,10 @@ import { JwtService } from '@nestjs/jwt';
 import { Cache } from 'cache-manager';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/service/user.service';
-import { AUTH_CODE_PURPOSE, RESET_PWD_TTL } from '../constants';
+import { AUTH_CODE_PURPOSE, RESET_PWD_TTL, SIGN_UP_TTL } from '../constants';
 import { JwtPayloadDto } from '../dtos/jwt-payload.dto';
-import { SaveResetPasswordAuthCodeDto } from '../dtos/SaveResetPasswordAuthCode.dto';
+import { SaveAuthCodeDto } from '../dtos/SaveAuthCode.dto';
+import { Purpose } from '../dtos/SendAuthCodeRequest.dto';
 
 @Injectable()
 export class AuthService {
@@ -36,21 +37,29 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  public async saveResetPasswordAuthCode(
+  public async saveAuthCode(
     email: string,
-  ): Promise<SaveResetPasswordAuthCodeDto> {
-    const resetPasswordAuthCode = this.createAuthCode();
-    const ttl = RESET_PWD_TTL;
+    purpose: Purpose,
+  ): Promise<SaveAuthCodeDto> {
+    let prefix: typeof AUTH_CODE_PURPOSE[keyof typeof AUTH_CODE_PURPOSE];
+    let ttl: number;
+    switch (purpose) {
+      case 'RESET_PASSWORD':
+        prefix = AUTH_CODE_PURPOSE['RESET_PWD'];
+        ttl = RESET_PWD_TTL;
+        break;
+      case 'SIGN_UP':
+        prefix = AUTH_CODE_PURPOSE['SIGN_UP'];
+        ttl = SIGN_UP_TTL;
+        break;
+    }
+    const authCode = this.createAuthCode();
 
-    await this.redisService.set(
-      `${AUTH_CODE_PURPOSE.RESET_PWD}${email}`,
-      resetPasswordAuthCode,
-      {
-        ttl,
-      },
-    );
+    await this.redisService.set(`${prefix}${email}`, authCode, {
+      ttl,
+    });
 
-    return SaveResetPasswordAuthCodeDto.create(email, resetPasswordAuthCode);
+    return SaveAuthCodeDto.create(email, authCode, ttl);
   }
 
   private createAuthCode() {

@@ -9,8 +9,10 @@ import { Cache } from 'cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
 import { UserService } from 'src/user/service/user.service';
-import { SendResetPasswordAuthCodeDto } from 'src/auth/dtos/SendResetPasswordAuthCode.dto';
+import { SIGN_UP_TTL } from 'src/auth/constants';
+import { SendAuthCodeRequestDto } from 'src/auth/dtos/SendAuthCodeRequest.dto';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
+import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -103,47 +105,113 @@ describe('AuthController (e2e)', () => {
     });
   });
 
-  describe('/auth/reset-password (POST)', () => {
-    it('회원가입된 이메일이라면 해당 이메일로 비밀번호 재설정용 인증번호를 보낸다.', async () => {
+  describe('/auth/code (POST)', () => {
+    it('회원가입 시, 가입된 이메일이 아니라면 해당 이메일로 인증 번호를 보내고 SendAuthCodeResponseDto를 반환한다.', async () => {
+      // given
+      const sendAuthCodeRequestDto: SendAuthCodeRequestDto = {
+        purpose: 'SIGN_UP',
+        email: 'test1234@gmail.com',
+      };
+
+      // when, then
+      const response = await request(app.getHttpServer())
+        .post('/auth/code')
+        .send(sendAuthCodeRequestDto)
+        .expect(201)
+        .expect({
+          purpose: sendAuthCodeRequestDto.purpose,
+          email: sendAuthCodeRequestDto.email,
+          ttl: SIGN_UP_TTL,
+        });
+      expect(mockEmailService.sendSignUpAuthCode).toBeCalled();
+    });
+
+    it('비밀번호 재설정 시, 가입된 이메일이라면 해당 이메일로 인증 번호를 보내고 SendAuthCodeResponseDto를 반환한다.', async () => {
+      // given
       const createUserServiceDto: CreateUserServiceDto = {
         email: 'test1234@gmail.com',
         password: 'test1234',
         nickname: 'tester',
       };
-      const user = await userService.save(createUserServiceDto);
+      await userService.save(createUserServiceDto);
+      const sendAuthCodeRequestDto: SendAuthCodeRequestDto = {
+        purpose: 'RESET_PASSWORD',
+        email: createUserServiceDto.email,
+      };
 
-      const sendResetPasswordAuthCodeRequestDto: SendResetPasswordAuthCodeDto =
-        {
-          email: createUserServiceDto.email,
-        };
-
+      // when, then
       const response = await request(app.getHttpServer())
-        .post('/auth/reset-password')
-        .send(sendResetPasswordAuthCodeRequestDto)
-        .expect(201);
-
+        .post('/auth/code')
+        .send(sendAuthCodeRequestDto)
+        .expect(201)
+        .expect({
+          purpose: sendAuthCodeRequestDto.purpose,
+          email: sendAuthCodeRequestDto.email,
+          ttl: SIGN_UP_TTL,
+        });
       expect(mockEmailService.sendResetPasswordAuthCode).toBeCalled();
     });
 
-    it('회원가입된 이메일이 아니라면 400 에러를 반환한다.', async () => {
+    it('이메일 전송에 실패하면 503 에러를 반환한다.', async () => {
+      // given
+      mockEmailService.sendSignUpAuthCode = jest
+        .fn()
+        .mockRejectedValue(new SendEmailFailedException());
+      const sendAuthCodeRequestDto: SendAuthCodeRequestDto = {
+        purpose: 'SIGN_UP',
+        email: 'test1234@gmail.com',
+      };
+
+      // when, then
+      const response = await request(app.getHttpServer())
+        .post('/auth/code')
+        .send(sendAuthCodeRequestDto)
+        .expect(503);
+      expect(mockEmailService.sendSignUpAuthCode).toBeCalled();
+    });
+
+    it('purpose가 올바르지 않으면 400 에러를 반환한다.', async () => {
+      return request(app.getHttpServer())
+        .post('/auth/code')
+        .send({
+          purpose: 'UPDATE_PASSWORD',
+          email: 'test1234@gmail.com',
+        })
+        .expect(400);
+    });
+
+    it('회원가입 시, 이미 가입된 이메일이라면 400 에러를 반환한다.', async () => {
+      // given
       const createUserServiceDto: CreateUserServiceDto = {
         email: 'test1234@gmail.com',
         password: 'test1234',
         nickname: 'tester',
       };
-      const user = await userService.save(createUserServiceDto);
+      await userService.save(createUserServiceDto);
+      const sendAuthCodeRequestDto: SendAuthCodeRequestDto = {
+        purpose: 'SIGN_UP',
+        email: createUserServiceDto.email,
+      };
 
-      const sendResetPasswordAuthCodeRequestDto: SendResetPasswordAuthCodeDto =
-        {
-          email: 'anothertest@gmail.com',
-        };
-
-      const response = await request(app.getHttpServer())
-        .post('/auth/reset-password')
-        .send(sendResetPasswordAuthCodeRequestDto)
+      // when, then
+      return request(app.getHttpServer())
+        .post('/auth/code')
+        .send(sendAuthCodeRequestDto)
         .expect(400);
+    });
 
-      expect(mockEmailService.sendResetPasswordAuthCode).not.toBeCalled();
+    it('비밀번호 재설정 시, 가입된 이메일이 아니라면 400 에러를 반환한다.', async () => {
+      // given
+      const sendAuthCodeRequestDto: SendAuthCodeRequestDto = {
+        purpose: 'RESET_PASSWORD',
+        email: 'test1234@gmail.com',
+      };
+
+      // when, then
+      return request(app.getHttpServer())
+        .post('/auth/code')
+        .send(sendAuthCodeRequestDto)
+        .expect(400);
     });
   });
 });

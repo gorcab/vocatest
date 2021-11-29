@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Cache } from 'cache-manager';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/service/user.service';
+import { SIGN_UP_TTL } from '../constants';
 import { JwtPayloadDto } from '../dtos/jwt-payload.dto';
 import { AuthService } from './auth.service';
 
@@ -88,18 +89,19 @@ describe('AuthService', () => {
     expect(result).toBe(accessToken);
   });
 
-  it('email과 생성된 인증 코드를 통해 SaveResetPasswordAuthCodeDto를 반환한다.', async () => {
-    const resetPasswordAuthCode = 123456;
+  it('email과 생성한 인증 코드를 토대로 redis에 저장한 뒤, SaveAuthCodeDto를 반환한다.', async () => {
+    const authCode = 123456;
     jest
       .spyOn(AuthService.prototype as any, 'createAuthCode')
-      .mockImplementation(() => resetPasswordAuthCode);
+      .mockImplementation(() => authCode);
 
-    const result = await service.saveResetPasswordAuthCode(user.email);
+    const result = await service.saveAuthCode(user.email, 'SIGN_UP');
 
     expect(redisService.set).toBeCalled();
     expect(result).toStrictEqual({
       email: user.email,
-      resetPasswordAuthCode,
+      authCode,
+      ttl: SIGN_UP_TTL,
     });
   });
 });

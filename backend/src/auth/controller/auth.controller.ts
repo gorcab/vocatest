@@ -5,14 +5,16 @@ import {
   Post,
   Req,
   Res,
+  ServiceUnavailableException,
   UseGuards,
 } from '@nestjs/common';
 import { RequestWithUser } from 'src/common/types';
 import { EmailService } from 'src/email/services/email.service';
 import { UserResponseDto } from 'src/user/dtos/UserResponse.dto';
-import { SendResetPasswordAuthCodeDto } from '../dtos/SendResetPasswordAuthCode.dto';
+import { SendAuthCodeRequestDto } from '../dtos/SendAuthCodeRequest.dto';
+import { SendAuthCodeResponseDto } from '../dtos/SendAuthCodeResponse.dto';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
-import { RegisteredEmailGuard } from '../guards/RegisteredEmail.guard';
+import { ValidAuthCodeRequest } from '../guards/ValidAuthCodeRequest.guard';
 import { AuthService } from '../service/auth.service';
 
 @Controller('auth')
@@ -37,17 +39,31 @@ export class AuthController {
     return userResponseDto;
   }
 
-  @Post('reset-password')
-  @UseGuards(RegisteredEmailGuard)
-  public async sendResetPasswordAuthCodeEmail(
-    @Body() requestDto: SendResetPasswordAuthCodeDto,
+  @Post('/code')
+  @UseGuards(ValidAuthCodeRequest)
+  public async sendAuthCodeToEmail(
+    @Body() { purpose, email }: SendAuthCodeRequestDto,
   ) {
-    const { email, resetPasswordAuthCode } =
-      await this.authService.saveResetPasswordAuthCode(requestDto.email);
+    const {
+      email: receiverEmail,
+      authCode,
+      ttl,
+    } = await this.authService.saveAuthCode(email, purpose);
 
-    await this.emailService.sendResetPasswordAuthCode(
-      email,
-      resetPasswordAuthCode,
-    );
+    try {
+      if (purpose === 'SIGN_UP') {
+        await this.emailService.sendSignUpAuthCode(receiverEmail, authCode);
+      } else if (purpose === 'RESET_PASSWORD') {
+        await this.emailService.sendResetPasswordAuthCode(
+          receiverEmail,
+          authCode,
+        );
+      }
+      return SendAuthCodeResponseDto.create(purpose, email, ttl);
+    } catch (error) {
+      throw new ServiceUnavailableException(
+        '이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.',
+      );
+    }
   }
 }

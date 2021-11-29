@@ -8,6 +8,7 @@ import { AuthController } from './controller/auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailModule } from 'src/email/email.module';
 import { RegisteredEmailGuard } from './guards/RegisteredEmail.guard';
+import { ValidAuthCodeRequest } from './guards/ValidAuthCodeRequest.guard';
 
 @Module({
   imports: [
@@ -26,7 +27,13 @@ import { RegisteredEmailGuard } from './guards/RegisteredEmail.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, RegisteredEmailGuard],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    RegisteredEmailGuard,
+    ValidAuthCodeRequest,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}
