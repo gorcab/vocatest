@@ -4,7 +4,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { TTL } from '../constant';
 import { User } from '../entities/user.entity';
 import { UserService } from './user.service';
 import { createUser } from 'src/common/mocks/utils';
@@ -88,20 +87,6 @@ describe('UserService', () => {
     );
 
     expect(result).toBeTruthy();
-  });
-
-  it('Redis Store에 {"user:email": signUpAuthCode}를 저장한다.', async () => {
-    jest
-      .spyOn(UserService.prototype as any, 'createAuthCode')
-      .mockImplementation(() => signUpAuthCode);
-
-    const result = await service.saveSignUpAuthCode(user.email);
-
-    expect(result).toStrictEqual({
-      email: user.email,
-      signUpAuthCode,
-      ttl: TTL,
-    });
   });
 
   it('User를 생성하면 생성한 User를 반환한다.', async () => {
@@ -202,5 +187,24 @@ describe('UserService', () => {
     await service.delete(user);
 
     expect(mockUserRepository.delete).toBeCalled();
+  });
+
+  it('비밀번호를 업데이트하면 레디스에 저장된 인증 번호를 삭제하고, 비밀번호를 해시한 뒤 업데이트한다.', async () => {
+    const deleteResetPasswordAuthCodeSpy = jest
+      .spyOn(UserService.prototype as any, 'deleteResetPasswordAuthCode')
+      .mockImplementation(() => Promise.resolve());
+    const encryptPasswordSpy = jest
+      .spyOn(UserService.prototype as any, 'encryptPassword')
+      .mockImplementation(() => Promise.resolve(user.password));
+    mockUserRepository.update = jest.fn();
+
+    await service.updatePassword(user.email, user.password);
+
+    expect(deleteResetPasswordAuthCodeSpy).toBeCalledWith(user.email);
+    expect(encryptPasswordSpy).toBeCalledWith(user.password);
+    expect(mockUserRepository.update).toBeCalledWith(
+      { email: user.email },
+      { password: user.password },
+    );
   });
 });

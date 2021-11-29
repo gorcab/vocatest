@@ -7,6 +7,8 @@ import { EmailModule } from 'src/email/email.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { AvailableEmailGuard } from './guards/AvailableEmail.guard';
 import { ValidSignUpAuthCodeGuard } from './guards/ValidSignUpAuthCode.guard';
+import { ValidResetPasswordAuthCodeGuard } from './guards/ValidResetPasswordAuthCode.guard';
+import { RegisteredEmailGuard } from './guards/RegisteredEmail.guard';
 
 @Module({
   imports: [
@@ -15,7 +17,13 @@ import { ValidSignUpAuthCodeGuard } from './guards/ValidSignUpAuthCode.guard';
     forwardRef(() => AuthModule),
   ],
   controllers: [UserController],
-  providers: [UserService, AvailableEmailGuard, ValidSignUpAuthCodeGuard],
-  exports: [UserService],
+  providers: [
+    UserService,
+    AvailableEmailGuard,
+    ValidSignUpAuthCodeGuard,
+    RegisteredEmailGuard,
+    ValidResetPasswordAuthCodeGuard,
+  ],
+  exports: [UserService, RegisteredEmailGuard],
 })
 export class UserModule {}

@@ -45,11 +45,11 @@ export class AuthService {
     let ttl: number;
     switch (purpose) {
       case 'RESET_PASSWORD':
-        prefix = AUTH_CODE_PURPOSE['RESET_PWD'];
+        prefix = AUTH_CODE_PURPOSE.RESET_PWD;
         ttl = RESET_PWD_TTL;
         break;
       case 'SIGN_UP':
-        prefix = AUTH_CODE_PURPOSE['SIGN_UP'];
+        prefix = AUTH_CODE_PURPOSE.SIGN_UP;
         ttl = SIGN_UP_TTL;
         break;
     }

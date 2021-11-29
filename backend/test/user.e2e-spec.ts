@@ -7,12 +7,13 @@ import { AppModule } from 'src/app.module';
 import { User } from 'src/user/entities/user.entity';
 import { Cache } from 'cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { SIGN_UP_PREFIX, TTL } from 'src/user/constant';
 import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
 import { UserService } from 'src/user/service/user.service';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
 import { UpdateUserDto } from 'src/user/dtos/UpdateUser.dto';
 import { DeleteUserDto } from 'src/user/dtos/DeleteUser.dto';
+import { AUTH_CODE_PURPOSE } from 'src/auth/constants';
+import { ResetPasswordDto } from 'src/user/dtos/ResetPassword.dto';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
@@ -75,7 +76,10 @@ describe('UserController (e2e)', () => {
         nickname: 'tester',
         signUpAuthCode: 123456,
       };
-      redisStore.set(`${SIGN_UP_PREFIX}${createUserRequestDto.email}`, 132456);
+      redisStore.set(
+        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
+        132456,
+      );
 
       // when
       const response = await request(app.getHttpServer())
@@ -97,7 +101,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -123,7 +127,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -149,7 +153,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -175,7 +179,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -199,7 +203,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${SIGN_UP_PREFIX}${createUserRequestDto.email}`,
+        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -451,6 +455,129 @@ describe('UserController (e2e)', () => {
         .auth(accessToken.body.accessToken, { type: 'bearer' })
         .send(deleteUserDto)
         .expect(401);
+    });
+  });
+
+  describe('/users/password (POST)', () => {
+    it('해당 이메일에 대한 인증 번호가 올바르면 비밀번호를 변경한다.', async () => {
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const resetPasswordDto: ResetPasswordDto = {
+        email: 'test1234@gmail.com',
+        resetPasswordAuthCode: 123456,
+        password: 'test1234',
+      };
+      redisStore.set(
+        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        resetPasswordDto.resetPasswordAuthCode,
+      );
+
+      return request(app.getHttpServer())
+        .post('/users/password')
+        .send(resetPasswordDto)
+        .expect(204);
+    });
+
+    it('해당 이메일이 가입되지 않은 이메일이라면 400 에러를 반환한다.', async () => {
+      const resetPasswordDto: ResetPasswordDto = {
+        email: 'test1234@gmail.com',
+        resetPasswordAuthCode: 123456,
+        password: 'test1234',
+      };
+
+      const response = await request(app.getHttpServer())
+        .post('/users/password')
+        .send(resetPasswordDto)
+        .expect(400);
+
+      expect(response.body.message).toBe('존재하지 않는 이메일입니다.');
+    });
+
+    it('해당 이메일에 대한 인증 번호가 올바르지 않으면 400 에러를 반환한다.', async () => {
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const resetPasswordDto: ResetPasswordDto = {
+        email: 'test1234@gmail.com',
+        resetPasswordAuthCode: 123456,
+        password: 'test1234',
+      };
+      redisStore.set(
+        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        423456,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users/password')
+        .send(resetPasswordDto)
+        .expect(400);
+
+      expect(response.body.message).toBe('인증 번호가 올바르지 않습니다.');
+    });
+
+    it('변경하려는 비밀번호가 8자 미만이면 400 에러를 반환한다.', async () => {
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const resetPasswordDto: ResetPasswordDto = {
+        email: 'test1234@gmail.com',
+        resetPasswordAuthCode: 123456,
+        password: 'test123',
+      };
+      redisStore.set(
+        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        resetPasswordDto.resetPasswordAuthCode,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users/password')
+        .send(resetPasswordDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe(
+        '비밀번호는 최소 8자 이상이어야 합니다.',
+      );
+    });
+
+    it('변경하려는 비밀번호가 12자를 초과하면 400 에러를 반환한다.', async () => {
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const resetPasswordDto: ResetPasswordDto = {
+        email: 'test1234@gmail.com',
+        resetPasswordAuthCode: 123456,
+        password: 'test123456789',
+      };
+      redisStore.set(
+        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        resetPasswordDto.resetPasswordAuthCode,
+      );
+
+      const response = await request(app.getHttpServer())
+        .post('/users/password')
+        .send(resetPasswordDto)
+        .expect(400);
+
+      expect(response.body.message[0]).toBe(
+        '비밀번호는 최대 12자 이하여야 합니다.',
+      );
     });
   });
 });

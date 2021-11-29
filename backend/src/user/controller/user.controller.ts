@@ -7,22 +7,19 @@ import {
   Param,
   Patch,
   Post,
-  ServiceUnavailableException,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthService } from 'src/auth/service/auth.service';
-import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
-import { EmailService } from 'src/email/services/email.service';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
 import { DeleteUserDto } from '../dtos/DeleteUser.dto';
-import { SignUpAuthRequestDto } from '../dtos/SignUpAuthRequest.dto';
-import { SignUpAuthResponseDto } from '../dtos/SignUpAuthResponse.dto';
+import { ResetPasswordDto } from '../dtos/ResetPassword.dto';
 import { UpdateUserDto } from '../dtos/UpdateUser.dto';
 import { UserResponseDto } from '../dtos/UserResponse.dto';
-import { AvailableEmailGuard } from '../guards/AvailableEmail.guard';
+import { RegisteredEmailGuard } from '../guards/RegisteredEmail.guard';
 import { SameUserIdInTokenAndParamGuard } from '../guards/SameUserIdInTokenAndParam.guard';
+import { ValidResetPasswordAuthCodeGuard } from '../guards/ValidResetPasswordAuthCode.guard';
 import { ValidSignUpAuthCodeGuard } from '../guards/ValidSignUpAuthCode.guard';
 import { UserService } from '../service/user.service';
 
@@ -30,7 +27,6 @@ import { UserService } from '../service/user.service';
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly emailService: EmailService,
     private readonly authService: AuthService,
   ) {}
 
@@ -90,5 +86,15 @@ export class UserController {
     }
 
     await this.userService.delete(user);
+  }
+
+  @Post('password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ValidResetPasswordAuthCodeGuard)
+  @UseGuards(RegisteredEmailGuard)
+  public async resetPassword(
+    @Body() { email, password, resetPasswordAuthCode }: ResetPasswordDto,
+  ) {
+    await this.userService.updatePassword(email, password);
   }
 }

@@ -1,12 +1,4 @@
-import {
-  IsEmail,
-  IsInt,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-  MinLength,
-} from 'class-validator';
+import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 import { IsWhitespaceString } from 'src/common/validators/IsWhitespaceString';
 
 export class CreateUserRequestDto {

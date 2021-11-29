@@ -3,12 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { SIGN_UP_PREFIX, TTL } from '../constant';
-import { SaveSignUpAuthCodeResultDto } from '../dtos/SaveSignUpAuthCodeResult.dto';
 import { User } from '../entities/user.entity';
 import { CreateUserServiceDto } from '../dtos/CreateUserService.dto';
 import { UpdateUserDto } from '../dtos/UpdateUser.dto';
 import { UpdatedUserResponseDto } from '../dtos/UpdatedUserResponse.dto';
+import { AUTH_CODE_PURPOSE, SIGN_UP_TTL } from 'src/auth/constants';
+import { ResetPasswordDto } from '../dtos/ResetPassword.dto';
 
 @Injectable()
 export class UserService {
@@ -34,32 +34,19 @@ export class UserService {
     signUpAuthCode: number,
   ): Promise<boolean> {
     const savedSignUpAuthCode = await this.redisService.get<number>(
-      `${SIGN_UP_PREFIX}${email}`,
+      `${AUTH_CODE_PURPOSE.SIGN_UP}${email}`,
     );
     return Number(savedSignUpAuthCode) === signUpAuthCode;
   }
 
-  public async saveSignUpAuthCode(
+  public async validateResetPasswordAuthCode(
     email: string,
-  ): Promise<SaveSignUpAuthCodeResultDto> {
-    const signUpAuthCode = this.createAuthCode();
-    const ttl = TTL; // 5 minutes
-
-    await this.redisService.set(`${SIGN_UP_PREFIX}${email}`, signUpAuthCode, {
-      ttl,
-    });
-
-    const saveSignUpAuthCodeResultDto: SaveSignUpAuthCodeResultDto = {
-      email,
-      signUpAuthCode,
-      ttl,
-    };
-
-    return saveSignUpAuthCodeResultDto;
-  }
-
-  private async deleteSignUpAuthCode(email: string): Promise<void> {
-    await this.redisService.del(`${SIGN_UP_PREFIX}${email}`);
+    resetPasswordAuthCode: number,
+  ): Promise<boolean> {
+    const savedResetPasswordAuthCode = await this.redisService.get<number>(
+      `${AUTH_CODE_PURPOSE.RESET_PWD}${email}`,
+    );
+    return Number(savedResetPasswordAuthCode) === resetPasswordAuthCode;
   }
 
   public async save({
@@ -119,13 +106,26 @@ export class UserService {
     await this.userRepository.delete(user.id);
   }
 
+  public async updatePassword(email: string, password: string): Promise<void> {
+    await this.deleteResetPasswordAuthCode(email);
+    const encryptedPassword = await this.encryptPassword(password);
+    await this.userRepository.update(
+      { email },
+      { password: encryptedPassword },
+    );
+  }
+
+  private async deleteSignUpAuthCode(email: string): Promise<void> {
+    await this.redisService.del(`${AUTH_CODE_PURPOSE.SIGN_UP}${email}`);
+  }
+
+  private async deleteResetPasswordAuthCode(email: string): Promise<void> {
+    await this.redisService.del(`${AUTH_CODE_PURPOSE.RESET_PWD}${email}`);
+  }
+
   private async encryptPassword(password: string): Promise<string> {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
     return bcrypt.hash(password, salt);
-  }
-
-  private createAuthCode(): number {
-    return Math.floor(Math.random() * 900000 + 100000);
   }
 }
