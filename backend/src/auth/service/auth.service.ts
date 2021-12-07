@@ -11,6 +11,8 @@ import {
   SIGN_UP_TTL,
 } from '../constants';
 import { AccessAndRefreshTokenDto } from '../dtos/AccessAndRefreshToken.dto';
+import { JwtPayloadDto } from '../dtos/JwtPayload.dto';
+import { JwtTokenDto } from '../dtos/JwtToken.dto';
 import { SaveAuthCodeDto } from '../dtos/SaveAuthCode.dto';
 import { Purpose } from '../dtos/SendAuthCodeRequest.dto';
 
@@ -32,31 +34,25 @@ export class AuthService {
   }
 
   public async login(user: User): Promise<AccessAndRefreshTokenDto> {
-    const accessToken = this.jwtService.sign(
+    const accessToken = this.createJwtToken(
       {
         sub: user.id,
         email: user.email,
       },
-      {
-        expiresIn: ACCESS_TOKEN_TTL,
-      },
+      ACCESS_TOKEN_TTL,
     );
-    const refreshToken = this.jwtService.sign(
-      { sub: user.id },
+    const refreshToken = this.createJwtToken(
       {
-        expiresIn: REFRESH_TOKEN_TTL,
+        sub: user.id,
       },
-    );
-
-    await this.redisService.set(
-      `${REDIS_KEY_PREFIX.REFRESH_TOKEN}${user.email}`,
-      refreshToken,
-      {
-        ttl: REFRESH_TOKEN_TTL,
-      },
+      REFRESH_TOKEN_TTL,
     );
 
     return AccessAndRefreshTokenDto.create(accessToken, refreshToken);
+  }
+
+  public createJwtToken(payload: Partial<JwtPayloadDto>, expiresIn: number) {
+    return this.jwtService.sign(payload, { expiresIn });
   }
 
   public async saveAuthCode(
@@ -82,6 +78,19 @@ export class AuthService {
     });
 
     return SaveAuthCodeDto.create(email, authCode, ttl);
+  }
+
+  public isExpiredToken(token: string): boolean {
+    const { exp } = this.decodeToken(token);
+    const currentTime = new Date().getTime() / 1000;
+    if (exp - currentTime < 0) {
+      return true;
+    }
+    return false;
+  }
+
+  public decodeToken(token: string): JwtTokenDto {
+    return this.jwtService.decode(token) as JwtTokenDto;
   }
 
   private createAuthCode() {

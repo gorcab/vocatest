@@ -9,7 +9,11 @@ import { Cache } from 'cache-manager';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
 import { UserService } from 'src/user/service/user.service';
-import { SIGN_UP_TTL } from 'src/auth/constants';
+import {
+  ACCESS_TOKEN_TTL,
+  REFRESH_TOKEN_TTL,
+  SIGN_UP_TTL,
+} from 'src/auth/constants';
 import { SendAuthCodeRequestDto } from 'src/auth/dtos/SendAuthCodeRequest.dto';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
 import { SendEmailFailedException } from 'src/email/exceptions/SendEmailFailed.exception';
@@ -213,6 +217,156 @@ describe('AuthController (e2e)', () => {
         .post('/auth/code')
         .send(sendAuthCodeRequestDto)
         .expect(400);
+    });
+  });
+
+  describe('/auth/token (POST)', () => {
+    afterEach(() => {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+    });
+
+    it('기한이 만료된 access token과 기한이 만료되지 않은 refresh token을 통해 토큰 재발급을 요청하면 새로운 access token을 반환한다.', async () => {
+      // given
+      const currentTime = new Date().getTime();
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const tokenResponse = await agent
+        .post('/auth/login')
+        .send({
+          email: createUserServiceDto.email,
+          password: createUserServiceDto.password,
+        })
+        .expect(201);
+      const accessToken = tokenResponse.body.accessToken;
+      const refreshToken = tokenResponse.body.refreshToken;
+
+      jest.useFakeTimers();
+      await Promise.resolve().then(() => {
+        jest.setSystemTime(
+          new Date(currentTime + ACCESS_TOKEN_TTL * 1000 + 1000),
+        );
+      });
+
+      // when
+      const newTokenResponse = await agent
+        .post('/auth/token')
+        .auth(accessToken, { type: 'bearer' })
+        .send({
+          refreshToken,
+        })
+        .expect(201);
+
+      // then
+      expect(typeof newTokenResponse.body.accessToken).toBe('string');
+      expect(newTokenResponse.body.accessToken).not.toBe(accessToken);
+    });
+
+    it('기한이 만료되지 않은 access token과 만료되지 않은 refresh token을 통해 토큰 재발급을 요청하면 기존의 access token을 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const tokenResponse = await agent
+        .post('/auth/login')
+        .send({
+          email: createUserServiceDto.email,
+          password: createUserServiceDto.password,
+        })
+        .expect(201);
+      const accessToken = tokenResponse.body.accessToken;
+      const refreshToken = tokenResponse.body.refreshToken;
+
+      // when
+      const newTokenResponse = await agent
+        .post('/auth/token')
+        .auth(accessToken, { type: 'bearer' })
+        .send({
+          refreshToken,
+        })
+        .expect(201);
+
+      // then
+      expect(typeof newTokenResponse.body.accessToken).toBe('string');
+      expect(newTokenResponse.body.accessToken).toBe(accessToken);
+    });
+
+    it('기한이 만료된 access token과 기한이 만료된 refresh token을 통해 토큰 재발급을 요청하면 401 에러를 반환한다.', async () => {
+      // given
+      const currentTime = new Date().getTime();
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const tokenResponse = await agent
+        .post('/auth/login')
+        .send({
+          email: createUserServiceDto.email,
+          password: createUserServiceDto.password,
+        })
+        .expect(201);
+      const accessToken = tokenResponse.body.accessToken;
+      const refreshToken = tokenResponse.body.refreshToken;
+
+      jest.useFakeTimers();
+      await Promise.resolve().then(() => {
+        jest.setSystemTime(
+          new Date(currentTime + REFRESH_TOKEN_TTL * 1000 + 1000),
+        );
+      });
+
+      // when, then
+      return await agent
+        .post('/auth/token')
+        .auth(accessToken, { type: 'bearer' })
+        .send({
+          refreshToken,
+        })
+        .expect(401);
+    });
+
+    it('access token 없이 토큰 재발급을 요청하면 401 에러를 반환한다.', async () => {
+      // given
+      const currentTime = new Date().getTime();
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const tokenResponse = await agent
+        .post('/auth/login')
+        .send({
+          email: createUserServiceDto.email,
+          password: createUserServiceDto.password,
+        })
+        .expect(201);
+      const refreshToken = tokenResponse.body.refreshToken;
+
+      // when, then
+      return await agent
+        .post('/auth/token')
+        .send({
+          refreshToken,
+        })
+        .expect(401);
     });
   });
 });
