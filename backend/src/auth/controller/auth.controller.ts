@@ -1,16 +1,15 @@
 import {
   Body,
   Controller,
-  Get,
   Post,
   Req,
-  Res,
   ServiceUnavailableException,
   UseGuards,
 } from '@nestjs/common';
 import { RequestWithUser } from 'src/common/types';
 import { EmailService } from 'src/email/services/email.service';
-import { UserResponseDto } from 'src/user/dtos/UserResponse.dto';
+import { UpdatedUserResponseDto } from 'src/user/dtos/UpdatedUserResponse.dto';
+import { UserWithJwtTokenDto } from 'src/user/dtos/UserWithJwtToken.dto';
 import { SendAuthCodeRequestDto } from '../dtos/SendAuthCodeRequest.dto';
 import { SendAuthCodeResponseDto } from '../dtos/SendAuthCodeResponse.dto';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
@@ -26,17 +25,13 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  public login(@Req() req: RequestWithUser): UserResponseDto {
-    const accessToken = this.authService.login(req.user);
-
-    const userResponseDto: UserResponseDto = {
-      id: req.user.id as number,
-      email: req.user.email as string,
-      nickname: req.user.nickname as string,
-      accessToken: accessToken,
-    };
-
-    return userResponseDto;
+  public async login(
+    @Req() req: RequestWithUser,
+  ): Promise<UserWithJwtTokenDto> {
+    const { accessToken, refreshToken } = await this.authService.login(
+      req.user,
+    );
+    return UserWithJwtTokenDto.create(req.user, accessToken, refreshToken);
   }
 
   @Post('/code')

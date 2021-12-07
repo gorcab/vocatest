@@ -16,7 +16,8 @@ import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
 import { DeleteUserDto } from '../dtos/DeleteUser.dto';
 import { ResetPasswordDto } from '../dtos/ResetPassword.dto';
 import { UpdateUserDto } from '../dtos/UpdateUser.dto';
-import { UserResponseDto } from '../dtos/UserResponse.dto';
+import { UserDto } from '../dtos/User.dto';
+import { UserWithJwtTokenDto } from '../dtos/UserWithJwtToken.dto';
 import { RegisteredEmailGuard } from '../guards/RegisteredEmail.guard';
 import { SameUserIdInTokenAndParamGuard } from '../guards/SameUserIdInTokenAndParam.guard';
 import { ValidResetPasswordAuthCodeGuard } from '../guards/ValidResetPasswordAuthCode.guard';
@@ -34,21 +35,12 @@ export class UserController {
   @UseGuards(ValidSignUpAuthCodeGuard)
   public async signUp(
     @Body() createUserRequestDto: CreateUserRequestDto,
-  ): Promise<UserResponseDto> {
+  ): Promise<UserDto> {
     const { signUpAuthCode, ...createUserServiceDto } = createUserRequestDto;
-
     const user = await this.userService.save(createUserServiceDto);
+    const { accessToken, refreshToken } = await this.authService.login(user);
 
-    const accessToken = await this.authService.login(user);
-
-    const userResponseDto: UserResponseDto = {
-      id: user.id,
-      email: user.email,
-      nickname: user.nickname,
-      accessToken,
-    };
-
-    return userResponseDto;
+    return UserWithJwtTokenDto.create(user, accessToken, refreshToken);
   }
 
   @Patch(':id')

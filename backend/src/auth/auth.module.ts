@@ -18,9 +18,6 @@ import { ValidAuthCodeRequest } from './guards/ValidAuthCodeRequest.guard';
       useFactory: () => {
         return {
           secret: process.env.JWT_SECRET,
-          signOptions: {
-            expiresIn: '3h',
-          },
         };
       },
     }),

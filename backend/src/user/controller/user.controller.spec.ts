@@ -28,6 +28,7 @@ describe('UserController', () => {
 
   const signUpAuthCode = 123456;
   const accessToken = 'accesstoken';
+  const refreshToken = 'refreshtoken';
 
   beforeEach(async () => {
     user = createUser();
@@ -56,7 +57,7 @@ describe('UserController', () => {
     };
 
     mockAuthService = {
-      login: (user: User) => accessToken,
+      login: (user: User) => Promise.resolve({ accessToken, refreshToken }),
       validateUser: (email: string, password: string) => Promise.resolve(user),
     };
 
@@ -102,7 +103,7 @@ describe('UserController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('회원가입에 성공하면 UserResponseDto를 반환한다.', async () => {
+  it('회원가입에 성공하면 UserWithJwtTokenDto를 반환한다.', async () => {
     const createUserRequestDto: CreateUserRequestDto = {
       email: user.email,
       password: user.password,
@@ -110,13 +111,14 @@ describe('UserController', () => {
       signUpAuthCode,
     };
 
-    const userResponseDto = await controller.signUp(createUserRequestDto);
+    const userWithJwtTokenDto = await controller.signUp(createUserRequestDto);
 
-    expect(userResponseDto).toStrictEqual({
+    expect(userWithJwtTokenDto).toStrictEqual({
       id: user.id,
       email: user.email,
       nickname: user.nickname,
       accessToken,
+      refreshToken,
     });
   });
 

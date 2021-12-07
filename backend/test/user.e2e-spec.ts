@@ -12,7 +12,7 @@ import { UserService } from 'src/user/service/user.service';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
 import { UpdateUserDto } from 'src/user/dtos/UpdateUser.dto';
 import { DeleteUserDto } from 'src/user/dtos/DeleteUser.dto';
-import { AUTH_CODE_PURPOSE } from 'src/auth/constants';
+import { REDIS_KEY_PREFIX } from 'src/auth/constants';
 import { ResetPasswordDto } from 'src/user/dtos/ResetPassword.dto';
 
 describe('UserController (e2e)', () => {
@@ -77,7 +77,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode: 123456,
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
+        `${REDIS_KEY_PREFIX.SIGN_UP}${createUserRequestDto.email}`,
         132456,
       );
 
@@ -101,7 +101,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
+        `${REDIS_KEY_PREFIX.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -127,7 +127,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
+        `${REDIS_KEY_PREFIX.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -153,7 +153,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
+        `${REDIS_KEY_PREFIX.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -179,7 +179,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
+        `${REDIS_KEY_PREFIX.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -193,7 +193,7 @@ describe('UserController (e2e)', () => {
       expect(response.body.message[0]).toBe('닉네임은 2자 이상이어야 합니다.');
     });
 
-    it('회원가입에 성공하면 사용자 정보와 access token을 반환한다.', async () => {
+    it('회원가입에 성공하면 사용자 정보와 access token, refresh token을 반환한다.', async () => {
       // given
       const signUpAuthCode = 123456;
       const createUserRequestDto: CreateUserRequestDto = {
@@ -203,7 +203,7 @@ describe('UserController (e2e)', () => {
         signUpAuthCode,
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.SIGN_UP}${createUserRequestDto.email}`,
+        `${REDIS_KEY_PREFIX.SIGN_UP}${createUserRequestDto.email}`,
         signUpAuthCode,
       );
 
@@ -214,13 +214,13 @@ describe('UserController (e2e)', () => {
         .expect(201);
 
       // then
-      const { accessToken, id, ...result } = response.body;
-      expect(result).toStrictEqual({
+      expect(response.body).toStrictEqual({
+        id: expect.any(Number),
         email: createUserRequestDto.email,
         nickname: createUserRequestDto.nickname,
+        accessToken: expect.any(String),
+        refreshToken: expect.any(String),
       });
-      expect(typeof accessToken).toBe('string');
-      expect(typeof id).toBe('number');
     });
   });
 
@@ -473,7 +473,7 @@ describe('UserController (e2e)', () => {
         password: 'test1234',
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        `${REDIS_KEY_PREFIX.RESET_PWD}${resetPasswordDto.email}`,
         resetPasswordDto.resetPasswordAuthCode,
       );
 
@@ -512,7 +512,7 @@ describe('UserController (e2e)', () => {
         password: 'test1234',
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        `${REDIS_KEY_PREFIX.RESET_PWD}${resetPasswordDto.email}`,
         423456,
       );
 
@@ -538,7 +538,7 @@ describe('UserController (e2e)', () => {
         password: 'test123',
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        `${REDIS_KEY_PREFIX.RESET_PWD}${resetPasswordDto.email}`,
         resetPasswordDto.resetPasswordAuthCode,
       );
 
@@ -566,7 +566,7 @@ describe('UserController (e2e)', () => {
         password: 'test123456789',
       };
       redisStore.set(
-        `${AUTH_CODE_PURPOSE.RESET_PWD}${resetPasswordDto.email}`,
+        `${REDIS_KEY_PREFIX.RESET_PWD}${resetPasswordDto.email}`,
         resetPasswordDto.resetPasswordAuthCode,
       );
 

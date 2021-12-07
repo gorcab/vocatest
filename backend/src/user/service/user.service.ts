@@ -7,8 +7,7 @@ import { User } from '../entities/user.entity';
 import { CreateUserServiceDto } from '../dtos/CreateUserService.dto';
 import { UpdateUserDto } from '../dtos/UpdateUser.dto';
 import { UpdatedUserResponseDto } from '../dtos/UpdatedUserResponse.dto';
-import { AUTH_CODE_PURPOSE, SIGN_UP_TTL } from 'src/auth/constants';
-import { ResetPasswordDto } from '../dtos/ResetPassword.dto';
+import { REDIS_KEY_PREFIX, SIGN_UP_TTL } from 'src/auth/constants';
 
 @Injectable()
 export class UserService {
@@ -34,7 +33,7 @@ export class UserService {
     signUpAuthCode: number,
   ): Promise<boolean> {
     const savedSignUpAuthCode = await this.redisService.get<number>(
-      `${AUTH_CODE_PURPOSE.SIGN_UP}${email}`,
+      `${REDIS_KEY_PREFIX.SIGN_UP}${email}`,
     );
     return Number(savedSignUpAuthCode) === signUpAuthCode;
   }
@@ -44,7 +43,7 @@ export class UserService {
     resetPasswordAuthCode: number,
   ): Promise<boolean> {
     const savedResetPasswordAuthCode = await this.redisService.get<number>(
-      `${AUTH_CODE_PURPOSE.RESET_PWD}${email}`,
+      `${REDIS_KEY_PREFIX.RESET_PWD}${email}`,
     );
     return Number(savedResetPasswordAuthCode) === resetPasswordAuthCode;
   }
@@ -116,11 +115,11 @@ export class UserService {
   }
 
   private async deleteSignUpAuthCode(email: string): Promise<void> {
-    await this.redisService.del(`${AUTH_CODE_PURPOSE.SIGN_UP}${email}`);
+    await this.redisService.del(`${REDIS_KEY_PREFIX.SIGN_UP}${email}`);
   }
 
   private async deleteResetPasswordAuthCode(email: string): Promise<void> {
-    await this.redisService.del(`${AUTH_CODE_PURPOSE.RESET_PWD}${email}`);
+    await this.redisService.del(`${REDIS_KEY_PREFIX.RESET_PWD}${email}`);
   }
 
   private async encryptPassword(password: string): Promise<string> {

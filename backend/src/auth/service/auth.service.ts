@@ -3,8 +3,14 @@ import { JwtService } from '@nestjs/jwt';
 import { Cache } from 'cache-manager';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/service/user.service';
-import { AUTH_CODE_PURPOSE, RESET_PWD_TTL, SIGN_UP_TTL } from '../constants';
-import { JwtPayloadDto } from '../dtos/jwt-payload.dto';
+import {
+  ACCESS_TOKEN_TTL,
+  REDIS_KEY_PREFIX,
+  REFRESH_TOKEN_TTL,
+  RESET_PWD_TTL,
+  SIGN_UP_TTL,
+} from '../constants';
+import { AccessAndRefreshTokenDto } from '../dtos/AccessAndRefreshToken.dto';
 import { SaveAuthCodeDto } from '../dtos/SaveAuthCode.dto';
 import { Purpose } from '../dtos/SendAuthCodeRequest.dto';
 
@@ -16,10 +22,7 @@ export class AuthService {
     @Inject(CACHE_MANAGER) private readonly redisService: Cache,
   ) {}
 
-  public async validateUser(
-    email: string,
-    password: string,
-  ): Promise<User | null> {
+  public async validateUser(email: string, password: string): Promise<User> {
     const user = await this.userService.findOneByEmailAndPassword(
       email,
       password,
@@ -28,28 +31,47 @@ export class AuthService {
     return user;
   }
 
-  public login(user: User): string {
-    const payload: JwtPayloadDto = {
-      sub: user.id,
-      email: user.email,
-    };
+  public async login(user: User): Promise<AccessAndRefreshTokenDto> {
+    const accessToken = this.jwtService.sign(
+      {
+        sub: user.id,
+        email: user.email,
+      },
+      {
+        expiresIn: ACCESS_TOKEN_TTL,
+      },
+    );
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id },
+      {
+        expiresIn: REFRESH_TOKEN_TTL,
+      },
+    );
 
-    return this.jwtService.sign(payload);
+    await this.redisService.set(
+      `${REDIS_KEY_PREFIX.REFRESH_TOKEN}${user.email}`,
+      refreshToken,
+      {
+        ttl: REFRESH_TOKEN_TTL,
+      },
+    );
+
+    return AccessAndRefreshTokenDto.create(accessToken, refreshToken);
   }
 
   public async saveAuthCode(
     email: string,
     purpose: Purpose,
   ): Promise<SaveAuthCodeDto> {
-    let prefix: typeof AUTH_CODE_PURPOSE[keyof typeof AUTH_CODE_PURPOSE];
+    let prefix: typeof REDIS_KEY_PREFIX[keyof typeof REDIS_KEY_PREFIX];
     let ttl: number;
     switch (purpose) {
       case 'RESET_PASSWORD':
-        prefix = AUTH_CODE_PURPOSE.RESET_PWD;
+        prefix = REDIS_KEY_PREFIX.RESET_PWD;
         ttl = RESET_PWD_TTL;
         break;
       case 'SIGN_UP':
-        prefix = AUTH_CODE_PURPOSE.SIGN_UP;
+        prefix = REDIS_KEY_PREFIX.SIGN_UP;
         ttl = SIGN_UP_TTL;
         break;
     }

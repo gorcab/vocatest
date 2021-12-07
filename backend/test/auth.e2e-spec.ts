@@ -51,7 +51,7 @@ describe('AuthController (e2e)', () => {
   });
 
   describe('/auth/login (POST)', () => {
-    it('로그인에 성공하면 access token과 사용자 정보를 response로 반환한다.', async () => {
+    it('로그인에 성공하면 access token, refresh token과 사용자 정보를 response로 반환한다.', async () => {
       // given
       const createUserDto: CreateUserRequestDto = {
         email: 'tester1234@gmail.com',
@@ -75,7 +75,8 @@ describe('AuthController (e2e)', () => {
         id: user.id,
         email: user.email,
         nickname: user.nickname,
-        accessToken: response.body.accessToken,
+        accessToken: expect.any(String),
+        refreshToken: expect.any(String),
       });
     });
 

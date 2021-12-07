@@ -1,10 +1,7 @@
-import { OmitType } from '@nestjs/mapped-types';
 import { User } from '../entities/user.entity';
-import { UserResponseDto } from './UserResponse.dto';
+import { UserDto } from './User.dto';
 
-export class UpdatedUserResponseDto extends OmitType(UserResponseDto, [
-  'accessToken',
-] as const) {
+export class UpdatedUserResponseDto extends UserDto {
   static create(user: User) {
     const updatedUserResponseDto: UpdatedUserResponseDto = {
       id: user.id,

@@ -5,7 +5,7 @@ import { Cache } from 'cache-manager';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/service/user.service';
 import { SIGN_UP_TTL } from '../constants';
-import { JwtPayloadDto } from '../dtos/jwt-payload.dto';
+import { JwtPayloadDto } from '../dtos/JwtPayload.dto';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -77,16 +77,21 @@ describe('AuthService', () => {
     expect(result).toStrictEqual(user);
   });
 
-  it('로그인을 하면 해당 회원 정보를 토대로 access token을 만들어 반환한다.', async () => {
+  it('로그인을 하면 해당 회원 정보를 토대로 access token, refresh token을 만들어 반환한다.', async () => {
     const accessToken = 'accesstoken';
+    const refreshToken = 'refreshtoken';
     const signSpy = jest
       .spyOn(jwtService, 'sign')
-      .mockImplementation(() => accessToken);
+      .mockImplementationOnce(() => accessToken)
+      .mockImplementationOnce(() => refreshToken);
 
     const result = await service.login(user);
 
     expect(signSpy).toHaveBeenCalled();
-    expect(result).toBe(accessToken);
+    expect(result).toStrictEqual({
+      accessToken,
+      refreshToken,
+    });
   });
 
   it('email과 생성한 인증 코드를 토대로 redis에 저장한 뒤, SaveAuthCodeDto를 반환한다.', async () => {
