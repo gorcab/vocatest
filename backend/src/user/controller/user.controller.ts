@@ -13,7 +13,6 @@ import {
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthService } from 'src/auth/service/auth.service';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
-import { DeleteUserDto } from '../dtos/DeleteUser.dto';
 import { ResetPasswordDto } from '../dtos/ResetPassword.dto';
 import { UpdateUserDto } from '../dtos/UpdateUser.dto';
 import { UserDto } from '../dtos/User.dto';
@@ -65,19 +64,8 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(SameUserIdInTokenAndParamGuard)
   @UseGuards(JwtAuthGuard)
-  public async delete(
-    @Param('id') userId: number,
-    @Body() deleteUserDto: DeleteUserDto,
-  ) {
-    const user = await this.userService.findOneByEmailAndPassword(
-      deleteUserDto.email,
-      deleteUserDto.password,
-    );
-    if (!user) {
-      throw new UnauthorizedException('비밀번호가 올바르지 않습니다.');
-    }
-
-    await this.userService.delete(user);
+  public async delete(@Param('id') userId: number) {
+    return await this.userService.deleteById(userId);
   }
 
   @Post('password')

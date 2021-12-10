@@ -90,7 +90,6 @@ describe('UserService', () => {
   });
 
   it('User를 생성하면 생성한 User를 반환한다.', async () => {
-    const deleteSignUpAuthCodeSpy = jest.spyOn(mockRedisService, 'del');
     const encryptPasswordSpy = jest
       .spyOn(UserService.prototype as any, 'encryptPassword')
       .mockImplementation(() => Promise.resolve(user.password));
@@ -102,7 +101,6 @@ describe('UserService', () => {
     });
 
     expect(createdUser).toStrictEqual(user);
-    expect(deleteSignUpAuthCodeSpy).toHaveBeenCalled();
     expect(encryptPasswordSpy).toHaveBeenCalled();
   });
 
@@ -184,7 +182,7 @@ describe('UserService', () => {
   });
 
   it('회원탈퇴를 하면 user repository의 delete 메소드를 호출한다.', async () => {
-    await service.delete(user);
+    await service.deleteById(user.id);
 
     expect(mockUserRepository.delete).toBeCalled();
   });

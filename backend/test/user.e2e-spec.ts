@@ -11,7 +11,6 @@ import { CreateUserRequestDto } from 'src/user/dtos/CreateUserRequest.dto';
 import { UserService } from 'src/user/service/user.service';
 import { CreateUserServiceDto } from 'src/user/dtos/CreateUserService.dto';
 import { UpdateUserDto } from 'src/user/dtos/UpdateUser.dto';
-import { DeleteUserDto } from 'src/user/dtos/DeleteUser.dto';
 import { REDIS_KEY_PREFIX } from 'src/auth/constants';
 import { ResetPasswordDto } from 'src/user/dtos/ResetPassword.dto';
 
@@ -382,11 +381,6 @@ describe('UserController (e2e)', () => {
       };
       const user = await userService.save(createUserServiceDto);
 
-      const deleteUserDto: DeleteUserDto = {
-        email: createUserServiceDto.email,
-        password: createUserServiceDto.password,
-      };
-
       const accessToken = await agent.post('/auth/login').send({
         email: createUserServiceDto.email,
         password: createUserServiceDto.password,
@@ -395,34 +389,7 @@ describe('UserController (e2e)', () => {
       return agent
         .delete(`/users/${user.id}`)
         .auth(accessToken.body.accessToken, { type: 'bearer' })
-        .send(deleteUserDto)
         .expect(204);
-    });
-
-    it('비밀번호가 올바르지 않으면 회원탈퇴에 실패하고 401 에러를 반환한다.', async () => {
-      const agent = request.agent(app.getHttpServer());
-      const createUserServiceDto: CreateUserServiceDto = {
-        email: 'test1234@gmail.com',
-        password: 'test1234',
-        nickname: 'tester1234',
-      };
-      const user = await userService.save(createUserServiceDto);
-
-      const deleteUserDto: DeleteUserDto = {
-        email: createUserServiceDto.email,
-        password: 'wrongpwd',
-      };
-
-      const accessToken = await agent.post('/auth/login').send({
-        email: createUserServiceDto.email,
-        password: createUserServiceDto.password,
-      });
-
-      return agent
-        .delete(`/users/${user.id}`)
-        .auth(accessToken.body.accessToken, { type: 'bearer' })
-        .send(deleteUserDto)
-        .expect(401);
     });
 
     it('다른 사용자에 대해 회원탈퇴를 요청하면 401 에러를 반환한다.', async () => {
@@ -440,11 +407,6 @@ describe('UserController (e2e)', () => {
       };
       const anotherUser = await userService.save(anotherCreateUserServiceDto);
 
-      const deleteUserDto: DeleteUserDto = {
-        email: anotherCreateUserServiceDto.email,
-        password: anotherCreateUserServiceDto.password,
-      };
-
       const accessToken = await agent.post('/auth/login').send({
         email: createUserServiceDto.email,
         password: createUserServiceDto.password,
@@ -453,7 +415,6 @@ describe('UserController (e2e)', () => {
       return agent
         .patch(`/users/${anotherUser.id}`)
         .auth(accessToken.body.accessToken, { type: 'bearer' })
-        .send(deleteUserDto)
         .expect(401);
     });
   });

@@ -13,16 +13,18 @@ export class ValidSignUpAuthCodeGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const createUserRequestDto = request.body as CreateUserRequestDto;
+    const { email, signUpAuthCode } = request.body as CreateUserRequestDto;
 
     const isValid = await this.userService.validateSignUpAuthCode(
-      createUserRequestDto.email,
-      createUserRequestDto.signUpAuthCode,
+      email,
+      signUpAuthCode,
     );
 
     if (!isValid) {
       throw new BadRequestException('인증 번호가 올바르지 않습니다.');
     }
+
+    await this.userService.deleteSignUpAuthCode(email);
 
     return true;
   }

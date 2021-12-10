@@ -53,7 +53,6 @@ export class UserService {
     password,
     nickname,
   }: CreateUserServiceDto): Promise<User> {
-    await this.deleteSignUpAuthCode(email);
     const encryptedPassword = await this.encryptPassword(password);
     const user = this.userRepository.create({
       email,
@@ -101,8 +100,8 @@ export class UserService {
     return UpdatedUserResponseDto.create(updatedUser);
   }
 
-  public async delete(user: User): Promise<void> {
-    await this.userRepository.delete(user.id);
+  public async deleteById(id: number): Promise<void> {
+    await this.userRepository.delete(id);
   }
 
   public async updatePassword(email: string, password: string): Promise<void> {
@@ -114,7 +113,7 @@ export class UserService {
     );
   }
 
-  private async deleteSignUpAuthCode(email: string): Promise<void> {
+  public async deleteSignUpAuthCode(email: string): Promise<void> {
     await this.redisService.del(`${REDIS_KEY_PREFIX.SIGN_UP}${email}`);
   }
 
