@@ -49,6 +49,7 @@ describe('AuthController', () => {
       createJwtToken: jest.fn(),
       decodeToken: jest.fn(),
       isExpiredToken: jest.fn(),
+      deleteRefreshToken: jest.fn(),
     };
 
     emailService = {
@@ -231,5 +232,11 @@ describe('AuthController', () => {
       accessToken,
       refreshToken: refreshTokenDto.refreshToken,
     });
+  });
+
+  it('로그아웃을 위해 해당 유저에 대해 저장 중인 refresh token을 삭제한다.', async () => {
+    await controller.logout(user);
+
+    expect(authService.deleteRefreshToken).toBeCalledWith(user.email);
   });
 });

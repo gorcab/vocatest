@@ -38,6 +38,7 @@ describe('AuthService', () => {
     redisService = {
       get: jest.fn(),
       set: jest.fn(),
+      del: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -228,5 +229,13 @@ describe('AuthService', () => {
       iat: expect.any(Number),
       exp: expect.any(Number),
     });
+  });
+
+  it('redis에 저장된 해당 사용자의 refresh token을 삭제한다.', async () => {
+    await service.deleteRefreshToken(user.email);
+
+    expect(redisService.del).toBeCalledWith(
+      `${REDIS_KEY_PREFIX.REFRESH_TOKEN}${user.email}`,
+    );
   });
 });

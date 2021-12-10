@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  HttpCode,
+  HttpStatus,
   Post,
   Req,
   ServiceUnavailableException,
@@ -10,11 +12,14 @@ import {
 import { RequestWithUser } from 'src/common/types';
 import { EmailService } from 'src/email/services/email.service';
 import { UserWithJwtTokenDto } from 'src/user/dtos/UserWithJwtToken.dto';
+import { User } from '../../common/decorators/user.decorator';
+import { User as UserEntity } from 'src/user/entities/user.entity';
 import { ACCESS_TOKEN_TTL } from '../constants';
 import { RefreshTokenDto } from '../dtos/RefreshToken.dto';
 import { RefreshTokensDto } from '../dtos/RefreshTokens.dto';
 import { SendAuthCodeRequestDto } from '../dtos/SendAuthCodeRequest.dto';
 import { SendAuthCodeResponseDto } from '../dtos/SendAuthCodeResponse.dto';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { ValidAuthCodeRequest } from '../guards/ValidAuthCodeRequest.guard';
 import { ValidRefreshTokenGuard } from '../guards/ValidRefreshToken.guard';
@@ -27,14 +32,21 @@ export class AuthController {
     private readonly emailService: EmailService,
   ) {}
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
+  @UseGuards(LocalAuthGuard)
   public async login(
     @Req() req: RequestWithUser,
   ): Promise<UserWithJwtTokenDto> {
     const { accessToken, refreshToken } =
       await this.authService.createAccessAndRefreshToken(req.user);
     return UserWithJwtTokenDto.create(req.user, accessToken, refreshToken);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  public async logout(@User() user: UserEntity): Promise<void> {
+    await this.authService.deleteRefreshToken(user.email);
   }
 
   @Post('/code')

@@ -65,6 +65,10 @@ export class AuthService {
     return this.redisService.get(`${REDIS_KEY_PREFIX.REFRESH_TOKEN}${email}`);
   }
 
+  public async deleteRefreshToken(email: string): Promise<void> {
+    await this.redisService.del(`${REDIS_KEY_PREFIX.REFRESH_TOKEN}${email}`);
+  }
+
   public createJwtToken(payload: Partial<JwtPayloadDto>, expiresIn: number) {
     return this.jwtService.sign(payload, { expiresIn });
   }

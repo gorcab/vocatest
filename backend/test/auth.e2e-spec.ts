@@ -372,4 +372,31 @@ describe('AuthController (e2e)', () => {
         .expect(401);
     });
   });
+
+  describe('/auth/logout POST', () => {
+    it('로그아웃을 하면 204 상태 코드를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      await userService.save(createUserServiceDto);
+
+      const tokenResponse = await agent
+        .post('/auth/login')
+        .send({
+          email: createUserServiceDto.email,
+          password: createUserServiceDto.password,
+        })
+        .expect(201);
+      const accessToken = tokenResponse.body.accessToken;
+
+      // when, then
+      return await agent
+        .post('/auth/logout')
+        .auth(accessToken, { type: 'bearer' })
+        .expect(204);
+    });
+  });
 });
