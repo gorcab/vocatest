@@ -332,11 +332,11 @@ describe('CategoryController (e2e)', () => {
         name: 'teps',
       };
       const category = await categoryService.save(user, createCategoryDto);
-      const anotherCategory = await categoryService.save(
+      const anotherCategoryDto = await categoryService.save(
         anotherUser,
         anotherCreateCategoryDto,
       );
-      const deleteCategoryId = anotherCategory.id;
+      const deleteCategoryId = anotherCategoryDto.id;
 
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
@@ -360,14 +360,14 @@ describe('CategoryController (e2e)', () => {
       const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
-      const category = await categoryService.save(user, createCategoryDto);
+      const categoryDto = await categoryService.save(user, createCategoryDto);
 
       const accessTokenResponse = await agent.post('/auth/login').send({
         email: createUserDto.email,
         password: createUserDto.password,
       });
 
-      const deleteCategoryId = category.id;
+      const deleteCategoryId = categoryDto.id;
       return agent
         .delete(`/categories/${deleteCategoryId}`)
         .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })

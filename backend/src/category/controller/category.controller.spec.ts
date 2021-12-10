@@ -2,7 +2,8 @@ import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { createCategory, createUser } from 'src/common/mocks/utils';
 import { User } from 'src/user/entities/user.entity';
-import { CategoryResponseDto } from '../dtos/CategoryResponse.dto';
+import { CategoriesDto } from '../dtos/Categories.dto';
+import { CategoryDto } from '../dtos/Category.dto';
 import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
 import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { Category } from '../entities/category.entity';
@@ -23,18 +24,18 @@ describe('CategoryController', () => {
 
     mockCategoryService = {
       findByUserAndName: async () => category,
-      findByUser: async () => categories,
-      save: async () => category as Category,
-      update: async (user: User, updateCategoryDto: CategoryResponseDto) => {
+      findByUser: async () => CategoriesDto.create(categories),
+      save: async () => CategoryDto.create(category),
+      update: async (user: User, updateCategoryDto: UpdateCategoryDto) => {
         const updatedCategory = new Category();
         updatedCategory.id = category.id;
         updatedCategory.name = updateCategoryDto.name;
         updatedCategory.user = user;
         updatedCategory.vocabularyLists = null;
 
-        return updatedCategory;
+        return CategoryDto.create(updatedCategory);
       },
-      deleteById: async () => true,
+      deleteById: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -54,7 +55,7 @@ describe('CategoryController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('카테고리가 생성되면 CreateCategoryResponseDto를 반환한다.', async () => {
+  it('카테고리가 생성되면 CategoryDto를 반환한다.', async () => {
     const createCategoryDto: CreateCategoryDto = {
       name: category.name,
     };
@@ -67,7 +68,7 @@ describe('CategoryController', () => {
     });
   });
 
-  it('회원의 모든 카테고리들을 CategoriesResponseDto로 반환한다.', async () => {
+  it('회원의 모든 카테고리들을 CategoriesDto로 반환한다.', async () => {
     const result = await controller.getAll(user);
 
     const expectedResult = {
@@ -80,7 +81,7 @@ describe('CategoryController', () => {
     expect(result).toStrictEqual(expectedResult);
   });
 
-  it('업데이트된 CategoryResponseDto를 반환한다.', async () => {
+  it('업데이트된 CategoryDto를 반환한다.', async () => {
     const updateCategoryDto: UpdateCategoryDto = {
       id: category.id,
       name: 'teps',
@@ -94,21 +95,10 @@ describe('CategoryController', () => {
     });
   });
 
-  it('카테고리 삭제에 성공하면 에러를 발생시키지 않는다.', async () => {
+  it('카테고리 삭제를 위해 service 객체의 deleteById 메소드를 호출한다.', async () => {
     const deleteCategoryId = 1;
+    await controller.delete(deleteCategoryId);
 
-    expect(async () => await controller.delete(deleteCategoryId)).not.toThrow(
-      new BadRequestException('카테고리 삭제에 실패했습니다.'),
-    );
-  });
-
-  it('카테고리 삭제에 실패하면 ServiceUnavailableException이 발생한다.', async () => {
-    mockCategoryService.deleteById = async () => false;
-
-    const deleteCategoryId = 1;
-
-    await expect(controller.delete(deleteCategoryId)).rejects.toThrow(
-      new BadRequestException('카테고리 삭제에 실패했습니다.'),
-    );
+    expect(mockCategoryService.deleteById).toBeCalledWith(deleteCategoryId);
   });
 });

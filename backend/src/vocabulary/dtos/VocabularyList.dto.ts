@@ -1,5 +1,5 @@
 import { PickType } from '@nestjs/mapped-types';
-import { CategoryResponseDto } from 'src/category/dtos/CategoryResponse.dto';
+import { CategoryDto } from 'src/category/dtos/Category.dto';
 import { VocabularyList } from '../entities/VocabularyList.entity';
 import { CreateVocabularyListDto } from './CreateVocabularyList.dto';
 
@@ -9,7 +9,7 @@ export class VocabularyListDto extends PickType(CreateVocabularyListDto, [
   id: number;
   createdAt: Date;
   numOfVocabularies: number;
-  category: CategoryResponseDto;
+  category: CategoryDto;
 
   static create(
     { id, createdAt, category, title }: VocabularyList,
@@ -18,7 +18,7 @@ export class VocabularyListDto extends PickType(CreateVocabularyListDto, [
     const vocabularyListResponseDto: VocabularyListDto = {
       id,
       title,
-      category: CategoryResponseDto.create(category),
+      category: CategoryDto.create(category),
       createdAt,
       numOfVocabularies,
     };

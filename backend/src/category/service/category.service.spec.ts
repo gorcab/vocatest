@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { createCategory, createUser } from 'src/common/mocks/utils';
 import { User } from 'src/user/entities/user.entity';
 import { DeepPartial, Repository } from 'typeorm';
+import { CategoriesDto } from '../dtos/Categories.dto';
 import { CreateCategoryDto } from '../dtos/CreateCategory.dto';
 import { UpdateCategoryDto } from '../dtos/UpdateCategory.dto';
 import { Category } from '../entities/category.entity';
@@ -26,10 +27,7 @@ describe('CategoryService', () => {
       create: async () => category,
       save: async () => category,
       update: async () => undefined,
-      delete: async () => ({
-        affected: 1,
-        raw: '',
-      }),
+      delete: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -70,13 +68,16 @@ describe('CategoryService', () => {
 
     const result = await service.save(user, createCategoryDto);
 
-    expect(result).toStrictEqual(category);
+    expect(result).toStrictEqual({
+      id: expect.any(Number),
+      name: createCategoryDto.name,
+    });
   });
 
   it('회원의 카테고리를 모두 반환한다.', async () => {
     const result = await service.findByUser(user);
 
-    expect(result).toStrictEqual(categories);
+    expect(result).toStrictEqual(CategoriesDto.create(categories));
   });
 
   it('사용자가 해당 ID의 카테고리를 가지고 있으면 해당 카테고리를 반환한다.', async () => {
@@ -104,29 +105,20 @@ describe('CategoryService', () => {
     expect(result.name).toBe(updateCategoryDto.name);
   });
 
-  it('카테고리가 정상적으로 삭제되면 true를 반환한다.', async () => {
+  it('카테고리 삭제를 위해 repository의 delete 메소드를 호출한다.', async () => {
     const id = 1;
 
-    const result = await service.deleteById(id);
+    await service.deleteById(id);
 
-    expect(result).toBeTruthy();
-  });
-
-  it('카테고리가 삭제되지 않으면 false를 반환한다.', async () => {
-    mockCategoryRepository.delete = async () => ({
-      affected: 0,
-      raw: '',
-    });
-    const id = 1;
-
-    const result = await service.deleteById(id);
-
-    expect(result).toBeFalsy();
+    expect(mockCategoryRepository.delete).toBeCalledWith(id);
   });
 
   it('id가 일치하는 카테고리를 반환한다.', async () => {
     const result = await service.findById(category.id);
 
-    expect(result).toMatchObject(category);
+    expect(result).toStrictEqual({
+      id: category.id,
+      name: category.name,
+    });
   });
 });

@@ -1,3 +1,4 @@
+import { CategoryDto } from 'src/category/dtos/Category.dto';
 import { Category } from 'src/category/entities/category.entity';
 import { User } from 'src/user/entities/user.entity';
 import { CreateVocabularyDto } from 'src/vocabulary/dtos/CreateVocabulary.dto';
@@ -53,9 +54,13 @@ export const createVocabulary = (examples?: Array<Example>) => {
 };
 
 export const createVocabularyList = (
-  category: Category,
+  { id, name }: CategoryDto,
   vocabularies?: Array<Vocabulary>,
 ) => {
+  const category = new Category();
+  category.id = id;
+  category.name = name;
+
   const vocabularyList = new VocabularyList();
   vocabularyList.id = getRandomId();
   vocabularyList.createdAt = new Date();

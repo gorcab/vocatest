@@ -520,10 +520,10 @@ describe('VocabularyController (e2e)', () => {
       const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
-      const category = await categoryService.save(user, createCategoryDto);
-      const vocaList = createVocabularyList(category, [createVocabulary()]);
+      const categoryDto = await categoryService.save(user, createCategoryDto);
+      const vocaList = createVocabularyList(categoryDto, [createVocabulary()]);
       const createVocabularyListDto: CreateVocabularyListDto = {
-        categoryId: category.id,
+        categoryId: categoryDto.id,
         title: 'vocaList1',
         vocabularies: [
           {
@@ -544,15 +544,15 @@ describe('VocabularyController (e2e)', () => {
       const anotherCreateCategoryDto: CreateCategoryDto = {
         name: 'teps',
       };
-      const anotherCategory = await categoryService.save(
+      const anotherCategoryDto = await categoryService.save(
         anotherUser,
         anotherCreateCategoryDto,
       );
-      const anotherVocaList = createVocabularyList(anotherCategory, [
+      const anotherVocaList = createVocabularyList(anotherCategoryDto, [
         createVocabulary(),
       ]);
       const anotherCreateVocabularyListDto: CreateVocabularyListDto = {
-        categoryId: anotherCategory.id,
+        categoryId: anotherCategoryDto.id,
         title: 'vocaList2',
         vocabularies: [
           {
@@ -699,10 +699,10 @@ describe('VocabularyController (e2e)', () => {
       const createCategoryDto: CreateCategoryDto = {
         name: 'toeic',
       };
-      const category = await categoryService.save(user, createCategoryDto);
-      const vocaList = createVocabularyList(category, [createVocabulary()]);
+      const categoryDto = await categoryService.save(user, createCategoryDto);
+      const vocaList = createVocabularyList(categoryDto, [createVocabulary()]);
       const createVocabularyListDto: CreateVocabularyListDto = {
-        categoryId: category.id,
+        categoryId: categoryDto.id,
         title: 'vocaList1',
         vocabularies: [
           {
@@ -723,15 +723,15 @@ describe('VocabularyController (e2e)', () => {
       const anotherCreateCategoryDto: CreateCategoryDto = {
         name: 'teps',
       };
-      const anotherCategory = await categoryService.save(
+      const anotherCategoryDto = await categoryService.save(
         anotherUser,
         anotherCreateCategoryDto,
       );
-      const anotherVocaList = createVocabularyList(anotherCategory, [
+      const anotherVocaList = createVocabularyList(anotherCategoryDto, [
         createVocabulary(),
       ]);
       const anotherCreateVocabularyListDto: CreateVocabularyListDto = {
-        categoryId: anotherCategory.id,
+        categoryId: anotherCategoryDto.id,
         title: 'vocaList2',
         vocabularies: [
           {
