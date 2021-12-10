@@ -260,6 +260,7 @@ describe('AuthController (e2e)', () => {
         .auth(accessToken, { type: 'bearer' })
         .send({
           refreshToken,
+          email: createUserServiceDto.email,
         })
         .expect(201);
 
@@ -294,6 +295,7 @@ describe('AuthController (e2e)', () => {
         .auth(accessToken, { type: 'bearer' })
         .send({
           refreshToken,
+          email: createUserServiceDto.email,
         })
         .expect(201);
 
@@ -336,13 +338,13 @@ describe('AuthController (e2e)', () => {
         .auth(accessToken, { type: 'bearer' })
         .send({
           refreshToken,
+          email: createUserServiceDto.email,
         })
         .expect(401);
     });
 
     it('access token 없이 토큰 재발급을 요청하면 401 에러를 반환한다.', async () => {
       // given
-      const currentTime = new Date().getTime();
       const agent = request.agent(app.getHttpServer());
       const createUserServiceDto: CreateUserServiceDto = {
         email: 'test1234@gmail.com',
@@ -365,6 +367,7 @@ describe('AuthController (e2e)', () => {
         .post('/auth/token')
         .send({
           refreshToken,
+          email: createUserServiceDto.email,
         })
         .expect(401);
     });

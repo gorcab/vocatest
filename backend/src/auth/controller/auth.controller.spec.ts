@@ -42,7 +42,8 @@ describe('AuthController', () => {
 
     authService = {
       validateUser: (email: string, password: string) => Promise.resolve(user),
-      login: (user: User) => Promise.resolve({ accessToken, refreshToken }),
+      createAccessAndRefreshToken: (user: User) =>
+        Promise.resolve({ accessToken, refreshToken }),
       saveAuthCode: async (email: string, purpose: Purpose) =>
         SaveAuthCodeDto.create(email, authToken, ttl),
       createJwtToken: jest.fn(),
@@ -162,6 +163,7 @@ describe('AuthController', () => {
     };
     const refreshTokenDto: RefreshTokenDto = {
       refreshToken: 'refreshtoken',
+      email: user.email,
     };
 
     // when, then
@@ -186,6 +188,7 @@ describe('AuthController', () => {
     };
     const refreshTokenDto: RefreshTokenDto = {
       refreshToken,
+      email: user.email,
     };
 
     // when
@@ -215,6 +218,7 @@ describe('AuthController', () => {
     };
     const refreshTokenDto: RefreshTokenDto = {
       refreshToken,
+      email: user.email,
     };
 
     // when

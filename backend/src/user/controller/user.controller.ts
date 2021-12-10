@@ -37,7 +37,8 @@ export class UserController {
   ): Promise<UserDto> {
     const { signUpAuthCode, ...createUserServiceDto } = createUserRequestDto;
     const user = await this.userService.save(createUserServiceDto);
-    const { accessToken, refreshToken } = await this.authService.login(user);
+    const { accessToken, refreshToken } =
+      await this.authService.createAccessAndRefreshToken(user);
 
     return UserWithJwtTokenDto.create(user, accessToken, refreshToken);
   }

@@ -1,11 +1,16 @@
 import { CACHE_MANAGER } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Cache } from 'cache-manager';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/service/user.service';
-import { REDIS_KEY_PREFIX, RESET_PWD_TTL, SIGN_UP_TTL } from '../constants';
+import {
+  REDIS_KEY_PREFIX,
+  REFRESH_TOKEN_TTL,
+  RESET_PWD_TTL,
+  SIGN_UP_TTL,
+} from '../constants';
 import { JwtPayloadDto } from '../dtos/JwtPayload.dto';
 import { JwtTokenDto } from '../dtos/JwtToken.dto';
 import { AuthService } from './auth.service';
@@ -84,8 +89,15 @@ describe('AuthService', () => {
   });
 
   it('로그인을 하면 해당 회원 정보를 토대로 access token, refresh token을 만들어 반환한다.', async () => {
-    const result = await service.login(user);
+    const result = await service.createAccessAndRefreshToken(user);
 
+    expect(redisService.set).toBeCalledWith(
+      `${REDIS_KEY_PREFIX.REFRESH_TOKEN}${user.email}`,
+      result.refreshToken,
+      {
+        ttl: REFRESH_TOKEN_TTL,
+      },
+    );
     expect(result).toStrictEqual({
       accessToken: expect.any(String),
       refreshToken: expect.any(String),
@@ -142,6 +154,17 @@ describe('AuthService', () => {
     const token = service.createJwtToken(jwtPayloadDto, expiresIn);
 
     expect(token).toStrictEqual(expect.any(String));
+  });
+
+  it('redis에 저장된 token을 반환한다.', async () => {
+    const savedRefreshToken = 'refreshToken';
+    redisService.get = jest
+      .fn()
+      .mockReturnValue(Promise.resolve(savedRefreshToken));
+
+    const result = await service.getRefreshToken(user.email);
+
+    expect(result).toBe(savedRefreshToken);
   });
 
   it('token이 만료되면 true를 반환한다.', () => {

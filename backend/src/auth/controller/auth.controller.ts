@@ -32,9 +32,8 @@ export class AuthController {
   public async login(
     @Req() req: RequestWithUser,
   ): Promise<UserWithJwtTokenDto> {
-    const { accessToken, refreshToken } = await this.authService.login(
-      req.user,
-    );
+    const { accessToken, refreshToken } =
+      await this.authService.createAccessAndRefreshToken(req.user);
     return UserWithJwtTokenDto.create(req.user, accessToken, refreshToken);
   }
 

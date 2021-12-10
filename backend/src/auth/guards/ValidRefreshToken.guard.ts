@@ -2,10 +2,8 @@ import {
   Injectable,
   CanActivate,
   ExecutionContext,
-  BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { AuthService } from '../service/auth.service';
 
 @Injectable()
@@ -14,12 +12,18 @@ export class ValidRefreshTokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const { refreshToken, ...restBody } = request.body as {
+    const { refreshToken, email, ...restBody } = request.body as {
       refreshToken: string;
+      email: string;
       [key: string]: any;
     };
 
-    if (this.authService.isExpiredToken(refreshToken)) {
+    const savedRefreshToken = await this.authService.getRefreshToken(email);
+
+    if (
+      this.authService.isExpiredToken(refreshToken) ||
+      refreshToken !== savedRefreshToken
+    ) {
       throw new UnauthorizedException();
     }
     return true;

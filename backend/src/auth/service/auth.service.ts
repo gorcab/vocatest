@@ -33,7 +33,9 @@ export class AuthService {
     return user;
   }
 
-  public async login(user: User): Promise<AccessAndRefreshTokenDto> {
+  public async createAccessAndRefreshToken(
+    user: User,
+  ): Promise<AccessAndRefreshTokenDto> {
     const accessToken = this.createJwtToken(
       {
         sub: user.id,
@@ -48,7 +50,19 @@ export class AuthService {
       REFRESH_TOKEN_TTL,
     );
 
+    await this.redisService.set(
+      `${REDIS_KEY_PREFIX.REFRESH_TOKEN}${user.email}`,
+      refreshToken,
+      {
+        ttl: REFRESH_TOKEN_TTL,
+      },
+    );
+
     return AccessAndRefreshTokenDto.create(accessToken, refreshToken);
+  }
+
+  public async getRefreshToken(email: string): Promise<string> {
+    return this.redisService.get(`${REDIS_KEY_PREFIX.REFRESH_TOKEN}${email}`);
   }
 
   public createJwtToken(payload: Partial<JwtPayloadDto>, expiresIn: number) {

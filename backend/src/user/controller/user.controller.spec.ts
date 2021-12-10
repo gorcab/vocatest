@@ -56,7 +56,8 @@ describe('UserController', () => {
     };
 
     mockAuthService = {
-      login: (user: User) => Promise.resolve({ accessToken, refreshToken }),
+      createAccessAndRefreshToken: (user: User) =>
+        Promise.resolve({ accessToken, refreshToken }),
       validateUser: (email: string, password: string) => Promise.resolve(user),
     };
 
