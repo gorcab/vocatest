@@ -358,20 +358,226 @@ describe('VocabularyController (e2e)', () => {
         .expect(200);
 
       expect(response.body).toStrictEqual({
-        page,
-        perPage,
-        total: vocaLists.length,
-        totalPage: Math.ceil(vocaLists.length / perPage),
+        page: 1,
+        perPage: 10,
+        total: 11,
+        totalPage: 2,
         data: createVocabularyListDtos
           .reverse()
-          .map((element) => ({
+          .map((element, index) => ({
             id: expect.any(Number),
             title: element.title,
-            category: expect.any(Object),
+            category: {
+              id: expect.any(Number),
+              name: expect.any(String),
+            },
             createdAt: expect.any(String),
             numOfVocabularies: element.vocabularies.length,
           }))
           .slice(0, 10),
+      });
+    });
+  });
+
+  describe('/vocabularies?category=${number}&page=${number}&perPage=${number} GET', () => {
+    it('해당 카테고리의 단어장들을 최신순으로 페이지 단위로 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+
+      const createAnotherCategoryDto: CreateCategoryDto = {
+        name: 'teps',
+      };
+      const anotherCategory = await categoryService.save(
+        user,
+        createAnotherCategoryDto,
+      );
+
+      const vocaLists: Array<Array<CreateVocabularyDto>> =
+        createVocabularyLists();
+
+      let day = 1;
+      const createVocabularyListDtos: Array<CreateVocabularyListDto> = [];
+      for (const vocabularies of vocaLists) {
+        const createVocabularyListDto: CreateVocabularyListDto = {
+          categoryId: category.id,
+          title: `DAY ${day}`,
+          vocabularies,
+        };
+        day++;
+        createVocabularyListDtos.push(createVocabularyListDto);
+
+        await vocabularyService.save(createVocabularyListDto);
+      }
+
+      const anotherVocaLists: Array<Array<CreateVocabularyDto>> = [
+        [{ english: 'pencil', korean: '연필' }],
+        [
+          { english: 'ruler', korean: '자' },
+          { english: 'eraser', korean: '지우개' },
+        ],
+        [{ english: 'chair', korean: '의자' }],
+      ];
+      day = 1;
+      for (const vocabularies of anotherVocaLists) {
+        const createVocabularyListDto: CreateVocabularyListDto = {
+          categoryId: anotherCategory.id,
+          title: `DAY ${day}`,
+          vocabularies,
+        };
+        day++;
+
+        await vocabularyService.save(createVocabularyListDto);
+      }
+
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+      const page = 1,
+        perPage = 10;
+
+      // when
+      const response = await agent
+        .get(
+          `/vocabularies?category=${anotherCategory.id}&page=${page}&perPage=${perPage}`,
+        )
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .expect(200);
+
+      // then
+      expect(response.body).toStrictEqual({
+        page: 1,
+        perPage: 10,
+        total: 3,
+        totalPage: 1,
+        data: [
+          {
+            id: expect.any(Number),
+            title: 'DAY 3',
+            category: {
+              id: expect.any(Number),
+              name: anotherCategory.name,
+            },
+            createdAt: expect.any(String),
+            numOfVocabularies: 1,
+          },
+          {
+            id: expect.any(Number),
+            title: 'DAY 2',
+            category: {
+              id: expect.any(Number),
+              name: anotherCategory.name,
+            },
+            createdAt: expect.any(String),
+            numOfVocabularies: 2,
+          },
+          {
+            id: expect.any(Number),
+            title: 'DAY 1',
+            category: {
+              id: expect.any(Number),
+              name: anotherCategory.name,
+            },
+            createdAt: expect.any(String),
+            numOfVocabularies: 1,
+          },
+        ],
+      });
+    });
+  });
+
+  describe('/vocabularies?title=${string}&page=${number}&perPage=${number}', () => {
+    it('제목에 특정 단어가 포함된 단어장들을 최신순으로 반환한다.', async () => {
+      // given
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const createCategoryDto: CreateCategoryDto = {
+        name: 'toeic',
+      };
+      const category = await categoryService.save(user, createCategoryDto);
+
+      const vocaLists: Array<Array<CreateVocabularyDto>> = [
+        [{ english: 'pencil', korean: '연필' }],
+        [
+          { english: 'ruler', korean: '자' },
+          { english: 'eraser', korean: '지우개' },
+        ],
+        [{ english: 'chair', korean: '의자' }],
+      ];
+      let day = 1;
+      for (const vocabularies of vocaLists) {
+        const createVocabularyListDto: CreateVocabularyListDto = {
+          categoryId: category.id,
+          title: day < 3 ? `빨간 책 DAY ${day}` : `파란 책 DAY ${day}`,
+          vocabularies,
+        };
+        day++;
+
+        await vocabularyService.save(createVocabularyListDto);
+      }
+
+      const accessTokenResponse = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+      const page = 1,
+        perPage = 10;
+
+      // when
+      const response = await agent
+        .get(
+          `/vocabularies?page=${page}&perPage=${perPage}&title=${encodeURI(
+            '빨간 책',
+          )}`,
+        )
+        .auth(accessTokenResponse.body.accessToken, { type: 'bearer' })
+        .expect(200);
+
+      // then
+      expect(response.body).toStrictEqual({
+        page: 1,
+        perPage: 10,
+        total: 2,
+        totalPage: 1,
+        data: [
+          {
+            id: expect.any(Number),
+            title: '빨간 책 DAY 2',
+            category: {
+              id: expect.any(Number),
+              name: category.name,
+            },
+            createdAt: expect.any(String),
+            numOfVocabularies: 2,
+          },
+          {
+            id: expect.any(Number),
+            title: '빨간 책 DAY 1',
+            category: {
+              id: expect.any(Number),
+              name: category.name,
+            },
+            createdAt: expect.any(String),
+            numOfVocabularies: 1,
+          },
+        ],
       });
     });
   });
@@ -397,14 +603,12 @@ describe('VocabularyController (e2e)', () => {
 
       let day = 1;
       let vocabularyListDto: VocabularyListDto;
-      const createVocabularyListDtos: Array<CreateVocabularyListDto> = [];
       for (const vocabularies of vocaLists) {
         const createVocabularyListDto: CreateVocabularyListDto = {
           categoryId: category.id,
           title: `DAY ${day}`,
           vocabularies,
         };
-        createVocabularyListDtos.push(createVocabularyListDto);
 
         const result = await vocabularyService.save(createVocabularyListDto);
         if (day === 1) {

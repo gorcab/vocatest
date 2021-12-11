@@ -49,11 +49,7 @@ describe('VocabularyController', () => {
             vocabularyList.vocabularies.length,
           ),
         ),
-      findByUserAndPageInfo: async (
-        user: User,
-        page: number,
-        perPage: number,
-      ) =>
+      findByUserAndPageInfo: async ({ user, page, perPage, categoryId }) =>
         new Page(
           Array(VocabularyListDto.create(vocabularyList, vocabularies.length)),
           page,
@@ -64,7 +60,7 @@ describe('VocabularyController', () => {
         VocabularyListDto.create(vocabularyList, vocabularies.length),
       findById: async (vocabularyListId: number) =>
         DetailedVocabularyListDto.create(vocabularyList),
-      deleteById: async (vocabularyListId: number) => true,
+      deleteById: jest.fn(),
       update: async (
         vocabularyListId: number,
         updateVocabularyListDto: UpdateVocabularyListDto,
@@ -144,6 +140,7 @@ describe('VocabularyController', () => {
 
     const result = await controller.getPaginatedVocabularyList(
       {
+        category: category.id,
         page,
         perPage,
       },
@@ -244,17 +241,9 @@ describe('VocabularyController', () => {
     });
   });
 
-  it('단어장 삭제에 성공하면 에러를 반환하지 않는다.', async () => {
+  it('단어장 삭제를 위한 서비스 객체의 deleteById 메소드를 호출한다.', async () => {
     const result = await controller.deleteOne(vocabularyList.id);
 
-    expect(result).toBeUndefined();
-  });
-
-  it('단어장 삭제에 실패하면 BadRequest 에러를 반환한다.', async () => {
-    vocabularyService.deleteById = async () => false;
-
-    await expect(controller.deleteOne(vocabularyList.id)).rejects.toThrow(
-      new BadRequestException('단어장 삭제에 실패했습니다.'),
-    );
+    expect(vocabularyService.deleteById).toBeCalledWith(vocabularyList.id);
   });
 });

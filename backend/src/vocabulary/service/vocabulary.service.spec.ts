@@ -67,10 +67,7 @@ describe('VocabularyService', () => {
       create: jest.fn().mockReturnValueOnce(vocabularyList),
       save: jest.fn(),
       findOne: async () => vocabularyList,
-      delete: async () => ({
-        affected: 1,
-        raw: '',
-      }),
+      delete: jest.fn(),
       createQueryBuilder: jest.fn(() => {
         return {
           innerJoinAndSelect: jest.fn().mockReturnThis(),
@@ -180,6 +177,7 @@ describe('VocabularyService', () => {
     const exists = false;
     vocabularyListRepository.createQueryBuilder = jest.fn(() => ({
       innerJoin: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
       getCount: jest.fn(() => Promise.resolve(exists)),
     }));
 
@@ -210,7 +208,11 @@ describe('VocabularyService', () => {
     const page = 1,
       perPage = 10;
 
-    const result = await service.findByUserAndPageInfo(user, page, perPage);
+    const result = await service.findByUserAndPageInfo({
+      user,
+      page,
+      perPage,
+    });
 
     expect(result).toMatchObject({
       page,
@@ -271,10 +273,9 @@ describe('VocabularyService', () => {
     });
   });
 
-  it('단어장을 삭제하면 삭제 여부를 boolean 값으로 반환한다.', async () => {
-    const result = await service.deleteById(vocabularyList.id);
-
-    expect(result).toBeTruthy();
+  it('단어장을 삭제하면 Repository의 delete 메소드를 호출한다.', async () => {
+    await service.deleteById(vocabularyList.id);
+    expect(vocabularyListRepository.delete).toBeCalledWith(vocabularyList.id);
   });
 
   it('단어장을 수정하면 수정된 단어장 정보를 반환한다.', async () => {

@@ -42,10 +42,22 @@ export class VocabularyController {
 
   @Get()
   public async getPaginatedVocabularyList(
-    @Query() { page, perPage }: GetPaginatedVocabularyListQueryDto,
+    @Query()
+    {
+      page,
+      perPage,
+      category: categoryId,
+      title,
+    }: GetPaginatedVocabularyListQueryDto,
     @User() user: UserEntity,
   ): Promise<Page<Array<VocabularyListDto>>> {
-    return this.vocabularyService.findByUserAndPageInfo(user, page, perPage);
+    return this.vocabularyService.findByUserAndPageInfo({
+      user,
+      categoryId,
+      page,
+      perPage,
+      title,
+    });
   }
 
   @Get(':id')
@@ -71,10 +83,6 @@ export class VocabularyController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(UsersVocabularyListGuard)
   public async deleteOne(@Param('id') vocabularyListId: number): Promise<void> {
-    const isDeleted = await this.vocabularyService.deleteById(vocabularyListId);
-
-    if (!isDeleted) {
-      throw new BadRequestException('단어장 삭제에 실패했습니다.');
-    }
+    await this.vocabularyService.deleteById(vocabularyListId);
   }
 }

@@ -7,6 +7,7 @@ import { User } from 'src/user/entities/user.entity';
 import { Connection, Repository } from 'typeorm';
 import { CreateVocabularyListDto } from '../dtos/CreateVocabularyList.dto';
 import { DetailedVocabularyListDto } from '../dtos/DetailedVocabularyList.dto';
+import { GetPaginatedVocabularyListServiceDto } from '../dtos/GetPaginatedVocabularyListService.dto';
 import { UpdateVocabularyListDto } from '../dtos/UpdateVocabularyList.dto';
 import { VocabularyListDto } from '../dtos/VocabularyList.dto';
 import { Example } from '../entities/Example.entity';
@@ -108,6 +109,7 @@ export class VocabularyService {
         'category.id = :categoryId',
         { categoryId },
       )
+      .where('vocabularyList.title= :title', { title })
       .getCount();
 
     return !!count;
@@ -132,18 +134,41 @@ export class VocabularyService {
     );
   }
 
-  public async findByUserAndPageInfo(
+  public async findByUserAndPageInfo({
+    categoryId,
     user,
     page,
     perPage,
-  ): Promise<Page<Array<VocabularyListDto>>> {
-    const [vocabularyLists, total] = await this.vocabularyListRepository
+    title,
+  }: GetPaginatedVocabularyListServiceDto): Promise<
+    Page<Array<VocabularyListDto>>
+  > {
+    let query = this.vocabularyListRepository
       .createQueryBuilder('vocabularyList')
-      .innerJoinAndSelect('vocabularyList.vocabularies', 'vocabulary')
-      .innerJoinAndSelect('vocabularyList.category', 'category')
-      .innerJoin('category.user', 'user', 'user.id = :userId', {
-        userId: user.id,
-      })
+      .innerJoinAndSelect('vocabularyList.vocabularies', 'vocabulary');
+
+    if (categoryId) {
+      query = query.innerJoinAndSelect(
+        'vocabularyList.category',
+        'category',
+        'category.id = :categoryId',
+        { categoryId },
+      );
+    } else {
+      query = query.innerJoinAndSelect('vocabularyList.category', 'category');
+    }
+
+    query = query.innerJoin('category.user', 'user', 'user.id = :userId', {
+      userId: user.id,
+    });
+
+    if (title) {
+      query = query.where('vocabularyList.title like :title', {
+        title: `%${title}%`,
+      });
+    }
+
+    const [vocabularyLists, total] = await query
       .orderBy('vocabularyList.createdAt', 'DESC')
       .skip(perPage * (page - 1))
       .take(perPage)
@@ -194,12 +219,8 @@ export class VocabularyService {
     return vocabularyList;
   }
 
-  public async deleteById(vocabularyListId: number): Promise<boolean> {
-    const deleteResult = await this.vocabularyListRepository.delete(
-      vocabularyListId,
-    );
-
-    return deleteResult.affected > 0;
+  public async deleteById(vocabularyListId: number): Promise<void> {
+    await this.vocabularyListRepository.delete(vocabularyListId);
   }
 
   public async update(
@@ -226,6 +247,7 @@ export class VocabularyService {
 
       const vocabularies: Array<Vocabulary> = [];
       let vocabularyId = 1;
+
       for (const {
         english,
         korean,
@@ -240,6 +262,7 @@ export class VocabularyService {
         await vocabularyRepository.save(vocabulary);
         vocabularyId++;
         vocabularies.push(vocabulary);
+
         if (examples) {
           let exampleId = 1;
           const examplesArray: Array<Example> = [];
@@ -254,16 +277,20 @@ export class VocabularyService {
             exampleId++;
             examplesArray.push(example);
           }
+
           vocabulary.examples = Promise.resolve(examplesArray);
         }
+
         vocabularyList.vocabularies = vocabularies;
       }
+
       vocabularyList = await vocabularyListRepository.findOne(
         vocabularyList.id,
         {
           relations: ['category', 'vocabularies'],
         },
       );
+
       await queryRunner.commitTransaction();
 
       return DetailedVocabularyListDto.create(vocabularyList);
