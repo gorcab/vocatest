@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
@@ -10,6 +11,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { User } from '../../common/decorators/user.decorator';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AuthService } from 'src/auth/service/auth.service';
 import { CreateUserRequestDto } from '../dtos/CreateUserRequest.dto';
@@ -22,6 +24,8 @@ import { SameUserIdInTokenAndParamGuard } from '../guards/SameUserIdInTokenAndPa
 import { ValidResetPasswordAuthCodeGuard } from '../guards/ValidResetPasswordAuthCode.guard';
 import { ValidSignUpAuthCodeGuard } from '../guards/ValidSignUpAuthCode.guard';
 import { UserService } from '../service/user.service';
+import { User as UserEntity } from '../entities/user.entity';
+import { UpdatedUserResponseDto } from '../dtos/UpdatedUserResponse.dto';
 
 @Controller('users')
 export class UserController {
@@ -49,7 +53,7 @@ export class UserController {
   public async update(
     @Param('id') userId: number,
     @Body() updateUserDto: UpdateUserDto,
-  ) {
+  ): Promise<UpdatedUserResponseDto> {
     const user = await this.userService.findOneByEmailAndPassword(
       updateUserDto.email,
       updateUserDto.password,
@@ -65,7 +69,7 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(SameUserIdInTokenAndParamGuard)
   @UseGuards(JwtAuthGuard)
-  public async delete(@Param('id') userId: number) {
+  public async delete(@Param('id') userId: number): Promise<void> {
     return await this.userService.deleteById(userId);
   }
 
@@ -75,7 +79,13 @@ export class UserController {
   @UseGuards(RegisteredEmailGuard)
   public async resetPassword(
     @Body() { email, password, resetPasswordAuthCode }: ResetPasswordDto,
-  ) {
+  ): Promise<void> {
     await this.userService.updatePassword(email, password);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  public async getUser(@User() user: UserEntity): Promise<UserDto> {
+    return UserDto.create(user);
   }
 }

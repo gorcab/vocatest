@@ -541,4 +541,48 @@ describe('UserController (e2e)', () => {
       );
     });
   });
+
+  describe('/users/me (GET)', () => {
+    it('access token을 통해 요청하면 해당 사용자의 정보를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const accessToken = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      return agent
+        .get(`/users/me`)
+        .auth(accessToken.body.accessToken, { type: 'bearer' })
+        .expect(200)
+        .expect({
+          email: createUserServiceDto.email,
+          id: user.id,
+          nickname: createUserServiceDto.nickname,
+        });
+    });
+
+    it('access token 없이 요청하면 401 에러를 반환한다.', async () => {
+      const agent = request.agent(app.getHttpServer());
+      const createUserServiceDto: CreateUserServiceDto = {
+        email: 'test1234@gmail.com',
+        password: 'test1234',
+        nickname: 'tester',
+      };
+      const user = await userService.save(createUserServiceDto);
+
+      const accessToken = await agent.post('/auth/login').send({
+        email: createUserServiceDto.email,
+        password: createUserServiceDto.password,
+      });
+
+      return agent.get(`/users/me`).expect(401);
+    });
+  });
 });

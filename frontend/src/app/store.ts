@@ -47,7 +47,6 @@ const createStore = () => {
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(baseApi.middleware, TokenSaveMiddleware),
   });
-  console.dir(store.getState());
   return store;
 };
 

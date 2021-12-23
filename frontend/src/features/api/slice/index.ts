@@ -6,24 +6,16 @@ import {
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../../../app/store";
-import { saveTokens, TokenState, User } from "../../user/slice";
-
-export type LoginRequest = {
-  email: string;
-  password: string;
-};
-
-export type LoginResponse = User & {
-  accessToken: string;
-  refreshToken: string;
-};
-
-export type UserResponse = User;
-
-export type ErrorResponse = {
-  status: number;
-  message: string;
-};
+import { saveTokens, TokenState } from "../../user/slice";
+import {
+  LoginRequest,
+  LoginResponse,
+  SignUpAuthCodeRequest,
+  SignUpAuthCodeResponse,
+  SignUpResponse,
+  SignUpRequest,
+  UserResponse,
+} from "../types";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.REACT_APP_API_URL,
@@ -70,7 +62,29 @@ export const baseApi = createApi({
     user: builder.query<UserResponse, void>({
       query: () => "/users/me",
     }),
+    signUpAuthCode: builder.mutation<
+      SignUpAuthCodeResponse,
+      SignUpAuthCodeRequest
+    >({
+      query: (signUpAuthCodeDto) => ({
+        url: "/auth/code",
+        method: "POST",
+        body: signUpAuthCodeDto,
+      }),
+    }),
+    signUp: builder.mutation<SignUpResponse, SignUpRequest>({
+      query: (signUpDto) => ({
+        url: "/users",
+        method: "POST",
+        body: signUpDto,
+      }),
+    }),
   }),
 });
 
-export const { useUserQuery, useLoginMutation } = baseApi;
+export const {
+  useUserQuery,
+  useLoginMutation,
+  useSignUpAuthCodeMutation,
+  useSignUpMutation,
+} = baseApi;

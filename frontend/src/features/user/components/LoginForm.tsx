@@ -1,14 +1,14 @@
 import { useLayoutEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
 import { BasicForm } from "../../common/components/BasicForm";
 import { Button } from "../../common/components/Button";
 import { Input } from "../../common/components/Input";
-import { ErrorResponse, useLoginMutation } from "../../api/slice";
+import { useLoginMutation } from "../../api/slice";
 import { Spinner } from "../../common/components/Spinner";
 import { Label } from "../../common/components/Label";
 import { InputErrorMessage } from "../../common/components/InputErrorMessage";
 import { InputGroup } from "../../common/components/InputGroup";
+import { ErrorResponse } from "../../api/types";
 
 type LoginFormProps = {
   handleSuccess: () => void;
@@ -38,7 +38,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ handleSuccess }) => {
 
   return (
     <BasicForm onSubmit={handleSubmit(onSubmit)}>
-      {error && "status" in error ? (
+      {error && "data" in error ? (
         <InputErrorMessage
           as="h2"
           isCenter={true}
@@ -91,7 +91,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ handleSuccess }) => {
           ) : null}
         </InputGroup>
       </div>
-      <Button type="submit">
+      <Button type="submit" disabled={isLoading}>
         {isLoading ? (
           <Spinner size={24} thickness={2} gap={2} color="#fff" />
         ) : (

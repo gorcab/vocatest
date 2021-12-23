@@ -1,7 +1,12 @@
+import { PickType } from '@nestjs/mapped-types';
 import { User } from '../entities/user.entity';
 import { UserDto } from './User.dto';
 
-export class UserWithJwtTokenDto extends UserDto {
+export class UserWithJwtTokenDto extends PickType(UserDto, [
+  'id',
+  'email',
+  'nickname',
+]) {
   accessToken: string;
   refreshToken: string;
 

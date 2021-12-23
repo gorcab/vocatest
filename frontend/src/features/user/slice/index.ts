@@ -65,6 +65,21 @@ const userSlice = createSlice({
             nickname,
           };
         }
+      )
+      .addMatcher(
+        baseApi.endpoints.signUp.matchFulfilled,
+        (
+          state,
+          { payload: { id, email, nickname, accessToken, refreshToken } }
+        ) => {
+          state.user = {
+            id,
+            email,
+            nickname,
+          };
+          state.accessToken = accessToken;
+          state.refreshToken = refreshToken;
+        }
       );
   },
 });

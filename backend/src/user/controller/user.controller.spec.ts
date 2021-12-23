@@ -174,4 +174,23 @@ describe('UserController', () => {
       resetPasswordDto.password,
     );
   });
+
+  it('사용자의 정보를 UserDto로 반환한다.', async () => {
+    const user: User = {
+      id: 1,
+      email: 'test@gmail.com',
+      password: 'test1234',
+      categories: null,
+      createdAt: new Date(),
+      nickname: 'tester',
+    };
+
+    const result = await controller.getUser(user);
+
+    expect(result).toEqual({
+      id: user.id,
+      email: user.email,
+      nickname: user.nickname,
+    });
+  });
 });

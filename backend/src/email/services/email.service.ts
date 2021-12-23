@@ -1,6 +1,5 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { SendSignUpAuthCodeDto } from '../dtos/SendSignUpAuthCode.dto';
 import { SendEmailFailedException } from '../exceptions/SendEmailFailed.exception';
 
 @Injectable()
@@ -17,6 +16,7 @@ export class EmailService {
         <p>인증번호: <strong>${signUpAuthCode}</strong></p>`,
       });
     } catch (error) {
+      console.dir(error);
       throw new SendEmailFailedException();
     }
   }

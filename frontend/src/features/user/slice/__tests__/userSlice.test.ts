@@ -1,6 +1,7 @@
 import { AnyAction } from "redux";
 import reducer, { saveTokens, UserState } from "../";
 import { baseApi } from "../../../api/slice";
+import { accessToken, refreshToken } from "../../../../mocks/handlers";
 import { setUpStore } from "../../../common/utils/test-utils";
 
 describe("userSlice reducer", () => {
@@ -67,14 +68,12 @@ describe("userSlice reducer", () => {
         email,
         nickname,
       },
-      accessToken: "accesstoken",
-      refreshToken: "refreshtoken",
+      accessToken,
+      refreshToken,
     });
   });
 
   it("user api 요청에 성공하면 사용자 정보를 상태에 추가한다.", async () => {
-    const accessToken = "accesstoken";
-    const refreshToken = "refreshtoken";
     const id = 1;
     const email = "tester@gmail.com";
     const nickname = "tester";
@@ -93,6 +92,42 @@ describe("userSlice reducer", () => {
     });
 
     await dispatch(baseApi.endpoints.user.initiate());
+
+    const nextState = getState();
+    expect(nextState.user).toEqual({
+      user: {
+        id,
+        email,
+        nickname,
+      },
+      accessToken,
+      refreshToken,
+    });
+  });
+
+  it("signUp api 요청에 성공하면 사용자 정보와 토큰 정보를 상태에 추가한다.", async () => {
+    const id = 1;
+    const email = "tester@gmail.com";
+    const password = "test1234";
+    const nickname = "tester";
+    const signUpAuthCode = 123456;
+    const { getState, dispatch } = setUpStore();
+
+    const initialState = getState();
+    expect(initialState.user).toEqual({
+      user: null,
+      accessToken: null,
+      refreshToken: null,
+    });
+
+    await dispatch(
+      baseApi.endpoints.signUp.initiate({
+        email,
+        password,
+        nickname,
+        signUpAuthCode,
+      })
+    );
 
     const nextState = getState();
     expect(nextState.user).toEqual({

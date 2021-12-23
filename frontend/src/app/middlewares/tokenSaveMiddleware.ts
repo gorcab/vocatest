@@ -7,6 +7,7 @@ export const TokenSaveMiddleware: Middleware<{}, RootState> =
   (storeApi: MiddlewareAPI) => (next) => (action: AnyAction) => {
     if (
       baseApi.endpoints.login.matchFulfilled(action) ||
+      baseApi.endpoints.signUp.matchFulfilled(action) ||
       action.type === saveTokens.type
     ) {
       localStorage.setItem("accessToken", action.payload.accessToken);

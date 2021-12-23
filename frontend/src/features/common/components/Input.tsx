@@ -24,7 +24,7 @@ export const Input: React.FC<InputProps> = ({
       style={style}
       type={type}
       id={id}
-      className="w-full border rounded mb-2 p-1"
+      className="w-full border rounded mb-2 p-1 flex items-center"
       aria-invalid={isError ? "true" : "false"}
       {...register}
     />
