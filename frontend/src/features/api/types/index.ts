@@ -10,17 +10,19 @@ export type LoginResponse = User & {
   refreshToken: string;
 };
 
-// SignUp Types
-export type SignUpAuthCodeRequest = {
-  purpose: "SIGN_UP";
+// Auth Code Types
+export type AuthCodeRequest = {
+  purpose: "SIGN_UP" | "RESET_PASSWORD";
   email: string;
 };
 
-export type SignUpAuthCodeResponse = {
+export type AuthCodeResponse = {
   email: string;
   purpose: string;
   ttl: number;
 };
+
+// SignUp Types
 
 export type SignUpRequest = {
   email: string;
@@ -35,6 +37,13 @@ export type SignUpResponse = {
   nickname: string;
   accessToken: string;
   refreshToken: string;
+};
+
+// ResetPassword Types
+export type ResetPasswordRequest = {
+  email: string;
+  password: string;
+  resetPasswordAuthCode: number;
 };
 
 // User Types

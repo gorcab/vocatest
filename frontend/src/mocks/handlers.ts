@@ -1,7 +1,8 @@
 import { rest } from "msw";
 import {
+  AuthCodeRequest,
   LoginRequest,
-  SignUpAuthCodeRequest,
+  ResetPasswordRequest,
   SignUpRequest,
 } from "../features/api/types";
 
@@ -13,22 +14,23 @@ const validUser = {
 };
 
 export const handlers = [
-  // 회원가입 이메일 인증 토큰 전송 요청 핸들러
-  rest.post<SignUpAuthCodeRequest>(
+  // 인증 토큰 전송 요청 핸들러
+  rest.post<AuthCodeRequest>(
     `${process.env.REACT_APP_API_URL}/auth/code`,
     (req, res, ctx) => {
       const { email, purpose } = req.body;
+      if (email === "wrong@gmail.com") {
+        return res(
+          ctx.status(503),
+          ctx.json({
+            status: 503,
+            message: "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.",
+          })
+        );
+      }
+
       if (purpose === "SIGN_UP") {
-        if (email === "wrong@gmail.com") {
-          return res(
-            ctx.status(503),
-            ctx.json({
-              status: 503,
-              message:
-                "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.",
-            })
-          );
-        } else if (email === "already@gmail.com") {
+        if (email === "already@gmail.com") {
           return res(
             ctx.status(400),
             ctx.json({
@@ -42,7 +44,28 @@ export const handlers = [
             ctx.json({
               email,
               purpose,
-              ttl: 5,
+              ttl: 300,
+            })
+          );
+        }
+      } else if (purpose === "RESET_PASSWORD") {
+        if (email === "notexists@gmail.com") {
+          return res(
+            ctx.delay(500),
+            ctx.status(400),
+            ctx.json({
+              status: 400,
+              message: "가입되지 않은 이메일입니다.",
+            })
+          );
+        } else {
+          return res(
+            ctx.delay(500),
+            ctx.status(201),
+            ctx.json({
+              email,
+              purpose,
+              ttl: 300,
             })
           );
         }
@@ -54,7 +77,7 @@ export const handlers = [
   rest.post<SignUpRequest>(
     `${process.env.REACT_APP_API_URL}/users`,
     (req, res, ctx) => {
-      const { email, password, nickname, signUpAuthCode } = req.body;
+      const { email, nickname, signUpAuthCode } = req.body;
       if (signUpAuthCode === 444444) {
         return res(
           ctx.delay(100),
@@ -88,6 +111,7 @@ export const handlers = [
       }
     }
   ),
+
   // 로그인 핸들러
   rest.post<LoginRequest>(
     `${process.env.REACT_APP_API_URL}/auth/login`,
@@ -131,4 +155,23 @@ export const handlers = [
       return res(ctx.status(401));
     }
   }),
+
+  // 비밀번호 재설정 인증 토큰 전송 요청 핸들러
+  rest.post<ResetPasswordRequest>(
+    `${process.env.REACT_APP_API_URL}/users/password`,
+    (req, res, ctx) => {
+      const { resetPasswordAuthCode } = req.body;
+      if (resetPasswordAuthCode === 444444) {
+        return res(
+          ctx.status(400),
+          ctx.json({
+            status: 400,
+            message: "인증 번호가 올바르지 않습니다.",
+          })
+        );
+      } else {
+        return res(ctx.status(204));
+      }
+    }
+  ),
 ];

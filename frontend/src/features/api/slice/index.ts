@@ -10,11 +10,12 @@ import { saveTokens, TokenState } from "../../user/slice";
 import {
   LoginRequest,
   LoginResponse,
-  SignUpAuthCodeRequest,
-  SignUpAuthCodeResponse,
   SignUpResponse,
   SignUpRequest,
   UserResponse,
+  AuthCodeResponse,
+  AuthCodeRequest,
+  ResetPasswordRequest,
 } from "../types";
 
 const baseQuery = fetchBaseQuery({
@@ -62,14 +63,11 @@ export const baseApi = createApi({
     user: builder.query<UserResponse, void>({
       query: () => "/users/me",
     }),
-    signUpAuthCode: builder.mutation<
-      SignUpAuthCodeResponse,
-      SignUpAuthCodeRequest
-    >({
-      query: (signUpAuthCodeDto) => ({
+    authCode: builder.mutation<AuthCodeResponse, AuthCodeRequest>({
+      query: (authCodeDto) => ({
         url: "/auth/code",
         method: "POST",
-        body: signUpAuthCodeDto,
+        body: authCodeDto,
       }),
     }),
     signUp: builder.mutation<SignUpResponse, SignUpRequest>({
@@ -79,12 +77,20 @@ export const baseApi = createApi({
         body: signUpDto,
       }),
     }),
+    resetPassword: builder.mutation<void, ResetPasswordRequest>({
+      query: (resetPasswordDto) => ({
+        url: "/users/password",
+        method: "POST",
+        body: resetPasswordDto,
+      }),
+    }),
   }),
 });
 
 export const {
   useUserQuery,
   useLoginMutation,
-  useSignUpAuthCodeMutation,
+  useAuthCodeMutation,
   useSignUpMutation,
+  useResetPasswordMutation,
 } = baseApi;

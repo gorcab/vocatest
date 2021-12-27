@@ -1,54 +1,55 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useAuthCodeMutation, useSignUpMutation } from "../../api/slice";
+import { useAuthCodeMutation, useResetPasswordMutation } from "../../api/slice";
 import { ErrorResponse } from "../../api/types";
 import { useTimeoutTrigger } from "../../common/hooks/useTimeoutTrigger";
 
-type SignUpDto = {
+type ResetPasswordDto = {
   email: string;
-  signUpAuthCode: number;
+  resetPasswordAuthCode: number;
   password: string;
   passwordConfirm: string;
-  nickname: string;
 };
 
-export const useSignUp = (handleSuccess: () => void) => {
+export const useResetPassword = (handleSuccess: () => void) => {
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
-    getValues,
     handleSubmit,
-    setError,
     formState: { errors },
+
+    setError,
     clearErrors,
-  } = useForm<SignUpDto>({
+    getValues,
+  } = useForm<ResetPasswordDto>({
     mode: "onBlur",
   });
 
   const [
-    requestSignUpAuthCode,
+    requestResetPasswordAuthCode,
     {
       isSuccess: isAuthCodeRequestSuccess,
       isLoading: isAuthCodeRequestLoading,
-      reset: signUpAuthCodeReset,
+      error: authCodeError,
       data,
-      error: authCodeErrorResponse,
+      reset: resetAuthCodeRequest,
     },
   ] = useAuthCodeMutation();
 
   const [
-    signUp,
+    resetPassword,
     {
-      isSuccess: isSignUpSuccess,
-      isLoading: isSignUpLoading,
-      error: signUpErrorResponse,
-      reset: signUpReset,
+      isSuccess: isResetPasswordSuccess,
+      isLoading: isResetPasswordLoading,
+      isError: isResetPasswordError,
+      error: resetPasswordError,
+      reset: resetPasswordReset,
     },
-  ] = useSignUpMutation();
+  ] = useResetPasswordMutation();
 
   useEffect(() => {
-    if (authCodeErrorResponse && "data" in authCodeErrorResponse) {
-      const { status, data } = authCodeErrorResponse;
+    if (authCodeError && "data" in authCodeError) {
+      const { status, data } = authCodeError;
       const errorMessage: string = (data as ErrorResponse).message;
       if (status >= 500) {
         setServerError(errorMessage);
@@ -62,13 +63,15 @@ export const useSignUp = (handleSuccess: () => void) => {
           setServerError(errorMessage);
         }
       }
+    } else if (!authCodeError) {
+      setServerError(null);
     }
-  }, [authCodeErrorResponse, setError]);
+  }, [authCodeError, setError]);
 
   useEffect(() => {
-    if (signUpErrorResponse && "data" in signUpErrorResponse) {
-      const { status, data } = signUpErrorResponse;
-      const errorMessage: string = (data as ErrorResponse).message;
+    if (resetPasswordError && "data" in resetPasswordError) {
+      const { status, data } = resetPasswordError;
+      const errorMessage = (data as ErrorResponse).message;
       if (status >= 500) {
         setServerError(errorMessage);
       } else if (status >= 400) {
@@ -77,91 +80,85 @@ export const useSignUp = (handleSuccess: () => void) => {
             type: "manual",
             message: errorMessage,
           });
-        } else if (/인증 번호/.test(errorMessage)) {
-          setError("signUpAuthCode", {
-            type: "manual",
-            message: errorMessage,
-          });
         } else {
           setServerError(errorMessage);
         }
       }
+    } else if (!resetPasswordError) {
+      setServerError(null);
     }
-  }, [signUpErrorResponse, setError]);
+  }, [resetPasswordError, setError]);
 
-  const onSubmit: SubmitHandler<SignUpDto> = ({
-    email,
-    password,
-    nickname,
-    signUpAuthCode,
-  }) => {
-    if (signUpErrorResponse) {
-      signUpReset();
-    }
-
-    signUp({
-      email,
-      password,
-      nickname,
-      signUpAuthCode,
-    });
-  };
-
-  const signUpAuthCodeTimeoutTrigger = () => {
-    setError("signUpAuthCode", {
+  const authCodeTimeoutTrigger = () => {
+    setError("resetPasswordAuthCode", {
       type: "manual",
       message: "인증 번호를 다시 요청해주세요.",
     });
     if (!!serverError) {
       setServerError(null);
     }
-    signUpAuthCodeReset();
+    resetAuthCodeRequest();
   };
 
   const { ttl, isSet } = useTimeoutTrigger(
-    signUpAuthCodeTimeoutTrigger,
+    authCodeTimeoutTrigger,
     isAuthCodeRequestSuccess && data
       ? { isSetTimeout: true, ttl: data.ttl }
       : { isSetTimeout: false }
   );
 
-  const handleSignUpAuthCodeButton = async () => {
-    if (errors.signUpAuthCode) {
-      clearErrors("signUpAuthCode");
+  useLayoutEffect(() => {
+    if (isResetPasswordSuccess) {
+      handleSuccess();
+    }
+  }, [isResetPasswordSuccess, handleSuccess]);
+
+  const handleResetPasswordAuthCodeButton = async () => {
+    if (errors.resetPasswordAuthCode) {
+      clearErrors("resetPasswordAuthCode");
     }
 
     if (!!serverError) {
       setServerError(null);
-      signUpAuthCodeReset();
+      resetAuthCodeRequest();
     }
 
     if (!errors.email) {
       const email = getValues("email");
-      await requestSignUpAuthCode({
-        purpose: "SIGN_UP",
+      await requestResetPasswordAuthCode({
+        purpose: "RESET_PASSWORD",
         email,
       });
     }
   };
 
-  useLayoutEffect(() => {
-    if (isSignUpSuccess) {
-      handleSuccess();
+  const onSubmit: SubmitHandler<ResetPasswordDto> = ({
+    email,
+    password,
+    resetPasswordAuthCode,
+  }) => {
+    if (isResetPasswordError) {
+      resetPasswordReset();
     }
-  }, [isSignUpSuccess, handleSuccess]);
+    resetPassword({
+      email,
+      password,
+      resetPasswordAuthCode,
+    });
+  };
 
   const submitHandler = handleSubmit(onSubmit);
 
   return {
-    register,
     getValues,
+    serverError,
     submitHandler,
     errors,
-    serverError,
-    ttl,
-    isSet,
+    register,
     isAuthCodeRequestLoading,
-    handleSignUpAuthCodeButton,
-    isSignUpLoading,
+    isResetPasswordLoading,
+    handleResetPasswordAuthCodeButton,
+    isSet,
+    ttl,
   };
 };

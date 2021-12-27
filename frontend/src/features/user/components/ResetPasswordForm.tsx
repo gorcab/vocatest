@@ -1,30 +1,32 @@
 import { BasicForm } from "../../common/components/BasicForm";
 import { Button } from "../../common/components/Button";
 import { Input } from "../../common/components/Input";
-import { Spinner } from "../../common/components/Spinner";
-import { Label } from "../../common/components/Label";
 import { InputErrorMessage } from "../../common/components/InputErrorMessage";
 import { InputGroup } from "../../common/components/InputGroup";
 import { InputRightElement } from "../../common/components/InputRightElement";
-import { useSignUp } from "../hooks/useSignUp";
+import { Label } from "../../common/components/Label";
+import { Spinner } from "../../common/components/Spinner";
+import { useResetPassword } from "../hooks/useResetPassword";
 
-type SignUpFormProps = {
+type ResetPasswordFormProps = {
   handleSuccess: () => void;
 };
 
-export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
+export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
+  handleSuccess,
+}) => {
   const {
-    register,
-    submitHandler,
-    getValues,
-    serverError,
     errors,
+    handleResetPasswordAuthCodeButton,
     isAuthCodeRequestLoading,
-    handleSignUpAuthCodeButton,
-    isSignUpLoading,
-    ttl,
+    isResetPasswordLoading,
     isSet,
-  } = useSignUp(handleSuccess);
+    register,
+    getValues,
+    submitHandler,
+    serverError,
+    ttl,
+  } = useResetPassword(handleSuccess);
 
   return (
     <BasicForm onSubmit={submitHandler}>
@@ -37,7 +39,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
           {serverError}
         </InputErrorMessage>
       ) : null}
-      <div className="mb-5">
+      <div className="mb-6">
         <Label name="email" label="이메일" />
         <InputGroup
           style={{
@@ -47,9 +49,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
           <Input
             type="email"
             id="email"
-            style={{
-              paddingRight: "4em",
-            }}
+            style={{ paddingRight: "4em" }}
             register={register("email", {
               required: "이메일을 입력해주세요.",
               pattern: {
@@ -63,7 +63,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
               type="button"
               disabled={isAuthCodeRequestLoading}
               style={{ width: "5em", fontSize: "0.7em" }}
-              onClick={handleSignUpAuthCodeButton}
+              onClick={handleResetPasswordAuthCodeButton}
             >
               {isAuthCodeRequestLoading ? (
                 <Spinner gap={2} thickness={2} size="1em" color="#fff" />
@@ -74,23 +74,21 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
           </InputRightElement>
         </InputGroup>
         {errors.email ? (
-          <InputErrorMessage as="div" style={{ marginBottom: "1rem" }}>
+          <InputErrorMessage as="div" style={{ marginBottom: "1em" }}>
             {errors.email.message}
           </InputErrorMessage>
         ) : null}
-        <Label name="signUpAuthCode" label="인증 번호" />
+        <Label name="resetPasswordAuthCode" label="인증 번호" />
         <InputGroup
-          style={{
-            marginBottom: errors.signUpAuthCode ? 0 : "1rem",
-          }}
+          style={{ marginBottom: errors.resetPasswordAuthCode ? 0 : "1em" }}
         >
           <Input
             type="text"
-            id="signUpAuthCode"
+            id="resetPasswordAuthCode"
             style={{
               paddingRight: ttl >= 0 ? "4em" : 0,
             }}
-            register={register("signUpAuthCode", {
+            register={register("resetPasswordAuthCode", {
               valueAsNumber: true,
               required: "이메일로 전송된 인증번호를 입력해주세요.",
               validate: {
@@ -110,13 +108,13 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
             </InputRightElement>
           )}
         </InputGroup>
-        {errors.signUpAuthCode ? (
-          <InputErrorMessage as="div" style={{ marginBottom: "1rem" }}>
-            {errors.signUpAuthCode.message}
+        {errors.resetPasswordAuthCode ? (
+          <InputErrorMessage as="div" style={{ marginBottom: "1em" }}>
+            {errors.resetPasswordAuthCode.message}
           </InputErrorMessage>
         ) : null}
         <InputGroup>
-          <Label name="password" label="비밀번호" />
+          <Label name="password" label="새 비밀번호" />
           <Input
             type="password"
             id="password"
@@ -139,14 +137,14 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
           ) : null}
         </InputGroup>
         <InputGroup>
-          <Label name="passwordConfirm" label="비밀번호 재입력" />
+          <Label name="passwordConfirm" label="새 비밀번호 재입력" />
           <Input
             type="password"
             id="passwordConfirm"
             register={register("passwordConfirm", {
               validate: (value) =>
                 value === getValues("password") ||
-                "비밀번호를 동일하게 입력해주세요.",
+                "새 비밀번호를 동일하게 입력해주세요.",
             })}
           />
           {errors.passwordConfirm ? (
@@ -155,35 +153,17 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
             </InputErrorMessage>
           ) : null}
         </InputGroup>
-        <InputGroup>
-          <Label name="nickname" label="닉네임" />
-          <Input
-            type="text"
-            id="nickname"
-            register={register("nickname", {
-              required: "닉네임을 입력해주세요.",
-              validate: {
-                whiteSpaceNickname: (value) =>
-                  value.trim() !== "" ||
-                  "공백으로 구성된 닉네임은 사용할 수 없습니다.",
-              },
-            })}
-          />
-          {errors.nickname ? (
-            <InputErrorMessage as="div">
-              {errors.nickname.message}
-            </InputErrorMessage>
-          ) : null}
-        </InputGroup>
       </div>
       <Button
         type="submit"
-        disabled={isAuthCodeRequestLoading || isSignUpLoading || ttl <= 0}
+        disabled={
+          isAuthCodeRequestLoading || isResetPasswordLoading || ttl <= 0
+        }
       >
-        {isSignUpLoading ? (
+        {isResetPasswordLoading ? (
           <Spinner size={24} thickness={2} gap={2} color="#fff" />
         ) : (
-          "회원가입"
+          "비밀번호 재설정"
         )}
       </Button>
     </BasicForm>

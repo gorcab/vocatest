@@ -9,6 +9,7 @@ import { selectUserAndAccessToken } from "./features/user/slice";
 import { CenterLayout } from "./features/common/components/CenterLayout";
 import { Spinner } from "./features/common/components/Spinner";
 import { SignUpPage } from "./pages/SignUpPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 
 export const loginUrl = "login";
 export const resetPasswordUrl = "reset-password";
@@ -44,6 +45,7 @@ function App() {
         />
         <Route path={loginUrl} element={<LoginPage />} />
         <Route path={signUpUrl} element={<SignUpPage />} />
+        <Route path={resetPasswordUrl} element={<ResetPasswordPage />} />
       </Route>
     </Routes>
   );

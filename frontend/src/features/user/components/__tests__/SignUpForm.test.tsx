@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { server } from "../../../../mocks/server";
-import { SignUpAuthCodeRequest } from "../../../api/types";
+import { AuthCodeRequest } from "../../../api/types";
 import {
   render,
   waitFor,
@@ -56,26 +56,19 @@ describe("SignUpForm", () => {
   });
 
   describe("이메일 필드를 올바르게 입력하지 않은 상태", () => {
-    it('이메일을 입력하지 않고 회원가입 버튼을 누르면 "이메일을 입력해주세요." 메시지를 보여준다.', async () => {
+    it("이메일을 입력하지 않으면 회원가입 버튼은 비활성화 상태이다.", () => {
       const {
-        renderResult,
-        handleSuccess,
         nicknameField,
         passwordConfirmField,
         passwordField,
         signUpButton,
       } = renderAndGetFields();
-      const { findAllByRole } = renderResult;
 
       userEvent.type(passwordField, "12345678");
       userEvent.type(passwordConfirmField, "12345678");
       userEvent.type(nicknameField, "tester");
-      userEvent.click(signUpButton);
 
-      const alerts = await findAllByRole("alert");
-      expect(alerts).toHaveLength(2);
-      expect(alerts[0]).toHaveTextContent("이메일을 입력해주세요.");
-      expect(handleSuccess).not.toBeCalled();
+      expect(signUpButton).toBeDisabled();
     });
 
     it('이메일 형식으로 입력하지 않고 회원가입 버튼을 누르면 "이메일 형식으로 입력해주세요." 메시지를 보여준다.', async () => {
@@ -107,29 +100,21 @@ describe("SignUpForm", () => {
   });
 
   describe("인증 번호 필드를 올바르게 입력하지 않은 상태", () => {
-    it('인증 번호를 입력하지 않고 회원가입 버튼을 누르면 "이메일로 전송된 인증번호를 입력해주세요." 메시지를 보여준다.', async () => {
+    it("인증 번호를 입력하지 않으면 회원가입 버튼은 비활성화 상태이다.", () => {
       const {
-        renderResult,
-        handleSuccess,
         emailField,
         passwordField,
         passwordConfirmField,
         nicknameField,
         signUpButton,
       } = renderAndGetFields();
-      const { findByRole } = renderResult;
 
       userEvent.type(emailField, "tester@gmail.com");
       userEvent.type(passwordField, "12345678");
       userEvent.type(passwordConfirmField, "12345678");
       userEvent.type(nicknameField, "tester");
-      userEvent.click(signUpButton);
 
-      const signUpAuthCodeAlert = await findByRole("alert");
-      expect(signUpAuthCodeAlert).toHaveTextContent(
-        "이메일로 전송된 인증번호를 입력해주세요."
-      );
-      expect(handleSuccess).not.toBeCalled();
+      expect(signUpButton).toBeDisabled();
     });
 
     it('숫자 형식의 인증 번호를 입력하지 않고 회원가입 버튼을 누르면 "인증번호가 올바르지 않습니다." 메시지를 보여준다.', async () => {
@@ -162,7 +147,7 @@ describe("SignUpForm", () => {
     it('인증 번호를 요청한 뒤 시간 제한 내에 회원가입 버튼을 누르지 않으면 "인증 번호를 다시 요청해주세요." 메시지를 보여준다.', async () => {
       // given
       server.use(
-        rest.post<SignUpAuthCodeRequest>(
+        rest.post<AuthCodeRequest>(
           `${process.env.REACT_APP_API_URL}/auth/code`,
           (req, res, ctx) => {
             const { email, purpose } = req.body;
