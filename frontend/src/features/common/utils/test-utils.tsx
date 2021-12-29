@@ -31,7 +31,10 @@ const render: RenderType = (
     return <Provider store={store}>{children}</Provider>;
   };
 
-  return rtlRender(ui, { wrapper: Wrapper, ...renderOptions });
+  return rtlRender(ui, {
+    wrapper: Wrapper,
+    ...renderOptions,
+  });
 };
 
 export * from "@testing-library/react";

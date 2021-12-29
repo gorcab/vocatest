@@ -1,3 +1,3 @@
 export const MainPage: React.FC = () => {
-  return <div>Main Page</div>;
+  return <div>Main 페이지</div>;
 };
