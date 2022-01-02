@@ -23,7 +23,7 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       onClick={onClick}
       style={style}
-      className="bg-blue-500 hover:opacity-90 text-white rounded p-1 flex justify-center items-center w-full disabled:opacity-70"
+      className="bg-blue-500 hover:opacity-90 focus:opacity-90 text-white rounded p-1 flex justify-center items-center w-full disabled:opacity-70 focus:outline focus:outline-offset-2 focus:outline-2"
       type={type}
       disabled={disabled}
     >

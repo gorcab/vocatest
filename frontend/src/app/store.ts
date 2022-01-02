@@ -1,41 +1,32 @@
 import {
-  AnyAction,
   combineReducers,
   configureStore,
   createAction,
-  DeepPartial,
-  Reducer,
 } from "@reduxjs/toolkit";
 import { baseApi } from "../features/api/slice";
-import userReducer from "../features/user/slice";
+import userReducer, { UserState } from "../features/user/slice";
+import toastReducer from "../features/toast/slice";
 import { TokenSaveMiddleware } from "./middlewares/tokenSaveMiddleware";
 
-const combinedReducer = combineReducers({
+export const combinedReducer = combineReducers({
   user: userReducer,
+  toast: toastReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
-
-const rootReducer: Reducer = (state: RootState, action: AnyAction) => {
-  if (action.type === logout.type) {
-    state = {} as RootState;
-  }
-
-  return combinedReducer(state, action);
-};
 
 export const logout = createAction("logout");
 
 const createStore = () => {
   const accessToken = localStorage.getItem("accessToken");
   const refreshToken = localStorage.getItem("refreshToken");
-  let preloadedState: DeepPartial<RootState> = {};
+  let preloadedState = {};
   if (accessToken && refreshToken) {
     preloadedState = {
       user: {
         user: null,
         accessToken,
         refreshToken,
-      },
+      } as UserState,
     };
   } else {
     localStorage.removeItem("accessToken");
@@ -43,7 +34,12 @@ const createStore = () => {
   }
   const store = configureStore({
     preloadedState,
-    reducer: rootReducer,
+    reducer: (state, action) => {
+      if (action.type === logout.type) {
+        return combinedReducer(undefined, action);
+      }
+      return combinedReducer(state, action);
+    },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(baseApi.middleware, TokenSaveMiddleware),
   });
@@ -52,5 +48,5 @@ const createStore = () => {
 
 export const store = createStore();
 
-export type RootState = ReturnType<typeof rootReducer>;
+export type RootState = ReturnType<typeof combinedReducer>;
 export type AppDispatch = typeof store.dispatch;

@@ -16,6 +16,10 @@ import {
   AuthCodeResponse,
   AuthCodeRequest,
   ResetPasswordRequest,
+  CategoryResponse,
+  CategoryDto,
+  CreateCategoryResponse,
+  CreateCategoryRequest,
 } from "../types";
 
 const baseQuery = fetchBaseQuery({
@@ -52,6 +56,7 @@ const baseQueryWithReAuth: BaseQueryFn<
 
 export const baseApi = createApi({
   baseQuery: baseQueryWithReAuth,
+  tagTypes: ["categories", "user"],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (loginDto) => ({
@@ -84,6 +89,31 @@ export const baseApi = createApi({
         body: resetPasswordDto,
       }),
     }),
+    category: builder.query<Array<CategoryDto>, void>({
+      query: () => "/categories",
+      transformResponse: (response: CategoryResponse) => response.categories,
+      providesTags: (result, error) =>
+        result
+          ? [
+              ...result.map(
+                (category) => ({ type: "categories", id: category.id } as const)
+              ),
+              { type: "categories", id: "LIST" },
+            ]
+          : [{ type: "categories", id: "LIST" }],
+    }),
+    createCategory: builder.mutation<
+      CreateCategoryResponse,
+      CreateCategoryRequest
+    >({
+      query: (createCategoryDto) => ({
+        url: "/categories",
+        method: "POST",
+        body: createCategoryDto,
+      }),
+      invalidatesTags: (result, error) =>
+        result ? [{ type: "categories", id: "LIST" }] : [],
+    }),
   }),
 });
 
@@ -93,4 +123,6 @@ export const {
   useAuthCodeMutation,
   useSignUpMutation,
   useResetPasswordMutation,
+  useCategoryQuery,
+  useCreateCategoryMutation,
 } = baseApi;

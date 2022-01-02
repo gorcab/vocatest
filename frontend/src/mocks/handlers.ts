@@ -1,6 +1,7 @@
 import { rest } from "msw";
 import {
   AuthCodeRequest,
+  CreateCategoryRequest,
   LoginRequest,
   ResetPasswordRequest,
   SignUpRequest,
@@ -12,6 +13,11 @@ const validUser = {
   email: "tester@gmail.com",
   nickname: "tester",
 };
+const categories = [
+  { id: 1, name: "토익" },
+  { id: 2, name: "텝스" },
+  { id: 3, name: "토플" },
+];
 
 export const handlers = [
   // 인증 토큰 전송 요청 핸들러
@@ -171,6 +177,54 @@ export const handlers = [
         );
       } else {
         return res(ctx.status(204));
+      }
+    }
+  ),
+
+  // 카테고리 조회 요청 핸들러
+  rest.get(`${process.env.REACT_APP_API_URL}/categories`, (req, res, ctx) => {
+    const isFailed = Math.random() > 0.8;
+    if (isFailed) {
+      return res(
+        ctx.delay(1000),
+        ctx.status(500),
+        ctx.json({
+          status: 500,
+          message: "Internal Server Error",
+        })
+      );
+    }
+
+    return res(
+      ctx.delay(1000),
+      ctx.status(200),
+      ctx.json({
+        categories,
+      })
+    );
+  }),
+
+  // 카테고리 생성 요청 핸들러
+  rest.post<CreateCategoryRequest>(
+    `${process.env.REACT_APP_API_URL}/categories`,
+    (req, res, ctx) => {
+      const { name } = req.body;
+      if (categories.map((category) => category.name).includes(name)) {
+        return res(
+          ctx.delay(100),
+          ctx.status(400),
+          ctx.json({
+            status: 400,
+            message: "이미 존재하는 카테고리명입니다.",
+          })
+        );
+      } else {
+        const createdCategory = {
+          id: categories.length + 1,
+          name,
+        };
+        categories.push(createdCategory);
+        return res(ctx.delay(1000), ctx.status(201), ctx.json(createdCategory));
       }
     }
   ),

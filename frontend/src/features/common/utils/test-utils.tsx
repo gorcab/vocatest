@@ -2,20 +2,25 @@ import React from "react";
 import { render as rtlRender, RenderOptions } from "@testing-library/react";
 import { configureStore, DeepPartial } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
-import { RootState, store } from "../../../app/store";
-import userReducer from "../../user/slice";
+import { logout, RootState, store } from "../../../app/store";
+import { combinedReducer } from "../../../app/store";
 import { baseApi } from "../../api/slice";
 
 type RenderType = (
   ui: React.ReactElement,
-  options?: RenderOptions & { preloadedState?: RootState; store?: typeof store }
+  options?: RenderOptions & {
+    preloadedState?: DeepPartial<RootState>;
+    store?: typeof store;
+  }
 ) => ReturnType<typeof rtlRender>;
 
-export function setUpStore(preloadedState: DeepPartial<RootState> = {}) {
+export function setUpStore(preloadedState?: DeepPartial<RootState>) {
   return configureStore({
-    reducer: {
-      user: userReducer,
-      [baseApi.reducerPath]: baseApi.reducer,
+    reducer: (state, action) => {
+      if (action.type === logout.type) {
+        return combinedReducer(undefined, action);
+      }
+      return combinedReducer(state, action);
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware().concat(baseApi.middleware),

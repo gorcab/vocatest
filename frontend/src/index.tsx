@@ -6,6 +6,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { store } from "./app/store";
 import { BrowserRouter } from "react-router-dom";
+import { ToastContainer } from "./features/toast/components/ToastContainer";
 
 if (process.env.NODE_ENV === "development") {
   const { worker } = require("./mocks/browser");
@@ -19,6 +20,7 @@ ReactDOM.render(
     <Provider store={store}>
       <BrowserRouter>
         <App />
+        <ToastContainer />
       </BrowserRouter>
     </Provider>
   </React.StrictMode>,

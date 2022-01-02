@@ -19,7 +19,7 @@ export const CategoryItem: React.FC<CategoryItemProps> = ({
           `${
             isActive
               ? "bg-blue-500 text-white hover:opacity-80"
-              : "text-slate-600 hover:bg-slate-200"
+              : "text-slate-600 hover:bg-slate-200 focus:bg-slate-200"
           } w-full px-3 py-2 rounded-xl`
         }
       >

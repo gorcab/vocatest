@@ -3,7 +3,7 @@ import { Outlet } from "react-router";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
-export const MainLayout: React.FC = ({ children }) => {
+export const MainLayout: React.FC = () => {
   const headerHeight = 60;
   const sidebarWidth = 200;
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
@@ -20,7 +20,7 @@ export const MainLayout: React.FC = ({ children }) => {
       />
       <main className="container mx-auto">
         <Sidebar width={sidebarWidth} show={showSidebar} />
-        <section className={`ml-0 md:ml-[${sidebarWidth}px]`}>
+        <section className={`ml-0 md:ml-[${sidebarWidth}px] p-10`}>
           <Outlet />
         </section>
       </main>

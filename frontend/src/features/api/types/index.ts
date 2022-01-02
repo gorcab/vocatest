@@ -23,7 +23,6 @@ export type AuthCodeResponse = {
 };
 
 // SignUp Types
-
 export type SignUpRequest = {
   email: string;
   signUpAuthCode: number;
@@ -48,6 +47,22 @@ export type ResetPasswordRequest = {
 
 // User Types
 export type UserResponse = User;
+
+// Category Types
+export type CategoryDto = {
+  id: number;
+  name: string;
+};
+
+export type CategoryResponse = {
+  categories: Array<CategoryDto>;
+};
+
+export type CreateCategoryRequest = {
+  name: string;
+};
+
+export type CreateCategoryResponse = CategoryDto;
 
 // Error Response type
 export type ErrorResponse = {
