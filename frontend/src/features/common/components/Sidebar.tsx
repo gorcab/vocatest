@@ -4,11 +4,10 @@ import { CreateCategoryFormModal } from "../../category/components/CreateCategor
 import { useCallback, useState } from "react";
 
 type SidebarProps = {
-  width: number;
   show: boolean;
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ width, show }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ show }) => {
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const openCreateCategoryFormModal = () => {
     setIsModalVisible(true);
@@ -20,7 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width, show }) => {
   return (
     <>
       <aside
-        className={`w-full md:w-[${width}px] transform-gpu duration-100 md:transform-none ${
+        className={`w-full md:w-[200px] transform-gpu duration-100 md:transform-none ${
           show ? `translate-x-[0]` : `-translate-x-full`
         } h-screen border-x px-2 pt-10 fixed bg-slate-100`}
       >

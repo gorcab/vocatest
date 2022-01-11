@@ -28,7 +28,7 @@ export const CreateCategoryFormModal: React.FC<CreateCategoryFormModalProps> =
           <h1 className="font-bold text-lg mb-3">카테고리 생성하기</h1>
           <button
             type="button"
-            className="absolute top-2 right-2"
+            className="absolute top-2 right-2 hover:text-black/70"
             onClick={modalCloseHandler}
           >
             <FaTimes className="w-[25px] h-[25px]" />

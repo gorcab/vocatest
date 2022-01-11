@@ -64,6 +64,30 @@ export type CreateCategoryRequest = {
 
 export type CreateCategoryResponse = CategoryDto;
 
+// Vocabulary Types
+export type VocabularyListDto = {
+  id: number;
+  title: string;
+  createdAt: string;
+  numOfVocabularies: number;
+  category: CategoryDto;
+};
+
+export type PagedVocabularyListsResponse = {
+  page: number;
+  perPage: number;
+  total: number;
+  totalPage: number;
+  data: Array<VocabularyListDto>;
+};
+
+export type PagedVocabularyListsRequest = {
+  page: number;
+  perPage: number;
+  category?: number;
+  title?: string;
+};
+
 // Error Response type
 export type ErrorResponse = {
   status: number;

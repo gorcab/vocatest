@@ -12,7 +12,7 @@ export class GetPaginatedVocabularyListQueryDto {
   page: number;
 
   @Min(1, { message: 'perPage는 1 이상의 정수여야 합니다.' })
-  @Max(10, { message: 'perPage는 10 이하의 정수여야 합니다.' })
+  @Max(20, { message: 'perPage는 20 이하의 정수여야 합니다.' })
   @Type(() => Number)
   perPage: number;
 

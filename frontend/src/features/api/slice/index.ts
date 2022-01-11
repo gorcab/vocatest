@@ -20,6 +20,8 @@ import {
   CategoryDto,
   CreateCategoryResponse,
   CreateCategoryRequest,
+  PagedVocabularyListsResponse,
+  PagedVocabularyListsRequest,
 } from "../types";
 
 const baseQuery = fetchBaseQuery({
@@ -56,7 +58,7 @@ const baseQueryWithReAuth: BaseQueryFn<
 
 export const baseApi = createApi({
   baseQuery: baseQueryWithReAuth,
-  tagTypes: ["categories", "user"],
+  tagTypes: ["categories", "user", "vocabularyLists"],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
       query: (loginDto) => ({
@@ -114,6 +116,42 @@ export const baseApi = createApi({
       invalidatesTags: (result, error) =>
         result ? [{ type: "categories", id: "LIST" }] : [],
     }),
+    vocabularyLists: builder.query<
+      PagedVocabularyListsResponse,
+      PagedVocabularyListsRequest
+    >({
+      query: ({ page, perPage, category, title }) => {
+        let endPoint = `/vocabularies?page=${page}&perPage=${perPage}`;
+        if (category) {
+          endPoint += `&category=${category}`;
+        }
+        if (title) {
+          endPoint += `&title=${title}`;
+        }
+        return endPoint;
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.data.map((vocabularyList) => ({
+                type: "vocabularyLists" as const,
+                id: vocabularyList.id,
+              })),
+              { type: "vocabularyLists" as const, id: "LIST" },
+            ]
+          : [{ type: "vocabularyLists" as const, id: "LIST" }],
+    }),
+    deleteVocabularyList: builder.mutation<void, number>({
+      query: (vocabularyListId) => ({
+        url: `/vocabularies/${vocabularyListId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, vocabularyListId) => {
+        return error
+          ? []
+          : [{ type: "vocabularyLists" as const, id: vocabularyListId }];
+      },
+    }),
   }),
 });
 
@@ -125,4 +163,6 @@ export const {
   useResetPasswordMutation,
   useCategoryQuery,
   useCreateCategoryMutation,
+  useVocabularyListsQuery,
+  useDeleteVocabularyListMutation,
 } = baseApi;

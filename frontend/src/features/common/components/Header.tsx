@@ -1,40 +1,25 @@
-import { useEffect, useState } from "react";
-import { FaBars, FaSearch, FaUserAlt, FaTimes } from "react-icons/fa";
+import { useState } from "react";
+import { FaBars, FaSearch, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { SearchVocabulariesFormModal } from "./SearchVocabulariesFormModal";
 import { UserDropdownMenu } from "./UserDropdownMenu";
 
 type HeaderProps = {
-  height: number;
   showSidebarOnMobile: boolean;
   handleSidebarButton: () => void;
 };
 
 export const Header: React.FC<HeaderProps> = ({
-  height,
   handleSidebarButton,
   showSidebarOnMobile,
 }) => {
   const [showSearchVocabulariesFormModal, setShowSearchVocabulariesFormModal] =
     useState<boolean>(false);
-  const [showDropdownMenu, setShowDropdownMenu] = useState<boolean>(false);
-
-  useEffect(() => {
-    const dropdownHandler = () => {
-      if (showDropdownMenu) {
-        setShowDropdownMenu(false);
-      }
-    };
-
-    document.addEventListener("click", dropdownHandler);
-
-    return () => {
-      document.removeEventListener("click", dropdownHandler);
-    };
-  }, [showDropdownMenu]);
 
   const closeSearchFormModalHandler = () => {
-    setShowSearchVocabulariesFormModal(false);
+    if (showSearchVocabulariesFormModal) {
+      setShowSearchVocabulariesFormModal(false);
+    }
   };
 
   const openSearchFormModalHandler = () => {
@@ -43,17 +28,12 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const dropdownMenuToggler = () => {
-    setShowDropdownMenu((prev) => !prev);
-  };
-
   return (
     <>
       <header
-        className={`shadow-sm sticky top-0 w-full z-[5] bg-slate-100`}
-        style={{ height }}
+        className={`h-[60px] shadow-sm sticky top-0 w-full z-[5] bg-slate-100`}
       >
-        <div className="container mx-auto h-full flex items-center relative">
+        <div className="md:container mx-auto h-full flex items-center relative">
           <div className="flex items-center grow">
             <button
               type="button"
@@ -76,25 +56,19 @@ export const Header: React.FC<HeaderProps> = ({
               <Link to="/">VOCATEST</Link>
             </h1>
           </div>
-          <div className="grow-0 flex items-center mr-2">
+          <div className="grow-0 flex items-center justify-center mr-2">
             <button
               type="button"
-              className="rounded-full border p-0.5 mr-2 text-gray-400 hover:text-gray-500 focus:text-gray-500"
+              className="rounded-full border p-0.5 mr-2 text-gray-400 hover:text-blue-500 focus:text-blue-500"
               onClick={openSearchFormModalHandler}
             >
               <FaSearch className="w-[25px] h-[25px] p-0.5" />
               <span className="sr-only">단어장 검색</span>
             </button>
             <div className="relative">
-              <button
-                type="button"
-                className="rounded-full border p-0.5 text-gray-400 hover:text-gray-500 focus:text-gray-500"
-                onClick={dropdownMenuToggler}
-              >
-                <FaUserAlt className="w-[25px] h-[25px] p-0.5" />
-                <span className="sr-only">회원 관련 메뉴</span>
-              </button>
-              <UserDropdownMenu isOpen={showDropdownMenu} />
+              <div className="flex items-center">
+                <UserDropdownMenu />
+              </div>
             </div>
           </div>
         </div>

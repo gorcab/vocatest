@@ -12,19 +12,17 @@ describe("Sidebar", () => {
   ];
 
   function renderSidebar() {
-    const width = 200,
-      show = true;
+    const show = true;
     const portal = document.createElement("div");
     portal.classList.add("portal");
-
-    const { getByRole, findByRole, findAllByRole, debug } = render(
+    const Component = (
       <BrowserRouter>
         <Routes>
           <Route
             path="/"
             element={
               <>
-                <Sidebar width={width} show={show} />
+                <Sidebar show={show} />
                 <Outlet />
               </>
             }
@@ -38,11 +36,12 @@ describe("Sidebar", () => {
             ))}
           </Route>
         </Routes>
-      </BrowserRouter>,
-      {
-        container: document.body.appendChild(portal),
-      }
+      </BrowserRouter>
     );
+
+    const { getByRole, findByRole, findAllByRole, debug } = render(Component, {
+      container: document.body.appendChild(portal),
+    });
 
     return {
       getByRole,

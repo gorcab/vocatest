@@ -4,8 +4,6 @@ import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
 export const MainLayout: React.FC = () => {
-  const headerHeight = 60;
-  const sidebarWidth = 200;
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
   const handleSidebarButton = () => {
     setShowSidebar((prev) => !prev);
@@ -14,13 +12,12 @@ export const MainLayout: React.FC = () => {
   return (
     <>
       <Header
-        height={headerHeight}
         handleSidebarButton={handleSidebarButton}
         showSidebarOnMobile={showSidebar}
       />
-      <main className="container mx-auto">
-        <Sidebar width={sidebarWidth} show={showSidebar} />
-        <section className={`ml-0 md:ml-[${sidebarWidth}px] p-10`}>
+      <main className="md:container w-full md:w-auto md:mx-auto">
+        <Sidebar show={showSidebar} />
+        <section className={`ml-0 md:ml-[200px]`}>
           <Outlet />
         </section>
       </main>
