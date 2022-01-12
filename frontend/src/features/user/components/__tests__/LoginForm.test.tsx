@@ -3,9 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { LoginForm } from "../LoginForm";
 
 describe("LoginForm", () => {
-  const handleSuccess = jest.fn();
-
-  const Component = <LoginForm handleSuccess={handleSuccess} />;
+  const Component = <LoginForm />;
 
   beforeEach(() => {
     window.history.replaceState({}, "", "/login");
@@ -116,24 +114,6 @@ describe("LoginForm", () => {
 
       expect(await findByRole("alert")).toHaveTextContent(
         "이메일 또는 비밀번호가 올바르지 않습니다."
-      );
-    });
-
-    it("로그인에 성공하면 handleSuccess prop을 호출한다.", async () => {
-      const { getByLabelText, findByRole, getByRole } = render(Component);
-      const emailField = getByLabelText("이메일");
-      const passwordField = getByLabelText("비밀번호");
-      const loginButton = getByRole("button", { name: "로그인" });
-
-      userEvent.type(emailField, "tester@gmail.com");
-      userEvent.type(passwordField, "12345678");
-      userEvent.click(loginButton);
-
-      await waitFor(
-        () => {
-          expect(handleSuccess).toBeCalled();
-        },
-        { timeout: 2000 }
       );
     });
   });

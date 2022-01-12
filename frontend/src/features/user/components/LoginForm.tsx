@@ -1,4 +1,3 @@
-import { useLayoutEffect } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { BasicForm } from "../../common/components/BasicForm";
 import { Button } from "../../common/components/Button";
@@ -10,31 +9,21 @@ import { InputErrorMessage } from "../../common/components/InputErrorMessage";
 import { InputGroup } from "../../common/components/InputGroup";
 import { ErrorResponse } from "../../api/types";
 
-type LoginFormProps = {
-  handleSuccess: () => void;
-};
-
 type LoginDto = {
   email: string;
   password: string;
 };
 
-export const LoginForm: React.FC<LoginFormProps> = ({ handleSuccess }) => {
+export const LoginForm: React.FC = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginDto>();
-  const [login, { isSuccess, isLoading, error }] = useLoginMutation();
+  const [login, { isLoading, error }] = useLoginMutation();
   const onSubmit: SubmitHandler<LoginDto> = (data) => {
     login(data);
   };
-
-  useLayoutEffect(() => {
-    if (isSuccess) {
-      handleSuccess();
-    }
-  }, [isSuccess, handleSuccess]);
 
   return (
     <BasicForm onSubmit={handleSubmit(onSubmit)}>

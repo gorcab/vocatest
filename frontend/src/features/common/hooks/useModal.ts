@@ -1,6 +1,10 @@
-import { useEffect, useRef } from "react";
+import { MutableRefObject, useEffect, useRef } from "react";
 
-export const useModal = (isOpen: boolean, onClose: () => void) => {
+export const useModal = (
+  isOpen: boolean,
+  onClose: () => void,
+  initialFocusRef?: MutableRefObject<HTMLElement | null>
+) => {
   const portalElement = useRef<HTMLDivElement>(
     document.querySelector(".portal")!
   );
@@ -41,6 +45,15 @@ export const useModal = (isOpen: boolean, onClose: () => void) => {
       document.removeEventListener("keydown", keydownHandler);
     };
   }, [onClose, isOpen]);
+
+  // initial focus
+  useEffect(() => {
+    if (!initialFocusRef) return;
+
+    if (isOpen && initialFocusRef.current) {
+      initialFocusRef.current.focus();
+    }
+  }, [initialFocusRef, isOpen]);
 
   useEffect(() => {
     if (portalElement.current === null || overlayElement.current === null) {

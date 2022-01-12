@@ -1,7 +1,5 @@
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
-import { localStorageMock } from "../../../../mocks/storageMocks";
-import { DEFAULT_PER_PAGE } from "../../utils/constants";
 import { render } from "../../utils/test-utils";
 import { Header } from "../Header";
 
@@ -14,7 +12,7 @@ describe("Header", () => {
     const portal = document.createElement("div");
     portal.classList.add("portal");
 
-    const { getByRole, findByPlaceholderText, findByRole, debug } = render(
+    const Component = (
       <BrowserRouter>
         <Routes>
           <Route
@@ -31,22 +29,25 @@ describe("Header", () => {
           >
             <Route path="login" element={<div>Login</div>} />
             <Route path="profile" element={<div>Profile</div>} />
-            <Route path="delete-account" element={<div>Delete Account</div>} />
-            <Route
-              path="vocabularies"
-              element={
-                <>
-                  <Outlet />
-                </>
-              }
-            >
-              <Route index element={<div>Vocabularies</div>} />
-              <Route path=":id" element={<div>Vocabulary</div>} />
-            </Route>
           </Route>
         </Routes>
-      </BrowserRouter>,
+      </BrowserRouter>
+    );
+
+    const { getByRole, findByPlaceholderText, findByRole, debug } = render(
+      Component,
       {
+        preloadedState: {
+          user: {
+            user: {
+              id: 1,
+              email: "tester@gmail.com",
+              nickname: "tester",
+            },
+            accessToken: "accessToken",
+            refreshToken: "refreshToken",
+          },
+        },
         container: document.body.appendChild(portal),
       }
     );

@@ -6,7 +6,7 @@ import {
 import { baseApi } from "../features/api/slice";
 import userReducer, { UserState } from "../features/user/slice";
 import toastReducer from "../features/toast/slice";
-import { TokenSaveMiddleware } from "./middlewares/tokenSaveMiddleware";
+import { authTokenMiddleware } from "./middlewares/authTokenMiddleware";
 
 export const combinedReducer = combineReducers({
   user: userReducer,
@@ -35,14 +35,19 @@ const createStore = () => {
   const store = configureStore({
     preloadedState,
     reducer: (state, action) => {
-      if (action.type === logout.type) {
+      if (
+        action.type === logout.type ||
+        baseApi.endpoints.deleteUser.matchFulfilled(action)
+      ) {
+        // 로그아웃 또는 회원탈퇴 시 스토어 초기화
         return combinedReducer(undefined, action);
       }
       return combinedReducer(state, action);
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(baseApi.middleware, TokenSaveMiddleware),
+      getDefaultMiddleware().concat(baseApi.middleware, authTokenMiddleware),
   });
+
   return store;
 };
 

@@ -19,7 +19,7 @@ export const SignUpPage: React.FC = () => {
       <h1 className="text-blue-500 text-center text-4xl font-extrabold mb-4">
         VOCATEST
       </h1>
-      <SignUpForm handleSuccess={navigateToMainPage} />
+      <SignUpForm />
     </main>
   );
 };

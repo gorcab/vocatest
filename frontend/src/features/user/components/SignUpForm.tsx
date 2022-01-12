@@ -8,11 +8,7 @@ import { InputGroup } from "../../common/components/InputGroup";
 import { InputRightElement } from "../../common/components/InputRightElement";
 import { useSignUp } from "../hooks/useSignUp";
 
-type SignUpFormProps = {
-  handleSuccess: () => void;
-};
-
-export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
+export const SignUpForm: React.FC = () => {
   const {
     register,
     submitHandler,
@@ -24,7 +20,7 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({ handleSuccess }) => {
     isSignUpLoading,
     ttl,
     isSet,
-  } = useSignUp(handleSuccess);
+  } = useSignUp();
 
   return (
     <BasicForm onSubmit={submitHandler}>

@@ -69,6 +69,7 @@ export const baseApi = createApi({
     }),
     user: builder.query<UserResponse, void>({
       query: () => "/users/me",
+      providesTags: ["user"],
     }),
     authCode: builder.mutation<AuthCodeResponse, AuthCodeRequest>({
       query: (authCodeDto) => ({
@@ -83,6 +84,13 @@ export const baseApi = createApi({
         method: "POST",
         body: signUpDto,
       }),
+    }),
+    deleteUser: builder.mutation<void, number>({
+      query: (userId) => ({
+        url: `/users/${userId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error) => (error ? [] : ["user"]),
     }),
     resetPassword: builder.mutation<void, ResetPasswordRequest>({
       query: (resetPasswordDto) => ({
@@ -160,6 +168,7 @@ export const {
   useLoginMutation,
   useAuthCodeMutation,
   useSignUpMutation,
+  useDeleteUserMutation,
   useResetPasswordMutation,
   useCategoryQuery,
   useCreateCategoryMutation,

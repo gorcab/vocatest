@@ -23,6 +23,17 @@ describe("UserDropdown", () => {
     const { getByRole, queryByRole, findByRole, getAllByRole } = render(
       Component,
       {
+        preloadedState: {
+          user: {
+            user: {
+              id: 1,
+              email: "tester@gmail.com",
+              nickname: "tester",
+            },
+            accessToken: "accessToken",
+            refreshToken: "refreshToken",
+          },
+        },
         container: document.body.appendChild(portal),
       }
     );

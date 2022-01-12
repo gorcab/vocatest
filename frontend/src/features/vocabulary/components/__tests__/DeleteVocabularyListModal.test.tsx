@@ -67,7 +67,7 @@ describe("DeleteVocabularyListModal", () => {
 
     const deleteTitle = getByRole("heading", { name: "단어장 삭제" });
     const deleteParagraph = getByText(
-      new RegExp(`${title} 단어장을 정말로 삭제하시겠습니까?`, "g")
+      new RegExp(`${title} 단어장을 삭제하시겠습니까?`, "g")
     );
     const closeIconButton = getByRole("button", { name: "닫기" });
     const deleteButton = getByRole("button", { name: "삭제하기" });

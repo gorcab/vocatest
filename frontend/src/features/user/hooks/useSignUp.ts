@@ -12,7 +12,7 @@ type SignUpDto = {
   nickname: string;
 };
 
-export const useSignUp = (handleSuccess: () => void) => {
+export const useSignUp = () => {
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -143,12 +143,6 @@ export const useSignUp = (handleSuccess: () => void) => {
       });
     }
   };
-
-  useLayoutEffect(() => {
-    if (isSignUpSuccess) {
-      handleSuccess();
-    }
-  }, [isSignUpSuccess, handleSuccess]);
 
   const submitHandler = handleSubmit(onSubmit);
 

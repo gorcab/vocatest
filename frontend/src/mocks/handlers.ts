@@ -10,12 +10,30 @@ import {
   VocabularyListDto,
 } from "../features/api/types";
 
-export const accessToken = "accesstoken";
-export const refreshToken = "refreshtoken";
-const validUser = {
-  email: "tester@gmail.com",
-  nickname: "tester",
-};
+const validUsers = [
+  {
+    email: "tester@gmail.com",
+    nickname: "tester",
+    id: 1,
+    accessToken: "accessToken1",
+    refreshToken: "refreshToken1",
+  },
+  {
+    email: "dev@gmail.com",
+    nickname: "dev",
+    id: 2,
+    accessToken: "accessToken2",
+    refreshToken: "refreshToken2",
+  },
+  {
+    email: "voca@gmail.com",
+    nickname: "voca",
+    id: 3,
+    accessToken: "accessToken3",
+    refreshToken: "refreshToken3",
+  },
+];
+
 const categories: Array<CategoryDto> = [
   { id: 1, name: "토익" },
   { id: 2, name: "텝스" },
@@ -247,8 +265,11 @@ const createHandlers = () => {
     rest.post<SignUpRequest>(
       `${process.env.REACT_APP_API_URL}/users`,
       (req, res, ctx) => {
+        const registeredEmails = validUsers.map((user) => user.email);
         const { email, nickname, signUpAuthCode } = req.body;
-        if (signUpAuthCode === 444444) {
+        const invalidSignUpAuthCode = 444444;
+
+        if (signUpAuthCode === invalidSignUpAuthCode) {
           return res(
             ctx.delay(100),
             ctx.status(400),
@@ -257,7 +278,7 @@ const createHandlers = () => {
               message: "인증 번호가 올바르지 않습니다.",
             })
           );
-        } else if (email === "wrong@gmail.com") {
+        } else if (registeredEmails.includes(email)) {
           return res(
             ctx.delay(100),
             ctx.status(400),
@@ -267,16 +288,22 @@ const createHandlers = () => {
             })
           );
         } else {
+          const id = validUsers.length + 1;
+          const accessToken = `accessToken${id}`;
+          const refreshToken = `refreshToken${id}`;
+
+          validUsers.push({
+            id,
+            email,
+            nickname,
+            accessToken,
+            refreshToken,
+          });
+
           return res(
             ctx.delay(100),
             ctx.status(201),
-            ctx.json({
-              id: 1,
-              email,
-              nickname,
-              accessToken,
-              refreshToken,
-            })
+            ctx.json({ ...validUsers[validUsers.length - 1] })
           );
         }
       }
@@ -287,23 +314,36 @@ const createHandlers = () => {
       `${process.env.REACT_APP_API_URL}/auth/login`,
       (req, res, ctx) => {
         const { email } = req.body;
-        if (email === "wrong@gmail.com") {
+        const normalizedObj = validUsers.reduce((acc, cur) => {
+          const { id, email, nickname, accessToken, refreshToken } = cur;
+          acc[email] = {
+            id,
+            nickname,
+            accessToken,
+            refreshToken,
+          };
+          return acc;
+        }, {} as Record<string, Omit<typeof validUsers[number], "email">>);
+
+        if (Object.keys(normalizedObj).includes(email)) {
+          const { id, nickname, refreshToken, accessToken } =
+            normalizedObj[email];
           return res(
-            ctx.status(401),
+            ctx.delay(500),
+            ctx.status(201),
             ctx.json({
-              message: "이메일 또는 비밀번호가 올바르지 않습니다.",
+              id,
+              email,
+              nickname,
+              accessToken,
+              refreshToken,
             })
           );
         } else {
           return res(
-            ctx.delay(1000),
-            ctx.status(201),
+            ctx.status(401),
             ctx.json({
-              id: 1,
-              email,
-              nickname: validUser.nickname,
-              accessToken,
-              refreshToken,
+              message: "이메일 또는 비밀번호가 올바르지 않습니다.",
             })
           );
         }
@@ -312,19 +352,55 @@ const createHandlers = () => {
 
     // access token을 통한 사용자 정보 요청
     rest.get(`${process.env.REACT_APP_API_URL}/users/me`, (req, res, ctx) => {
-      if (req.headers.get("Authorization") === `Bearer ${accessToken}`) {
-        return res(
-          ctx.status(200),
-          ctx.json({
-            id: 1,
-            email: validUser.email,
-            nickname: validUser.nickname,
-          })
-        );
-      } else {
+      const authorizationHeader = req.headers.get("Authorization");
+      if (!authorizationHeader) {
         return res(ctx.status(401));
       }
+
+      if (/Bearer accessToken(\d)/.test(authorizationHeader)) {
+        const accessToken = authorizationHeader.split(" ")[1];
+        const user = validUsers.find(
+          (user) => user.accessToken === accessToken
+        );
+        if (user) {
+          const { id, nickname, email } = user;
+          return res(
+            ctx.status(200),
+            ctx.json({
+              id,
+              email,
+              nickname,
+            })
+          );
+        }
+      }
+
+      return res(ctx.status(401));
     }),
+
+    // 회원 탈퇴 요청
+    rest.delete(
+      `${process.env.REACT_APP_API_URL}/users/:id`,
+      (req, res, ctx) => {
+        let { id } = req.params;
+        const validUserIndex = validUsers.findIndex(
+          (user) => user.id === Number(id)
+        );
+        if (validUserIndex !== -1) {
+          validUsers.splice(validUserIndex, 1);
+          return res(ctx.delay(500), ctx.status(201));
+        } else {
+          return res(
+            ctx.delay(200),
+            ctx.status(400),
+            ctx.json({
+              status: 400,
+              message: "Bad Request",
+            })
+          );
+        }
+      }
+    ),
 
     // 비밀번호 재설정 인증 토큰 전송 요청 핸들러
     rest.post<ResetPasswordRequest>(
@@ -438,18 +514,7 @@ const createHandlers = () => {
             page,
             perPage
           );
-          return res(
-            ctx.delay(500),
-            ctx.status(200),
-            ctx.json({
-              ...getPageBasedVocabularyListsOfSpecificTitle(
-                entireVocabularyLists,
-                title,
-                page,
-                perPage
-              ),
-            })
-          );
+          return res(ctx.delay(500), ctx.status(200), ctx.json(result));
         }
         // 전체 단어장 조회
         return res(

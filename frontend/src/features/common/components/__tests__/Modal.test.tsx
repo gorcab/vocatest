@@ -39,6 +39,10 @@ describe("Modal", () => {
       closeHandler,
     };
   }
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
   it("Modal과 내부 요소들이 렌더링된다.", () => {
     const { getByRole, getByText, getByPlaceholderText } = renderModal();
 

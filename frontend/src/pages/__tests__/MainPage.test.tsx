@@ -9,6 +9,8 @@ import {
   createEntireVocabularyLists,
   createMockVocabularyListsInEachCategory,
   getPageBasedEntireVocabularyLists,
+  getQueryParamsFromRestRequest,
+  getPageBasedVocabularyListsOfSpecificTitle,
 } from "../../mocks/handlers";
 import { server } from "../../mocks/server";
 import { MainPage } from "../MainPage";
@@ -82,7 +84,6 @@ describe("MainPage", () => {
       getAllByRole,
       entireVocabularyLists,
       response,
-      page,
       perPage,
     } = renderMainPage();
 
@@ -117,8 +118,24 @@ describe("MainPage", () => {
   it("title을 query parameter로 받으면 `${title}에 대한 검색 결과`를 heading으로 갖고, `${title}`이 들어간 단어장들만 서버로부터 받아 렌더링한다.", async () => {
     // given
     const title = encodeURIComponent("토익");
-    const { getByRole, getAllByRole } = renderMainPage(`/?title=${title}`);
-
+    const { getByRole, getAllByRole, response } = renderMainPage(
+      `/?title=${title}`
+    );
+    server.use(
+      rest.get(
+        `${process.env.REACT_APP_API_URL}/vocabularies`,
+        (req, res, ctx) => {
+          const { page, perPage, title } = getQueryParamsFromRestRequest(req);
+          const result = getPageBasedVocabularyListsOfSpecificTitle(
+            response.data,
+            title as string,
+            page,
+            perPage
+          );
+          return res(ctx.status(200), ctx.json(result));
+        }
+      )
+    );
     // when
     await waitForElementToBeRemoved(document.querySelector(".animate-pulse"));
 

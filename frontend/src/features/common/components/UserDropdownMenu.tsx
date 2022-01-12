@@ -3,13 +3,13 @@ import { FaUserAlt } from "react-icons/fa";
 import { useNavigate } from "react-router";
 import { useAppDispatch } from "../../../app/hooks";
 import { logout } from "../../../app/store";
+import { DeleteAccountModal } from "../../user/components/DeleteAccountModal";
 import { Dropdown } from "./Dropdown";
 import { DropdownButton } from "./DropdownButton";
 import { DropdownItem } from "./DropdownItem";
 import { DropdownList } from "./DropdownList";
-import { Modal } from "./Modal";
 
-export const UserDropdownMenu: React.FC = ({}) => {
+export const UserDropdownMenu: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [openDeleteAccountModal, setOpenDeleteAccountModal] = useState(false);
@@ -48,12 +48,12 @@ export const UserDropdownMenu: React.FC = ({}) => {
           </DropdownItem>
         </DropdownList>
       </Dropdown>
-      <Modal
-        isOpen={openDeleteAccountModal}
-        onClose={closeDeleteAccountModalHandler}
-      >
-        <div>회원 탈퇴</div>
-      </Modal>
+      {openDeleteAccountModal && (
+        <DeleteAccountModal
+          isOpen={openDeleteAccountModal}
+          onClose={closeDeleteAccountModalHandler}
+        />
+      )}
     </>
   );
 };

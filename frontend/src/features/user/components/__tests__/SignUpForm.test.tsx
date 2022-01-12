@@ -11,8 +11,7 @@ import { SignUpForm } from "../SignUpForm";
 
 describe("SignUpForm", () => {
   function renderAndGetFields() {
-    const handleSuccess = jest.fn();
-    const renderResult = render(<SignUpForm handleSuccess={handleSuccess} />);
+    const renderResult = render(<SignUpForm />);
     const { getByLabelText, getByRole } = renderResult;
     const emailField = getByLabelText("이메일");
     const authCodeRequestButton = getByRole("button", { name: "인증 요청" });
@@ -24,7 +23,6 @@ describe("SignUpForm", () => {
 
     return {
       renderResult,
-      handleSuccess,
       emailField,
       authCodeRequestButton,
       signUpAuthCodeField,
@@ -74,7 +72,6 @@ describe("SignUpForm", () => {
     it('이메일 형식으로 입력하지 않고 회원가입 버튼을 누르면 "이메일 형식으로 입력해주세요." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         authCodeRequestButton,
         signUpAuthCodeField,
@@ -95,7 +92,6 @@ describe("SignUpForm", () => {
 
       const alerts = await findAllByRole("alert");
       expect(alerts[0]).toHaveTextContent("이메일 형식으로 입력해주세요.");
-      expect(handleSuccess).not.toBeCalled();
     });
   });
 
@@ -120,7 +116,6 @@ describe("SignUpForm", () => {
     it('숫자 형식의 인증 번호를 입력하지 않고 회원가입 버튼을 누르면 "인증번호가 올바르지 않습니다." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         passwordField,
         passwordConfirmField,
@@ -141,7 +136,6 @@ describe("SignUpForm", () => {
       expect(signUpAuthCodeAlert).toHaveTextContent(
         "인증번호가 올바르지 않습니다."
       );
-      expect(handleSuccess).not.toBeCalled();
     });
 
     it('인증 번호를 요청한 뒤 시간 제한 내에 회원가입 버튼을 누르지 않으면 "인증 번호를 다시 요청해주세요." 메시지를 보여준다.', async () => {
@@ -192,7 +186,6 @@ describe("SignUpForm", () => {
     it('비밀번호 필드를 입력하지 않고 회원가입 버튼을 누르면 "비밀번호를 입력해주세요." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         authCodeRequestButton,
         signUpAuthCodeField,
@@ -212,13 +205,11 @@ describe("SignUpForm", () => {
 
       const passwordAlert = await findByRole("alert");
       expect(passwordAlert).toHaveTextContent("비밀번호를 입력해주세요.");
-      expect(handleSuccess).not.toBeCalled();
     });
 
     it('8자 미만의 비밀번호를 입력하고 회원가입 버튼을 누르면 "비밀번호는 최소 8자 이상이어야 합니다." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         authCodeRequestButton,
         signUpAuthCodeField,
@@ -244,13 +235,11 @@ describe("SignUpForm", () => {
       expect(passwordAlert).toHaveTextContent(
         "비밀번호는 최소 8자 이상이어야 합니다."
       );
-      expect(handleSuccess).not.toBeCalled();
     });
 
     it('13자 이상의 비밀번호를 입력하고 회원가입 버튼을 누르면 "비밀번호는 최대 12자 이하여야 합니다." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         authCodeRequestButton,
         signUpAuthCodeField,
@@ -276,13 +265,11 @@ describe("SignUpForm", () => {
       expect(passwordAlert).toHaveTextContent(
         "비밀번호는 최대 12자 이하여야 합니다."
       );
-      expect(handleSuccess).not.toBeCalled();
     });
 
     it('비밀번호 재입력 필드를 비밀번호 필드와 동일하게 입력하지 않은 상태에서 회원가입 버튼을 누르면 "비밀번호를 동일하게 입력해주세요." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         authCodeRequestButton,
         signUpAuthCodeField,
@@ -308,7 +295,6 @@ describe("SignUpForm", () => {
       expect(passwordConfirmAlert).toHaveTextContent(
         "비밀번호를 동일하게 입력해주세요."
       );
-      expect(handleSuccess).not.toBeCalled();
     });
   });
 
@@ -316,7 +302,6 @@ describe("SignUpForm", () => {
     it('닉네임을 입력하지 않고 회원가입 버튼을 누르면 "닉네임을 입력해주세요." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         authCodeRequestButton,
         signUpAuthCodeField,
@@ -339,13 +324,11 @@ describe("SignUpForm", () => {
 
       const nicknameAlert = await findByRole("alert");
       expect(nicknameAlert).toHaveTextContent("닉네임을 입력해주세요.");
-      expect(handleSuccess).not.toBeCalled();
     });
 
     it('공백으로만 이루어진 닉네임을 입력하고 회원가입 버튼을 누르면 "공백으로 구성된 닉네임은 사용할 수 없습니다." 메시지를 보여준다.', async () => {
       const {
         renderResult,
-        handleSuccess,
         emailField,
         authCodeRequestButton,
         signUpAuthCodeField,
@@ -371,7 +354,6 @@ describe("SignUpForm", () => {
       expect(nicknameAlert).toHaveTextContent(
         "공백으로 구성된 닉네임은 사용할 수 없습니다."
       );
-      expect(handleSuccess).not.toBeCalled();
     });
   });
 
@@ -435,34 +417,5 @@ describe("SignUpForm", () => {
       const authCodeAlert = await findByRole("alert");
       expect(authCodeAlert).toHaveTextContent("인증 번호가 올바르지 않습니다.");
     });
-  });
-
-  it("회원가입에 성공하면 handleSuccess prop을 호출한다.", async () => {
-    const {
-      emailField,
-      authCodeRequestButton,
-      signUpAuthCodeField,
-      passwordField,
-      passwordConfirmField,
-      nicknameField,
-      handleSuccess,
-      signUpButton,
-    } = renderAndGetFields();
-
-    userEvent.type(emailField, "tester@gmail.com");
-    userEvent.click(authCodeRequestButton);
-    await waitForElementToBeRemoved(document.querySelector("svg.animate-spin"));
-    userEvent.type(signUpAuthCodeField, "123456");
-    userEvent.type(passwordField, "test1234");
-    userEvent.type(passwordConfirmField, "test1234");
-    userEvent.type(nicknameField, "tester");
-    userEvent.click(signUpButton);
-
-    await waitFor(
-      () => {
-        expect(handleSuccess).toBeCalled();
-      },
-      { timeout: 2000 }
-    );
   });
 });

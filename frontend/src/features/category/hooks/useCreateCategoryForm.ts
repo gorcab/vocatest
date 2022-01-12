@@ -38,7 +38,7 @@ export const useCreateCategoryForm = (
   });
   const { ref } = registerResult;
 
-  const registerRef = (inputElement: HTMLInputElement | null) => {
+  const registerRef = (inputElement: HTMLInputElement) => {
     ref(inputElement);
     categoryNameFieldRef.current = inputElement;
   };
@@ -47,12 +47,6 @@ export const useCreateCategoryForm = (
     mutationReset();
     createCategory(dto);
   });
-
-  useEffect(() => {
-    if (categoryNameFieldRef.current && isOpen) {
-      categoryNameFieldRef.current.focus();
-    }
-  }, [isOpen]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -88,6 +82,7 @@ export const useCreateCategoryForm = (
   ]);
 
   return {
+    categoryNameFieldRef,
     mutationResult,
     submitHandler,
     registerRef,
