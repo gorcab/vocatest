@@ -40,7 +40,7 @@ export const AuthenticatedApp: React.FC = () => {
         }
       >
         <Route index element={<MainPage />} />
-        <Route path="categories/:id" element={<div>Category 페이지</div>} />
+        <Route path="profile" element={<h2>내 프로필</h2>} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

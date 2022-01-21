@@ -14,6 +14,7 @@ function App() {
       </CenterLayout>
     );
   }
+
   return user ? <AuthenticatedApp /> : <UnauthenticatedApp />;
 }
 

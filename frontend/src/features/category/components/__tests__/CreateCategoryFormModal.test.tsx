@@ -4,7 +4,6 @@ import { server } from "../../../../mocks/server";
 import { render, waitFor } from "../../../common/utils/test-utils";
 import { ToastContainer } from "../../../toast/components/ToastContainer";
 import { CreateCategoryFormModal } from "../CreateCategoryFormModal";
-
 describe("CreateCategoryFormModal", () => {
   function renderCreateCategoryFormModal() {
     const portal = document.createElement("div");
@@ -71,7 +70,8 @@ describe("CreateCategoryFormModal", () => {
     expect(errorMessage).toHaveTextContent("이미 존재하는 카테고리명입니다.");
   });
 
-  it("서버 측 에러로 인해 카테고리 생성에 실패하면 `카테고리 생성에 실패했습니다. 잠시 후에 다시 시도해주세요.` 에러 메시지를 띄운다.", async () => {
+  it("서버 측 에러로 인해 카테고리 생성에 실패하면 서버 측으로부터 받은 에러 메시지를 띄운다.", async () => {
+    const message = "Internal Server Error";
     server.use(
       rest.post(
         `${process.env.REACT_APP_API_URL}/categories`,
@@ -80,7 +80,7 @@ describe("CreateCategoryFormModal", () => {
             ctx.status(500),
             ctx.json({
               status: 500,
-              message: "Internal Server Error",
+              message,
             })
           );
         }
@@ -96,9 +96,7 @@ describe("CreateCategoryFormModal", () => {
 
     const errorMessage = await findByRole("alert");
 
-    expect(errorMessage).toHaveTextContent(
-      "카테고리 생성에 실패했습니다. 잠시 후에 다시 시도해주세요."
-    );
+    expect(errorMessage).toHaveTextContent(message);
   });
 
   it("카테고리 생성에 성공하면 `modalCloseHandler` 함수가 호출된다.", async () => {

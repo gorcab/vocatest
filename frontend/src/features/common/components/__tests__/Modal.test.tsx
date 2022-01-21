@@ -66,7 +66,6 @@ describe("Modal", () => {
     const input2Field = getByPlaceholderText("입력 2 필드");
     const button = getByRole("button", { name: "버튼" });
 
-    userEvent.tab();
     expect(document.activeElement).toBe(inputField);
 
     userEvent.tab();
@@ -76,6 +75,15 @@ describe("Modal", () => {
     expect(document.activeElement).toBe(button);
 
     userEvent.tab();
+    expect(document.activeElement).toBe(inputField);
+
+    userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(button);
+
+    userEvent.tab({ shift: true });
+    expect(document.activeElement).toBe(input2Field);
+
+    userEvent.tab({ shift: true });
     expect(document.activeElement).toBe(inputField);
 
     userEvent.tab({ shift: true });

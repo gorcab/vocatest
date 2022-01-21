@@ -3,6 +3,7 @@ import {
   AuthCodeRequest,
   CategoryDto,
   CreateCategoryRequest,
+  EditCategoryRequest,
   LoginRequest,
   PagedVocabularyListsResponse,
   ResetPasswordRequest,
@@ -34,7 +35,8 @@ const validUsers = [
   },
 ];
 
-const categories: Array<CategoryDto> = [
+let nextCategoryId = 4;
+let categories: Array<CategoryDto> = [
   { id: 1, name: "토익" },
   { id: 2, name: "텝스" },
   { id: 3, name: "토플" },
@@ -237,7 +239,7 @@ const createHandlers = () => {
             );
           }
         } else if (purpose === "RESET_PASSWORD") {
-          if (email === "notexists@gmail.com") {
+          if (!validUsers.find((user) => user.email === email)) {
             return res(
               ctx.delay(500),
               ctx.status(400),
@@ -416,17 +418,17 @@ const createHandlers = () => {
             })
           );
         } else {
-          return res(ctx.status(204));
+          return res(ctx.delay(500), ctx.status(204));
         }
       }
     ),
 
     // 카테고리 조회 요청 핸들러
     rest.get(`${process.env.REACT_APP_API_URL}/categories`, (req, res, ctx) => {
-      const isFailed = Math.random() > 0.8;
+      const isFailed = Math.random() > 0.9;
       if (isFailed) {
         return res(
-          ctx.delay(1000),
+          ctx.delay(500),
           ctx.status(500),
           ctx.json({
             status: 500,
@@ -436,7 +438,7 @@ const createHandlers = () => {
       }
 
       return res(
-        ctx.delay(1000),
+        ctx.delay(500),
         ctx.status(200),
         ctx.json({
           categories,
@@ -449,7 +451,7 @@ const createHandlers = () => {
       `${process.env.REACT_APP_API_URL}/categories`,
       (req, res, ctx) => {
         const { name } = req.body;
-        if (categories.map((category) => category.name).includes(name)) {
+        if (categories.findIndex((category) => category.name === name) !== -1) {
           return res(
             ctx.delay(100),
             ctx.status(400),
@@ -460,10 +462,11 @@ const createHandlers = () => {
           );
         } else {
           const createdCategory = {
-            id: categories.length + 1,
+            id: nextCategoryId++,
             name,
           };
           categories.push(createdCategory);
+          mockVocabularyLists[createdCategory.id] = [];
           return res(
             ctx.delay(1000),
             ctx.status(201),
@@ -473,13 +476,83 @@ const createHandlers = () => {
       }
     ),
 
+    // 카테고리 수정 요청 핸들러
+    rest.patch<EditCategoryRequest>(
+      `${process.env.REACT_APP_API_URL}/categories/:id`,
+      (req, res, ctx) => {
+        const { id, name } = req.body;
+        const categoryIndex = categories.findIndex(
+          (category) => category.id === id
+        );
+        if (categoryIndex === -1) {
+          return res(
+            ctx.delay(500),
+            ctx.status(400),
+            ctx.json({
+              status: 400,
+              message: "올바르지 않은 카테고리입니다.",
+            })
+          );
+        }
+
+        const isAlreadyExistName =
+          categories.findIndex((category) => category.name === name) !== -1;
+        if (isAlreadyExistName) {
+          return res(
+            ctx.delay(500),
+            ctx.status(400),
+            ctx.json({
+              status: 400,
+              message: "이미 존재하는 카테고리명입니다.",
+            })
+          );
+        }
+
+        categories[categoryIndex].name = name;
+
+        return res(
+          ctx.delay(500),
+          ctx.status(201),
+          ctx.json({
+            ...categories[categoryIndex],
+          })
+        );
+      }
+    ),
+
+    // 카테고리 삭제 핸들러
+    rest.delete(
+      `${process.env.REACT_APP_API_URL}/categories/:id`,
+      (req, res, ctx) => {
+        const { id } = req.params;
+        const categoryIndex = categories.findIndex(
+          (category) => category.id === Number(id)
+        );
+        if (categoryIndex === -1) {
+          return res(
+            ctx.delay(500),
+            ctx.status(401),
+            ctx.json({
+              status: 401,
+              message: "올바르지 않은 카테고리입니다.",
+            })
+          );
+        } else {
+          const { id } = categories[categoryIndex];
+          categories = categories.filter((category) => category.id !== id);
+          delete mockVocabularyLists[id];
+
+          return res(ctx.delay(500), ctx.status(201));
+        }
+      }
+    ),
     // 단어장 조회 핸들러
     rest.get(
       `${process.env.REACT_APP_API_URL}/vocabularies`,
       (req, res, ctx) => {
         const { page, perPage, categoryId, title } =
           getQueryParamsFromRestRequest(req);
-        const isFailed = Math.random() > 0.8;
+        const isFailed = Math.random() > 0.9;
 
         if (isNaN(page) || isNaN(perPage) || perPage > 20 || isFailed) {
           return res(
@@ -491,22 +564,49 @@ const createHandlers = () => {
             })
           );
         }
+        entireVocabularyLists =
+          createEntireVocabularyLists(mockVocabularyLists);
+
         // 특정 카테고리의 단어장 조회
         if (categoryId) {
+          const vocabularyListsInCategoryResponse =
+            getPageBasedVocabularyListsOfCategory(
+              mockVocabularyLists,
+              categoryId,
+              page,
+              perPage
+            );
+
+          // 해당 카테고리의 특정 제목이 들어간 단어장들만 조회
+          if (title) {
+            const data = vocabularyListsInCategoryResponse.data.filter((voca) =>
+              new RegExp(`${title}`, "g").test(voca.title)
+            );
+            const total = data.length;
+            const totalPage = Math.ceil(total / perPage);
+            const vocabularyListToHaveTitleResponse: PagedVocabularyListsResponse =
+              {
+                data,
+                page,
+                perPage,
+                total,
+                totalPage,
+              };
+            return res(
+              ctx.delay(500),
+              ctx.status(200),
+              ctx.json(vocabularyListToHaveTitleResponse)
+            );
+          }
+          // 해당 카테고리의 모든 단어장 조회
           return res(
             ctx.delay(500),
             ctx.status(200),
-            ctx.json({
-              ...getPageBasedVocabularyListsOfCategory(
-                mockVocabularyLists,
-                categoryId,
-                page,
-                perPage
-              ),
-            })
+            ctx.json(vocabularyListsInCategoryResponse)
           );
         }
-        // 단어장의 제목으로 조회
+
+        // 모든 카테고리 내 단어장의 제목으로 조회
         if (title) {
           const result = getPageBasedVocabularyListsOfSpecificTitle(
             entireVocabularyLists,
@@ -516,6 +616,7 @@ const createHandlers = () => {
           );
           return res(ctx.delay(500), ctx.status(200), ctx.json(result));
         }
+
         // 전체 단어장 조회
         return res(
           ctx.delay(500),

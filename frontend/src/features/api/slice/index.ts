@@ -22,6 +22,8 @@ import {
   CreateCategoryRequest,
   PagedVocabularyListsResponse,
   PagedVocabularyListsRequest,
+  EditCategoryResponse,
+  EditCategoryRequest,
 } from "../types";
 
 const baseQuery = fetchBaseQuery({
@@ -43,11 +45,7 @@ const baseQueryWithReAuth: BaseQueryFn<
 > = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
   if (api.endpoint !== "login" && result.error && result.error.status === 401) {
-    const refreshTokenResult = await baseQuery(
-      "/auth/refresh",
-      api,
-      extraOptions
-    );
+    const refreshTokenResult = await baseQuery("/users/me", api, extraOptions);
     if (refreshTokenResult.data) {
       api.dispatch(saveTokens(refreshTokenResult.data as TokenState));
       result = await baseQuery(args, api, extraOptions);
@@ -124,6 +122,33 @@ export const baseApi = createApi({
       invalidatesTags: (result, error) =>
         result ? [{ type: "categories", id: "LIST" }] : [],
     }),
+    editCategory: builder.mutation<EditCategoryResponse, EditCategoryRequest>({
+      query: (editCategoryDto) => ({
+        url: `/categories/${editCategoryDto.id}`,
+        method: "PATCH",
+        body: editCategoryDto,
+      }),
+      invalidatesTags: (result) =>
+        result
+          ? [
+              { type: "categories", id: result.id },
+              { type: "vocabularyLists", id: "LIST" },
+            ]
+          : [],
+    }),
+    deleteCategory: builder.mutation<void, number>({
+      query: (categoryId) => ({
+        url: `/categories/${categoryId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result, error, categoryId) =>
+        result !== undefined
+          ? [
+              { type: "categories", id: categoryId },
+              { type: "vocabularyLists", id: "LIST" },
+            ]
+          : [],
+    }),
     vocabularyLists: builder.query<
       PagedVocabularyListsResponse,
       PagedVocabularyListsRequest
@@ -155,9 +180,7 @@ export const baseApi = createApi({
         method: "DELETE",
       }),
       invalidatesTags: (result, error, vocabularyListId) => {
-        return error
-          ? []
-          : [{ type: "vocabularyLists" as const, id: vocabularyListId }];
+        return error ? [] : [{ type: "vocabularyLists", id: vocabularyListId }];
       },
     }),
   }),
@@ -172,6 +195,8 @@ export const {
   useResetPasswordMutation,
   useCategoryQuery,
   useCreateCategoryMutation,
+  useEditCategoryMutation,
+  useDeleteCategoryMutation,
   useVocabularyListsQuery,
   useDeleteVocabularyListMutation,
 } = baseApi;

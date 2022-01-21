@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { FaTimes } from "react-icons/fa";
-import { useNavigate } from "react-router";
-import { DEFAULT_PER_PAGE } from "../utils/constants";
+import { useLocation, useNavigate } from "react-router";
+import { useSearchUrl } from "../hooks/useSearchUrl";
 import { Modal } from "./Modal";
 
 type SearchVocabulariesFormModalProps = {
@@ -11,19 +11,26 @@ type SearchVocabulariesFormModalProps = {
 
 export const SearchVocabulariesFormModal: React.FC<SearchVocabulariesFormModalProps> =
   ({ isOpen, closeModalHandler }) => {
+    const {
+      pagedVocabularyListsRequest: { perPage, category },
+    } = useSearchUrl();
     const navigate = useNavigate();
+    const location = useLocation();
     const searchFieldRef = useRef<HTMLInputElement>(null);
 
     const searchVocabulariesHandler: React.FormEventHandler = (event) => {
       event.preventDefault();
       if (searchFieldRef.current) {
-        const value = encodeURIComponent(searchFieldRef.current.value);
-        if (value) {
-          navigate(`/?page=1&perPage=${DEFAULT_PER_PAGE}&title=${value}`);
-        } else {
-          navigate("/");
+        const title = encodeURIComponent(searchFieldRef.current.value);
+        if (title) {
+          let url = `${location.pathname}?`;
+          if (category) {
+            url += `category=${category}&`;
+          }
+          url += `page=1&perPage=${perPage}&title=${title}`;
+          navigate(url);
+          closeModalHandler();
         }
-        closeModalHandler();
       }
     };
 

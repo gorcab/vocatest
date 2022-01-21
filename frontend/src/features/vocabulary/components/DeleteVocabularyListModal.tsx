@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useDeleteVocabularyListMutation } from "../../api/slice";
 import { Modal } from "../../common/components/Modal";
 import { Spinner } from "../../common/components/Spinner";
@@ -17,12 +17,6 @@ export const DeleteVocabularyListModal: React.FC<DeleteVocabularyListModalProps>
     const [deleteVocabularyList, { isLoading, error, isSuccess, reset }] =
       useDeleteVocabularyListMutation();
     const deleteButtonRef = useRef<HTMLButtonElement>(null);
-
-    useEffect(() => {
-      if (deleteButtonRef.current && isOpen) {
-        deleteButtonRef.current.focus();
-      }
-    }, [isOpen]);
 
     useEffect(() => {
       if (isSuccess) {
@@ -55,7 +49,7 @@ export const DeleteVocabularyListModal: React.FC<DeleteVocabularyListModalProps>
             disabled={isLoading}
             ref={deleteButtonRef}
             onClick={deleteHandler}
-            className={`ml-5 rounded-sm bg-red-500 hover:bg-red-500/80 disabled:bg-red-500/80 outline-red-500 focus:outline focus:outline-offset-2 focus:outline-2 py-1 px-3 w-20 flex justify-center`}
+            className="ml-5 rounded-sm bg-red-500 hover:bg-red-500/80 disabled:bg-red-500/80 outline-red-500 focus:outline focus:outline-offset-2 focus:outline-2 py-1 px-3 w-20 flex justify-center"
           >
             {isLoading ? (
               <Spinner thickness={2} gap={2} color="White" size={25} />

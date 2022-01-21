@@ -1,5 +1,6 @@
 import { rest } from "msw";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import { PagedVocabularyListsResponse } from "../../features/api/types";
 import { DEFAULT_PER_PAGE } from "../../features/common/utils/constants";
 import {
   render,
@@ -18,15 +19,51 @@ import { MainPage } from "../MainPage";
 describe("MainPage", () => {
   function renderMainPage(currentUrl: string = "/") {
     const searchParams = new URLSearchParams(window.location.search);
-    const page = Number(searchParams.get("page"));
-    const perPage = Number(searchParams.get("perPage"));
+    const page = Number(searchParams.get("page")) || 1;
+    const perPage = Number(searchParams.get("perPage")) || DEFAULT_PER_PAGE;
+    const title = searchParams.get("title");
     const mockVocabularyLists = createMockVocabularyListsInEachCategory();
     const entireVocabularyLists =
       createEntireVocabularyLists(mockVocabularyLists);
-    const response = getPageBasedEntireVocabularyLists(
-      entireVocabularyLists,
-      page,
-      perPage
+    let response: PagedVocabularyListsResponse | null = null;
+
+    if (title) {
+      response = getPageBasedVocabularyListsOfSpecificTitle(
+        entireVocabularyLists,
+        title,
+        page,
+        perPage
+      );
+    } else {
+      response = getPageBasedEntireVocabularyLists(
+        entireVocabularyLists,
+        page,
+        perPage
+      );
+    }
+
+    server.use(
+      rest.get(
+        `${process.env.REACT_APP_API_URL}/vocabularies`,
+        (req, res, ctx) => {
+          const { page, perPage, title } = getQueryParamsFromRestRequest(req);
+          if (title) {
+            response = getPageBasedVocabularyListsOfSpecificTitle(
+              entireVocabularyLists,
+              title,
+              page,
+              perPage
+            );
+          } else {
+            response = getPageBasedEntireVocabularyLists(
+              entireVocabularyLists,
+              page,
+              perPage
+            );
+          }
+          return res(ctx.status(200), ctx.json(response));
+        }
+      )
     );
 
     window.history.replaceState({}, "", currentUrl);
@@ -117,10 +154,6 @@ describe("MainPage", () => {
 
   it("title을 query parameter로 받으면 `${title}에 대한 검색 결과`를 heading으로 갖고, `${title}`이 들어간 단어장들만 서버로부터 받아 렌더링한다.", async () => {
     // given
-    const title = encodeURIComponent("토익");
-    const { getByRole, getAllByRole, response } = renderMainPage(
-      `/?title=${title}`
-    );
     server.use(
       rest.get(
         `${process.env.REACT_APP_API_URL}/vocabularies`,
@@ -136,16 +169,23 @@ describe("MainPage", () => {
         }
       )
     );
+
+    const title = "토익";
+    const encodedTitle = encodeURIComponent(title);
+    const { getByRole, getAllByRole, response } = renderMainPage(
+      `/?title=${encodedTitle}`
+    );
+
     // when
     await waitForElementToBeRemoved(document.querySelector(".animate-pulse"));
 
     // then
-    const heading = getByRole("heading", { name: `"토익"에 대한 검색 결과` });
+    const heading = getByRole("heading", {
+      name: `"${title}"에 대한 검색 결과`,
+    });
     const [cardList] = getAllByRole("list");
     Array.from(cardList.children).forEach((list, index) => {
-      expect(list).toHaveTextContent(
-        new RegExp(`${decodeURIComponent(title)}`)
-      );
+      expect(list).toHaveTextContent(new RegExp(`${title}`));
     });
     expect(heading).toBeInTheDocument();
   });

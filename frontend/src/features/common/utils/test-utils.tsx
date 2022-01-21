@@ -5,6 +5,7 @@ import { Provider } from "react-redux";
 import { logout, RootState, store } from "../../../app/store";
 import { combinedReducer } from "../../../app/store";
 import { baseApi } from "../../api/slice";
+import { authTokenMiddleware } from "../../../app/middlewares/authTokenMiddleware";
 
 type RenderType = (
   ui: React.ReactElement,
@@ -23,7 +24,7 @@ export function setUpStore(preloadedState?: DeepPartial<RootState>) {
       return combinedReducer(state, action);
     },
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(baseApi.middleware),
+      getDefaultMiddleware().concat(baseApi.middleware, authTokenMiddleware),
     preloadedState,
   });
 }

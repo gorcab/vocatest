@@ -6,6 +6,11 @@ import { FaCheckCircle, FaExclamationCircle, FaTimes } from "react-icons/fa";
 
 type ToastProps = ToastType;
 
+const BG_COLOR: Record<ToastProps["type"], string> = {
+  ERROR: "bg-red-600/90",
+  SUCCESS: "bg-green-600/90",
+};
+
 export const Toast = motion(
   React.forwardRef<HTMLLIElement, ToastProps>(
     ({ type, desc, id, duration = 5000 }, ref) => {
@@ -49,9 +54,7 @@ export const Toast = motion(
         <li
           role="alert"
           ref={ref}
-          className={`${
-            type === "ERROR" ? "bg-red-600/90" : "bg-green-600/90"
-          } relative text-white p-3 mb-5 w-72 rounded-sm`}
+          className={`${BG_COLOR[type]} relative text-white p-3 mb-5 w-72 rounded-sm`}
         >
           <button
             onClick={handleDelete}

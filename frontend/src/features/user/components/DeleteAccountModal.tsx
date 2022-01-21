@@ -4,6 +4,7 @@ import { useDeleteUserMutation } from "../../api/slice";
 import { Modal } from "../../common/components/Modal";
 import { Spinner } from "../../common/components/Spinner";
 import { useAuth } from "../../common/hooks/useAuth";
+import { is4XXError, is5XXError } from "../../common/utils/helper";
 import { useToast } from "../../toast/hooks/useToast";
 import { User } from "../slice";
 
@@ -20,7 +21,7 @@ export const DeleteAccountModal: React.FC<DeleteAccoountModalProps> = ({
   const { id } = useAuth() as User;
   const navigate = useNavigate();
   const toast = useToast();
-  const [deleteUser, { isLoading, isSuccess, reset, isError }] =
+  const [deleteUser, { isLoading, isSuccess, reset, error }] =
     useDeleteUserMutation();
 
   const deleteButtonHandler = () => {
@@ -30,15 +31,18 @@ export const DeleteAccountModal: React.FC<DeleteAccoountModalProps> = ({
   useEffect(() => {
     if (isSuccess) {
       reset();
+      onClose();
       navigate("/login");
-    } else if (isError) {
+    } else if (is4XXError(error) || is5XXError(error)) {
       reset();
       toast({
         type: "ERROR",
-        desc: "회원 탈퇴에 실패했습니다. 잠시 후에 다시 시도해주세요.",
+        desc:
+          error.data.message ||
+          "회원 탈퇴에 실패했습니다. 잠시 후에 다시 시도해주세요.",
       });
     }
-  }, [isSuccess, isError, toast, reset, navigate]);
+  }, [isSuccess, error, toast, reset, navigate]);
 
   return (
     <Modal
@@ -48,7 +52,7 @@ export const DeleteAccountModal: React.FC<DeleteAccoountModalProps> = ({
       backgroundColorclassName="bg-white"
       title="회원 탈퇴"
     >
-      <p className="mb-5">회원을 탈퇴하시겠습니까?</p>
+      <p className="mb-5">회원 탈퇴하시겠습니까?</p>
       <div className="flex flex-row-reverse text-white">
         <button
           ref={deleteButtonRef}

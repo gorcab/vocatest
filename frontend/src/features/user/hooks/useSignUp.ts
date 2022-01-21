@@ -3,6 +3,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { useAuthCodeMutation, useSignUpMutation } from "../../api/slice";
 import { ErrorResponse } from "../../api/types";
 import { useTimeoutTrigger } from "../../common/hooks/useTimeoutTrigger";
+import { is4XXError, is5XXError } from "../../common/utils/helper";
 
 type SignUpDto = {
   email: string;
@@ -18,21 +19,20 @@ export const useSignUp = () => {
     register,
     getValues,
     handleSubmit,
-    setError,
+    setError: setFormError,
     formState: { errors },
-    clearErrors,
+    clearErrors: clearFormErrors,
   } = useForm<SignUpDto>({
     mode: "onBlur",
   });
-
   const [
     requestSignUpAuthCode,
     {
       isSuccess: isAuthCodeRequestSuccess,
       isLoading: isAuthCodeRequestLoading,
-      reset: signUpAuthCodeReset,
-      data,
-      error: authCodeErrorResponse,
+      error: authCodeError,
+      data: authCodeData,
+      reset: signUpAuthCodeRequestReset,
     },
   ] = useAuthCodeMutation();
 
@@ -41,53 +41,47 @@ export const useSignUp = () => {
     {
       isSuccess: isSignUpSuccess,
       isLoading: isSignUpLoading,
-      error: signUpErrorResponse,
-      reset: signUpReset,
+      error: signUpError,
+      reset: signUpRequestReset,
     },
   ] = useSignUpMutation();
 
+  // AuthCode request error handling
   useEffect(() => {
-    if (authCodeErrorResponse && "data" in authCodeErrorResponse) {
-      const { status, data } = authCodeErrorResponse;
-      const errorMessage: string = (data as ErrorResponse).message;
-      if (status >= 500) {
-        setServerError(errorMessage);
-      } else if (status >= 400) {
-        if (/이메일/.test(errorMessage)) {
-          setError("email", {
-            type: "manual",
-            message: errorMessage,
-          });
-        } else {
-          setServerError(errorMessage);
-        }
+    if (is4XXError(authCodeError)) {
+      if (/이메일/.test(authCodeError.data.message)) {
+        setFormError("email", {
+          type: "manual",
+          message: authCodeError.data.message,
+        });
+      } else {
+        setServerError(authCodeError.data.message);
       }
+    } else if (is5XXError(authCodeError)) {
+      setServerError(authCodeError.data.message);
     }
-  }, [authCodeErrorResponse, setError]);
+  }, [authCodeError, setFormError]);
 
+  // Sign Up request error handling
   useEffect(() => {
-    if (signUpErrorResponse && "data" in signUpErrorResponse) {
-      const { status, data } = signUpErrorResponse;
-      const errorMessage: string = (data as ErrorResponse).message;
-      if (status >= 500) {
-        setServerError(errorMessage);
-      } else if (status >= 400) {
-        if (/이메일/.test(errorMessage)) {
-          setError("email", {
-            type: "manual",
-            message: errorMessage,
-          });
-        } else if (/인증 번호/.test(errorMessage)) {
-          setError("signUpAuthCode", {
-            type: "manual",
-            message: errorMessage,
-          });
-        } else {
-          setServerError(errorMessage);
-        }
+    if (is4XXError(signUpError)) {
+      if (/이메일/.test(signUpError.data.message)) {
+        setFormError("email", {
+          type: "manual",
+          message: signUpError.data.message,
+        });
+      } else if (/인증 번호/.test(signUpError.data.message)) {
+        setFormError("signUpAuthCode", {
+          type: "manual",
+          message: signUpError.data.message,
+        });
+      } else {
+        setServerError(signUpError.data.message);
       }
+    } else if (is5XXError(signUpError)) {
+      setServerError(signUpError.data.message);
     }
-  }, [signUpErrorResponse, setError]);
+  }, [signUpError, setFormError]);
 
   const onSubmit: SubmitHandler<SignUpDto> = ({
     email,
@@ -95,8 +89,8 @@ export const useSignUp = () => {
     nickname,
     signUpAuthCode,
   }) => {
-    if (signUpErrorResponse) {
-      signUpReset();
+    if (signUpError) {
+      signUpRequestReset();
     }
 
     signUp({
@@ -107,32 +101,34 @@ export const useSignUp = () => {
     });
   };
 
+  const submitHandler = handleSubmit(onSubmit);
+
   const signUpAuthCodeTimeoutTrigger = () => {
-    setError("signUpAuthCode", {
+    setFormError("signUpAuthCode", {
       type: "manual",
       message: "인증 번호를 다시 요청해주세요.",
     });
-    if (!!serverError) {
+    if (Boolean(serverError)) {
       setServerError(null);
     }
-    signUpAuthCodeReset();
+    signUpAuthCodeRequestReset();
   };
 
   const { ttl, isSet } = useTimeoutTrigger(
     signUpAuthCodeTimeoutTrigger,
-    isAuthCodeRequestSuccess && data
-      ? { isSetTimeout: true, ttl: data.ttl }
+    authCodeData
+      ? { isSetTimeout: true, ttl: authCodeData.ttl }
       : { isSetTimeout: false }
   );
 
   const handleSignUpAuthCodeButton = async () => {
     if (errors.signUpAuthCode) {
-      clearErrors("signUpAuthCode");
+      clearFormErrors("signUpAuthCode");
     }
 
-    if (!!serverError) {
+    if (Boolean(serverError)) {
       setServerError(null);
-      signUpAuthCodeReset();
+      signUpAuthCodeRequestReset();
     }
 
     if (!errors.email) {
@@ -143,8 +139,6 @@ export const useSignUp = () => {
       });
     }
   };
-
-  const submitHandler = handleSubmit(onSubmit);
 
   return {
     register,

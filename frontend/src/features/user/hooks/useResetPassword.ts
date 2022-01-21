@@ -3,6 +3,7 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { useAuthCodeMutation, useResetPasswordMutation } from "../../api/slice";
 import { ErrorResponse } from "../../api/types";
 import { useTimeoutTrigger } from "../../common/hooks/useTimeoutTrigger";
+import { is4XXError, is5XXError } from "../../common/utils/helper";
 
 type ResetPasswordDto = {
   email: string;
@@ -18,8 +19,8 @@ export const useResetPassword = (handleSuccess: () => void) => {
     handleSubmit,
     formState: { errors },
 
-    setError,
-    clearErrors,
+    setError: setFormError,
+    clearErrors: clearFormErrors,
     getValues,
   } = useForm<ResetPasswordDto>({
     mode: "onBlur",
@@ -31,7 +32,7 @@ export const useResetPassword = (handleSuccess: () => void) => {
       isSuccess: isAuthCodeRequestSuccess,
       isLoading: isAuthCodeRequestLoading,
       error: authCodeError,
-      data,
+      data: authCodeData,
       reset: resetAuthCodeRequest,
     },
   ] = useAuthCodeMutation();
@@ -47,54 +48,58 @@ export const useResetPassword = (handleSuccess: () => void) => {
     },
   ] = useResetPasswordMutation();
 
+  // Auth code request error handling
   useEffect(() => {
-    if (authCodeError && "data" in authCodeError) {
-      const { status, data } = authCodeError;
-      const errorMessage: string = (data as ErrorResponse).message;
-      if (status >= 500) {
-        setServerError(errorMessage);
-      } else if (status >= 400) {
-        if (/이메일/.test(errorMessage)) {
-          setError("email", {
+    if (authCodeError) {
+      if (is5XXError(authCodeError)) {
+        setServerError(authCodeError.data.message);
+      } else if (is4XXError(authCodeError)) {
+        const message = authCodeError.data.message;
+        if (/이메일/.test(message)) {
+          setFormError("email", {
             type: "manual",
-            message: errorMessage,
+            message,
           });
         } else {
-          setServerError(errorMessage);
+          setServerError(message);
         }
       }
-    } else if (!authCodeError) {
-      setServerError(null);
+    } else {
+      if (Boolean(serverError)) {
+        setServerError(null);
+      }
     }
-  }, [authCodeError, setError]);
+  }, [authCodeError, setFormError]);
 
+  // Reset password request error handling
   useEffect(() => {
-    if (resetPasswordError && "data" in resetPasswordError) {
-      const { status, data } = resetPasswordError;
-      const errorMessage = (data as ErrorResponse).message;
-      if (status >= 500) {
-        setServerError(errorMessage);
-      } else if (status >= 400) {
-        if (/이메일/.test(errorMessage)) {
-          setError("email", {
+    if (resetPasswordError) {
+      if (is5XXError(resetPasswordError)) {
+        setServerError(resetPasswordError.data.message);
+      } else if (is4XXError(resetPasswordError)) {
+        const message = resetPasswordError.data.message;
+        if (/이메일/.test(message)) {
+          setFormError("email", {
             type: "manual",
-            message: errorMessage,
+            message,
           });
         } else {
-          setServerError(errorMessage);
+          setServerError(message);
         }
       }
-    } else if (!resetPasswordError) {
-      setServerError(null);
+    } else {
+      if (Boolean(serverError)) {
+        setServerError(null);
+      }
     }
-  }, [resetPasswordError, setError]);
+  }, [resetPasswordError, setFormError]);
 
   const authCodeTimeoutTrigger = () => {
-    setError("resetPasswordAuthCode", {
+    setFormError("resetPasswordAuthCode", {
       type: "manual",
       message: "인증 번호를 다시 요청해주세요.",
     });
-    if (!!serverError) {
+    if (Boolean(serverError)) {
       setServerError(null);
     }
     resetAuthCodeRequest();
@@ -102,8 +107,8 @@ export const useResetPassword = (handleSuccess: () => void) => {
 
   const { ttl, isSet } = useTimeoutTrigger(
     authCodeTimeoutTrigger,
-    isAuthCodeRequestSuccess && data
-      ? { isSetTimeout: true, ttl: data.ttl }
+    authCodeData
+      ? { isSetTimeout: true, ttl: authCodeData.ttl }
       : { isSetTimeout: false }
   );
 
@@ -115,10 +120,10 @@ export const useResetPassword = (handleSuccess: () => void) => {
 
   const handleResetPasswordAuthCodeButton = async () => {
     if (errors.resetPasswordAuthCode) {
-      clearErrors("resetPasswordAuthCode");
+      clearFormErrors("resetPasswordAuthCode");
     }
 
-    if (!!serverError) {
+    if (Boolean(serverError)) {
       setServerError(null);
       resetAuthCodeRequest();
     }

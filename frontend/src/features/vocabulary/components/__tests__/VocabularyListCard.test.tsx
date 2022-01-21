@@ -4,10 +4,12 @@ import { CategoryDto } from "../../../api/types";
 import { VocabularyListCard } from "../VocabularyListCard";
 import { getFormattedDate } from "../../../common/utils/helper";
 import userEvent from "@testing-library/user-event";
+import { DEFAULT_PER_PAGE } from "../../../common/utils/constants";
 
 describe("VocabularyListCard", () => {
   function renderVocabularyListCard() {
-    window.history.replaceState({}, "", "/");
+    const page = 1;
+    const perPage = DEFAULT_PER_PAGE;
     const category: CategoryDto = {
       id: 1,
       name: "토익",
@@ -63,6 +65,8 @@ describe("VocabularyListCard", () => {
       getByText,
       findAllByRole,
       findByRole,
+      page,
+      perPage,
       vocabularyListId,
       title,
       createdAt,
@@ -70,6 +74,10 @@ describe("VocabularyListCard", () => {
       numOfVocabularies,
     };
   }
+
+  beforeEach(() => {
+    window.history.replaceState({}, "", `/?page=1&perPage=${DEFAULT_PER_PAGE}`);
+  });
 
   it("단어장 이름, 생성 날짜, 단어 갯수, 단어장 수정 및 삭제 드롭다운 메뉴를 열기 위한 버튼을 렌더링한다.", () => {
     const { getByRole, getByText, title, createdAt, numOfVocabularies } =
@@ -109,20 +117,22 @@ describe("VocabularyListCard", () => {
     expect(window.location.pathname).toBe(`/vocabularies/${vocabularyListId}`);
   });
 
-  it("단어장의 카테고리 링크를 누르면 `categories/:id` url로 이동한다.", () => {
+  it("단어장 내 카테고리 링크를 누르면 `/?page=1&perPage=${perPage}&category=${categoryId}` url로 이동한다.", () => {
     const { getByRole, category } = renderVocabularyListCard();
     const categoryLink = getByRole("link", { name: category.name });
 
     userEvent.click(categoryLink);
 
-    expect(window.location.pathname).toBe(`/categories/${category.id}`);
+    expect(window.location.pathname + window.location.search).toBe(
+      `/?page=1&perPage=${DEFAULT_PER_PAGE}&category=${category.id}`
+    );
   });
 
   it("드롭다운 메뉴의 `단어장 삭제` 메뉴를 클릭하면 단어장 삭제 모달이 나타난다.", async () => {
     const { getByRole, findByRole } = renderVocabularyListCard();
     const dropdownButton = getByRole("button", { expanded: false });
     userEvent.click(dropdownButton);
-    const deleteModalOpenButton = await findByRole("button", {
+    const deleteModalOpenButton = await findByRole("menuitem", {
       name: "단어장 삭제",
     });
 
@@ -138,7 +148,7 @@ describe("VocabularyListCard", () => {
       renderVocabularyListCard();
     const dropdownButton = getByRole("button", { expanded: false });
     userEvent.click(dropdownButton);
-    const editVocabularyButton = await findByRole("button", {
+    const editVocabularyButton = await findByRole("menuitem", {
       name: "단어장 수정",
     });
 

@@ -1,10 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { localStorageMock } from "../../../../mocks/storageMocks";
-import { render, within } from "../../utils/test-utils";
+import { render, within } from "../../../common/utils/test-utils";
 import { UserDropdownMenu } from "../UserDropdownMenu";
 
-describe("UserDropdown", () => {
+describe("UserDropdownMenu", () => {
   function renderUserDropdown() {
     window.history.replaceState({}, "", "/");
     const portal = document.createElement("div");
@@ -64,14 +64,20 @@ describe("UserDropdown", () => {
     userEvent.click(userButton);
 
     const menu = await findByRole("menu");
-    const profileLink = within(menu).getByRole("link");
-    const [deleteAccoountButton, logoutButton] =
-      within(menu).getAllByRole("button");
+    const profileLink = within(menu).getByRole("menuitem", {
+      name: "내 프로필",
+    });
+    const deleteAccountButton = within(menu).getByRole("menuitem", {
+      name: "회원 탈퇴",
+    });
+    const logoutButton = within(menu).getByRole("menuitem", {
+      name: "로그아웃",
+    });
 
     expect(menu.childElementCount).toBe(3);
-    expect(profileLink).toHaveTextContent("내 프로필");
-    expect(deleteAccoountButton).toHaveTextContent("회원 탈퇴");
-    expect(logoutButton).toHaveTextContent("로그아웃");
+    expect(profileLink).toBeInTheDocument();
+    expect(deleteAccountButton).toBeInTheDocument();
+    expect(logoutButton).toBeInTheDocument();
   });
 
   it("메뉴 아이템 중 `내 프로필` 링크를 클릭하면 `/profile` url로 이동한다.", async () => {
@@ -80,7 +86,9 @@ describe("UserDropdown", () => {
     userEvent.click(userButton);
 
     const menu = await findByRole("menu");
-    const profileLink = within(menu).getByRole("link");
+    const profileLink = within(menu).getByRole("menuitem", {
+      name: "내 프로필",
+    });
 
     userEvent.click(profileLink);
 
@@ -93,7 +101,7 @@ describe("UserDropdown", () => {
     userEvent.click(userButton);
 
     const menu = await findByRole("menu");
-    const deleteAccoountButton = within(menu).getByRole("button", {
+    const deleteAccoountButton = within(menu).getByRole("menuitem", {
       name: "회원 탈퇴",
     });
 
@@ -114,7 +122,7 @@ describe("UserDropdown", () => {
     userEvent.click(userButton);
 
     const menu = await findByRole("menu");
-    const logoutButton = within(menu).getByRole("button", {
+    const logoutButton = within(menu).getByRole("menuitem", {
       name: "로그아웃",
     });
 

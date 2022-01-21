@@ -31,7 +31,7 @@ export const CreateCategoryFormModal: React.FC<CreateCategoryFormModalProps> =
         backgroundColorclassName="bg-white"
       >
         <BasicForm onSubmit={submitHandler}>
-          <Label label="카테고리명" name="name"></Label>
+          <Label label="카테고리명" name="name" />
           <InputGroup>
             <input
               type="text"

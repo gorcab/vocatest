@@ -5,8 +5,10 @@ import { render } from "../../utils/test-utils";
 import { SearchVocabulariesFormModal } from "../SearchVocabulariesFormModal";
 
 describe("SearchVocabulariesFormModal", () => {
-  function renderSearchVocabulariesFormModal() {
-    window.history.replaceState({}, "", "/");
+  function renderSearchVocabulariesFormModal(
+    initialUrl: string = `/?page=1&perPage=${DEFAULT_PER_PAGE}`
+  ) {
+    window.history.replaceState({}, "", initialUrl);
     const closeModalHandler = jest.fn();
     const portal = document.createElement("div");
     portal.classList.add("portal");
@@ -49,7 +51,7 @@ describe("SearchVocabulariesFormModal", () => {
     expect(document.activeElement).toBe(searchField);
   });
 
-  it("단어장을 입력 후 엔터 키를 누르면 `/page=1&perPage=${DEFAULT_PER_PAGE}&title=${title}` url로 이동하고 closeModalHandler가 호출된다.", async () => {
+  it("단어장을 입력 후 엔터 키를 누르면 `/?page=1&perPage=${perPage}&title=${title}` url로 이동하고 closeModalHandler가 호출된다.", async () => {
     const { getByPlaceholderText, closeModalHandler } =
       renderSearchVocabulariesFormModal();
     const title = "DAY-10";
@@ -60,6 +62,25 @@ describe("SearchVocabulariesFormModal", () => {
 
     expect(pathname + search).toBe(
       `/?page=1&perPage=${DEFAULT_PER_PAGE}&title=${title}`
+    );
+    expect(closeModalHandler).toBeCalled();
+  });
+
+  it("특정 카테고리 페이지에서 단어장을 검색하면 `/?category=${categoryId}&page=1&perPage=${perPage}&title=${title}` url로 이동하고 closeModalHandler가 호출된다.", async () => {
+    const categoryId = 1;
+    const perPage = 12;
+    const title = "DAY-1";
+    const { getByPlaceholderText, closeModalHandler } =
+      renderSearchVocabulariesFormModal(
+        `/?category=${categoryId}&page=2&perPage=${perPage}`
+      );
+    const searchField = getByPlaceholderText("단어장명을 입력해주세요.");
+
+    userEvent.type(searchField, `${title}{enter}`);
+    const { pathname, search } = window.location;
+
+    expect(pathname + search).toBe(
+      `/?category=${categoryId}&page=1&perPage=${perPage}&title=${title}`
     );
     expect(closeModalHandler).toBeCalled();
   });

@@ -64,6 +64,13 @@ export type CreateCategoryRequest = {
 
 export type CreateCategoryResponse = CategoryDto;
 
+export type EditCategoryRequest = {
+  id: number;
+  name: string;
+};
+
+export type EditCategoryResponse = CategoryDto;
+
 // Vocabulary Types
 export type VocabularyListDto = {
   id: number;

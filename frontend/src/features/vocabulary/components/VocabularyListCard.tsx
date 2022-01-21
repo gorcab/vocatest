@@ -1,14 +1,9 @@
-import { useState } from "react";
-import { FaEllipsisV } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { CategoryDto } from "../../api/types";
 import { Card } from "../../common/components/Card";
-import { Dropdown } from "../../common/components/Dropdown";
-import { DropdownButton } from "../../common/components/DropdownButton";
-import { DropdownItem } from "../../common/components/DropdownItem";
-import { DropdownList } from "../../common/components/DropdownList";
+import { DEFAULT_PER_PAGE } from "../../common/utils/constants";
 import { getFormattedDate } from "../../common/utils/helper";
-import { DeleteVocabularyListModal } from "./DeleteVocabularyListModal";
+import { VocabularyListCardDropdownMenu } from "./VocabularyListCardDropdownMenu";
 
 type VocabularyListCardProps = {
   id: number;
@@ -25,21 +20,9 @@ export const VocabularyListCard: React.FC<VocabularyListCardProps> = ({
   createdAt,
   category,
 }) => {
-  const navigate = useNavigate();
   const formattedDate = getFormattedDate(new Date(createdAt));
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const openModalHandler: React.MouseEventHandler<HTMLButtonElement> = (
-    event
-  ) => {
-    event.preventDefault();
-    setShowDeleteModal(true);
-  };
-  const closeModalHandler = () => setShowDeleteModal(false);
-  const navigateToEditVocabularyListPage: React.MouseEventHandler<HTMLButtonElement> =
-    (event) => {
-      event.preventDefault();
-      navigate(`/edit-vocabulary/${id}`);
-    };
+  const [searchParams] = useSearchParams();
+  const perPage = searchParams.get("perPage") || DEFAULT_PER_PAGE;
 
   return (
     <>
@@ -53,39 +36,21 @@ export const VocabularyListCard: React.FC<VocabularyListCardProps> = ({
         >
           <div className="relative flex justify-between items-center">
             <h3 className="font-bold">{title}</h3>
-            <Dropdown id={id}>
-              <DropdownButton className="text-slate-500 hover:text-blue-500 p-2">
-                <FaEllipsisV />
-              </DropdownButton>
-              <DropdownList>
-                <DropdownItem as="button" onClick={openModalHandler}>
-                  단어장 삭제
-                </DropdownItem>
-                <DropdownItem
-                  as="button"
-                  onClick={navigateToEditVocabularyListPage}
-                >
-                  단어장 수정
-                </DropdownItem>
-              </DropdownList>
-            </Dropdown>
+            <VocabularyListCardDropdownMenu
+              vocabularyListId={id}
+              vocabularyListTitle={title}
+            />
           </div>
           <div className="text-sm text-slate-500 mb-3">{formattedDate}</div>
           <div className="text-sm">{numOfVocabularies} 단어</div>
         </Link>
         <Link
-          to={`/categories/${category.id}`}
+          to={`/?page=1&perPage=${perPage}&category=${category.id}`}
           className="hover:text-blue-500 absolute bottom-1 p-3 left-1"
         >
           {category.name}
         </Link>
       </Card>
-      <DeleteVocabularyListModal
-        title={title}
-        vocabularyListId={id}
-        isOpen={showDeleteModal}
-        onClose={closeModalHandler}
-      />
     </>
   );
 };

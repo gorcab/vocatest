@@ -7,8 +7,11 @@ import {
   getQueryParamsFromRestRequest,
 } from "../../../../mocks/handlers";
 import { server } from "../../../../mocks/server";
-import { DEFAULT_PER_PAGE } from "../../utils/constants";
-import { render, waitForElementToBeRemoved } from "../../utils/test-utils";
+import { DEFAULT_PER_PAGE } from "../../../common/utils/constants";
+import {
+  render,
+  waitForElementToBeRemoved,
+} from "../../../common/utils/test-utils";
 import { VocabularyListSection } from "../VocabularyListSection";
 
 describe("VocabularyListSection", () => {
@@ -16,6 +19,7 @@ describe("VocabularyListSection", () => {
     initialUrl: string,
     isBadRequest: boolean = false
   ) {
+    const errorMessage = "Bad Request";
     window.history.replaceState({}, "", initialUrl);
     const mockVocabularyListsInEachCategory =
       createMockVocabularyListsInEachCategory();
@@ -31,7 +35,7 @@ describe("VocabularyListSection", () => {
               ctx.status(400),
               ctx.json({
                 status: 400,
-                message: "Bad Request",
+                message: errorMessage,
               })
             );
           }
@@ -67,6 +71,7 @@ describe("VocabularyListSection", () => {
     return {
       getByRole,
       getAllByRole,
+      errorMessage,
       entireVocabularyLists,
     };
   }
@@ -102,13 +107,16 @@ describe("VocabularyListSection", () => {
     expect(pagination.childElementCount).toBe(pagesToShow + 2); // 페이지 갯수 + (이전 페이지 버튼, 다음 페이지 버튼)
   });
 
-  it("단어장 조회 요청에 실패헀을 경우 `단어장 조회에 실패했습니다.` 메시지와 `재요청` 버튼을 렌더링한다.", async () => {
-    const { getByRole } = renderVocabularyListSection("/", true);
+  it("단어장 조회 요청에 실패헀을 경우 서버 측 에러 메시지와 `재요청` 버튼을 렌더링한다.", async () => {
+    const { getByRole, errorMessage: message } = renderVocabularyListSection(
+      "/",
+      true
+    );
 
     await waitForElementToBeRemoved(document.querySelector(".animate-pulse"));
 
     const errorMessage = getByRole("heading", {
-      name: "단어장 조회에 실패했습니다.",
+      name: message,
     });
     const refetchButton = getByRole("button", { name: "재요청" });
 

@@ -49,55 +49,57 @@ export const Pagination: React.FC<PaginationProps> = ({
       : firstPageToShow + numOfPagesToShow - 1;
 
   return (
-    <ul className="flex items-center">
-      <li>
-        <button
-          disabled={currentPage === 1}
-          className={`flex justify-center items-center ${
-            hasPrev()
-              ? "text-black hover:text-blue-500"
-              : "text-slate-500 cursor-not-allowed"
-          }`}
-          type="button"
-          onClick={prevButtonClick}
-        >
-          <FaChevronLeft width={25} height={25} />
-          <span className="sr-only">이전 페이지로 가기</span>
-        </button>
-      </li>
+    <nav aria-label="pagination">
+      <ul className="flex items-center">
+        <li>
+          <button
+            disabled={currentPage === 1}
+            className={`flex justify-center items-center ${
+              hasPrev()
+                ? "text-black hover:text-blue-500"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
+            type="button"
+            onClick={prevButtonClick}
+          >
+            <FaChevronLeft width={25} height={25} />
+            <span className="sr-only">이전 페이지로 가기</span>
+          </button>
+        </li>
 
-      {Array.from({ length: lastPageToShow - firstPageToShow + 1 }).map(
-        (_, index) => (
-          <li key={firstPageToShow + index}>
-            <button
-              onClick={() => pageButtonClick(firstPageToShow + index)}
-              className={`${
-                firstPageToShow + index === currentPage
-                  ? "text-blue-500"
-                  : "text-black"
-              } flex justify-center items-center p-2 hover:text-blue-500`}
-            >
-              {firstPageToShow + index}
-            </button>
-          </li>
-        )
-      )}
+        {Array.from({ length: lastPageToShow - firstPageToShow + 1 }).map(
+          (_, index) => (
+            <li key={firstPageToShow + index}>
+              <button
+                onClick={() => pageButtonClick(firstPageToShow + index)}
+                className={`${
+                  firstPageToShow + index === currentPage
+                    ? "text-blue-500 font-extrabold"
+                    : "text-black"
+                } flex justify-center items-center p-2 hover:text-blue-500`}
+              >
+                {firstPageToShow + index}
+              </button>
+            </li>
+          )
+        )}
 
-      <li>
-        <button
-          type="button"
-          disabled={currentPage === totalPage}
-          onClick={nextButtonClick}
-          className={`flex justify-center items-center ${
-            hasNext()
-              ? "text-black hover:text-blue-500"
-              : "text-slate-500 cursor-not-allowed"
-          }`}
-        >
-          <FaChevronRight width={25} height={25} />
-          <span className="sr-only">다음 페이지로 가기</span>
-        </button>
-      </li>
-    </ul>
+        <li>
+          <button
+            type="button"
+            disabled={currentPage === totalPage}
+            onClick={nextButtonClick}
+            className={`flex justify-center items-center ${
+              hasNext()
+                ? "text-black hover:text-blue-500"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
+          >
+            <FaChevronRight width={25} height={25} />
+            <span className="sr-only">다음 페이지로 가기</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
   );
 };

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { FaBars, FaSearch, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { UserDropdownMenu } from "../../user/components/UserDropdownMenu";
 import { SearchVocabulariesFormModal } from "./SearchVocabulariesFormModal";
-import { UserDropdownMenu } from "./UserDropdownMenu";
 
 type HeaderProps = {
   showSidebarOnMobile: boolean;
@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header
-        className={`h-[60px] shadow-sm sticky top-0 w-full z-[5] bg-slate-100`}
+        className={`h-[60px] shadow-sm sticky top-0 w-full z-[60] bg-slate-100`}
       >
         <div className="md:container mx-auto h-full flex items-center relative">
           <div className="flex items-center grow">

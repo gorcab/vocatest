@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateCategoryMutation } from "../../api/slice";
-import { CreateCategoryRequest, ErrorResponse } from "../../api/types";
+import { CreateCategoryRequest } from "../../api/types";
+import { is4XXError, is5XXError } from "../../common/utils/helper";
 import { useToast } from "../../toast/hooks/useToast";
 
 type CreateCategoryDto = CreateCategoryRequest;
@@ -13,7 +14,7 @@ export const useCreateCategoryForm = (
   const [createCategory, mutationResult] = useCreateCategoryMutation();
   const {
     isLoading: isCreateCategoryLoading,
-    error,
+    error: mutationError,
     isSuccess,
     reset: mutationReset,
   } = mutationResult;
@@ -53,13 +54,9 @@ export const useCreateCategoryForm = (
       mutationReset();
       formReset();
       modalCloseHandler();
-    } else if (error && "status" in error) {
-      const message = (error.data as ErrorResponse).message;
-      if (
-        error.status >= 400 &&
-        error.status < 500 &&
-        /카테고리명/.test(message)
-      ) {
+    } else if (is4XXError(mutationError)) {
+      const message = mutationError.data.message;
+      if (/카테고리명/.test(message)) {
         setError("name", {
           type: "manual",
           message,
@@ -70,9 +67,14 @@ export const useCreateCategoryForm = (
           desc: "카테고리 생성에 실패했습니다. 잠시 후에 다시 시도해주세요.",
         });
       }
+    } else if (is5XXError(mutationError)) {
+      toast({
+        type: "ERROR",
+        desc: mutationError.data.message,
+      });
     }
   }, [
-    error,
+    mutationError,
     setError,
     toast,
     isSuccess,
@@ -81,9 +83,15 @@ export const useCreateCategoryForm = (
     mutationReset,
   ]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      formReset();
+      mutationReset();
+    }
+  }, [isOpen, formReset, mutationReset]);
+
   return {
     categoryNameFieldRef,
-    mutationResult,
     submitHandler,
     registerRef,
     errors,

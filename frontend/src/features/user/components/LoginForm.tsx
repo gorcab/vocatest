@@ -8,6 +8,9 @@ import { Label } from "../../common/components/Label";
 import { InputErrorMessage } from "../../common/components/InputErrorMessage";
 import { InputGroup } from "../../common/components/InputGroup";
 import { ErrorResponse } from "../../api/types";
+import { useLayoutEffect } from "react";
+import { CustomError } from "../../common/utils/CustomError";
+import { is4XXError, is5XXError } from "../../common/utils/helper";
 
 type LoginDto = {
   email: string;
@@ -25,15 +28,22 @@ export const LoginForm: React.FC = () => {
     login(data);
   };
 
+  if (is5XXError(error)) {
+    throw new CustomError({
+      statusCode: error.status,
+      message: error.data.message,
+    });
+  }
+
   return (
     <BasicForm onSubmit={handleSubmit(onSubmit)}>
-      {error && "data" in error ? (
+      {is4XXError(error) ? (
         <InputErrorMessage
           as="h2"
           isCenter={true}
           style={{ marginBottom: "1em" }}
         >
-          {(error.data as ErrorResponse).message}
+          {error.data.message}
         </InputErrorMessage>
       ) : null}
       <div className="mb-5">

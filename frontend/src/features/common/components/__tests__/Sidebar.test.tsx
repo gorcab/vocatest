@@ -75,9 +75,9 @@ describe("Sidebar", () => {
 
   it("`카테고리 생성` 버튼과 서버로부터 받은 카테고리 목록을 렌더링한다.", async () => {
     const { getByRole, findAllByRole } = renderSidebar();
-
     const createCategoryButton = getByRole("button", { name: "카테고리 생성" });
-    await waitForElementToBeRemoved(document.querySelector(".animate-spin"));
+
+    await waitForElementToBeRemoved(document.querySelector(".animate-pulse"));
     const categoryList = await findAllByRole("listitem");
 
     expect(createCategoryButton).toBeInTheDocument();
@@ -99,12 +99,12 @@ describe("Sidebar", () => {
 
   it("카테고리를 클릭하면 해당 카테고리 페이지로 이동한다.", async () => {
     const { getByRole } = renderSidebar();
-    await waitForElementToBeRemoved(document.querySelector(".animate-spin"));
+    await waitForElementToBeRemoved(document.querySelector(".animate-pulse"));
     const toeicCategory = getByRole("link", { name: categories[0].name });
 
     userEvent.click(toeicCategory);
     const { pathname, search } = window.location;
 
-    expect(pathname + search).toBe(`/categories/${categories[0].id}`);
+    expect(pathname + search).toBe(`/?category=${categories[0].id}`);
   });
 });

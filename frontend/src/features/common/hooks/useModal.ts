@@ -1,4 +1,7 @@
 import { MutableRefObject, useEffect, useRef } from "react";
+import { useDocumentEventHandler } from "../../category/hooks/useDocumentEventHandler";
+import { Keyboard } from "../utils/constants";
+import { focusableSelectors } from "../utils/helper";
 
 export const useModal = (
   isOpen: boolean,
@@ -10,69 +13,70 @@ export const useModal = (
   );
   const overlayElement = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // focus trap
-    const keydownHandler = (event: KeyboardEvent) => {
-      if (portalElement.current === null) return;
-      if (event.key === "Tab") {
-        const focusableElements = portalElement.current.querySelectorAll(
-          "a, button:not([disabled]), textarea, input:not([disabled]), select"
-        );
-        const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[
-          focusableElements.length - 1
-        ] as HTMLElement;
+  useDocumentEventHandler("keydown", (event) => {
+    if (portalElement.current === null) return;
+    if (event.key === Keyboard.Tab) {
+      // focus trap
+      const focusableElements =
+        portalElement.current.querySelectorAll(focusableSelectors);
+      const firstFocusableElement = focusableElements[0] as HTMLElement;
+      const lastFocusableElement = focusableElements[
+        focusableElements.length - 1
+      ] as HTMLElement;
 
-        if (event.shiftKey) {
-          if (document.activeElement === firstElement) {
-            event.preventDefault();
-            lastElement.focus();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            event.preventDefault();
-            firstElement.focus();
-          }
+      if (event.shiftKey) {
+        if (document.activeElement === firstFocusableElement) {
+          event.preventDefault();
+          lastFocusableElement.focus();
         }
-      } else if (event.key === "Escape") {
-        onClose();
+      } else {
+        if (document.activeElement === lastFocusableElement) {
+          event.preventDefault();
+          firstFocusableElement.focus();
+        }
       }
-    };
-
-    document.addEventListener("keydown", keydownHandler);
-
-    return () => {
-      document.removeEventListener("keydown", keydownHandler);
-    };
-  }, [onClose, isOpen]);
+    } else if (event.key === Keyboard.Escape) {
+      onClose();
+    }
+  });
 
   // initial focus
   useEffect(() => {
-    if (!initialFocusRef) return;
-
-    if (isOpen && initialFocusRef.current) {
-      initialFocusRef.current.focus();
+    if (!isOpen) return;
+    if (initialFocusRef) {
+      initialFocusRef.current?.focus();
+    } else {
+      const focusableElements =
+        portalElement.current.querySelectorAll(focusableSelectors);
+      if (focusableElements.length > 0) {
+        (focusableElements[0] as HTMLElement).focus();
+      }
     }
   }, [initialFocusRef, isOpen]);
 
   useEffect(() => {
-    if (portalElement.current === null || overlayElement.current === null) {
+    if (
+      portalElement.current === null ||
+      overlayElement.current === null ||
+      !isOpen
+    ) {
       return;
     }
-    if (isOpen) {
-      const overlayElem = overlayElement.current;
-      const modalCloseHandler = (event: MouseEvent) => {
-        if (event.target === overlayElem) {
-          onClose();
-        }
-      };
 
-      overlayElem.addEventListener("click", modalCloseHandler);
+    const overlayElem = overlayElement.current;
+    const modalCloseHandler = (event: MouseEvent) => {
+      if (event.target === overlayElem) {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+      }
+    };
 
-      return () => {
-        overlayElem.removeEventListener("click", modalCloseHandler);
-      };
-    }
+    overlayElem.addEventListener("click", modalCloseHandler);
+
+    return () => {
+      overlayElem.removeEventListener("click", modalCloseHandler);
+    };
   }, [onClose, isOpen]);
 
   return { overlayElement, portalElement };
