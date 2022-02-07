@@ -4,6 +4,7 @@ import { CenterLayout } from "../../features/common/components/CenterLayout";
 import { MainLayout } from "../../features/common/components/MainLayout";
 import { Protected } from "../../features/common/components/Protected";
 import { Spinner } from "../../features/common/components/Spinner";
+import { CreateVocabularyListPage } from "../../pages/CreateVocabularyListPage";
 import { MainPage } from "../../pages/MainPage";
 import { NotFoundPage } from "../../pages/NotFoundPage";
 import { unAuthenticatedRoutes } from "./UnauthenticatedApp";
@@ -40,6 +41,10 @@ export const AuthenticatedApp: React.FC = () => {
         }
       >
         <Route index element={<MainPage />} />
+        <Route
+          path="create-vocabulary"
+          element={<CreateVocabularyListPage />}
+        />
         <Route path="profile" element={<h2>내 프로필</h2>} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

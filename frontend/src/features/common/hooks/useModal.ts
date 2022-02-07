@@ -1,24 +1,21 @@
 import { MutableRefObject, useEffect, useRef } from "react";
-import { useDocumentEventHandler } from "../../category/hooks/useDocumentEventHandler";
 import { Keyboard } from "../utils/constants";
 import { focusableSelectors } from "../utils/helper";
+import { useDocumentEventHandler } from "./useDocumentEventHandler";
 
 export const useModal = (
   isOpen: boolean,
   onClose: () => void,
   initialFocusRef?: MutableRefObject<HTMLElement | null>
 ) => {
-  const portalElement = useRef<HTMLDivElement>(
-    document.querySelector(".portal")!
-  );
   const overlayElement = useRef<HTMLDivElement>(null);
 
   useDocumentEventHandler("keydown", (event) => {
-    if (portalElement.current === null) return;
     if (event.key === Keyboard.Tab) {
+      if (!overlayElement.current) return;
       // focus trap
       const focusableElements =
-        portalElement.current.querySelectorAll(focusableSelectors);
+        overlayElement.current.querySelectorAll(focusableSelectors);
       const firstFocusableElement = focusableElements[0] as HTMLElement;
       const lastFocusableElement = focusableElements[
         focusableElements.length - 1
@@ -43,11 +40,12 @@ export const useModal = (
   // initial focus
   useEffect(() => {
     if (!isOpen) return;
+    if (!overlayElement.current) return;
     if (initialFocusRef) {
       initialFocusRef.current?.focus();
     } else {
       const focusableElements =
-        portalElement.current.querySelectorAll(focusableSelectors);
+        overlayElement.current.querySelectorAll(focusableSelectors);
       if (focusableElements.length > 0) {
         (focusableElements[0] as HTMLElement).focus();
       }
@@ -55,11 +53,7 @@ export const useModal = (
   }, [initialFocusRef, isOpen]);
 
   useEffect(() => {
-    if (
-      portalElement.current === null ||
-      overlayElement.current === null ||
-      !isOpen
-    ) {
+    if (overlayElement.current === null || !isOpen) {
       return;
     }
 
@@ -79,5 +73,5 @@ export const useModal = (
     };
   }, [onClose, isOpen]);
 
-  return { overlayElement, portalElement };
+  return { overlayElement };
 };

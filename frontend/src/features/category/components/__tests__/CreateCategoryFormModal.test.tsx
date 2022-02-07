@@ -6,9 +6,6 @@ import { ToastContainer } from "../../../toast/components/ToastContainer";
 import { CreateCategoryFormModal } from "../CreateCategoryFormModal";
 describe("CreateCategoryFormModal", () => {
   function renderCreateCategoryFormModal() {
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
-
     const modalCloseHandler = jest.fn();
     const { getByRole, findByRole, getByLabelText } = render(
       <>
@@ -17,10 +14,7 @@ describe("CreateCategoryFormModal", () => {
           modalCloseHandler={modalCloseHandler}
         />
         <ToastContainer />
-      </>,
-      {
-        container: document.body.appendChild(portal),
-      }
+      </>
     );
 
     return {

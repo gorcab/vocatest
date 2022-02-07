@@ -9,9 +9,6 @@ describe("Header", () => {
     const showSidebar = false;
     const handleSidebarButton = jest.fn();
 
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
-
     const Component = (
       <BrowserRouter>
         <Routes>
@@ -34,9 +31,8 @@ describe("Header", () => {
       </BrowserRouter>
     );
 
-    const { getByRole, findByPlaceholderText, findByRole, debug } = render(
-      Component,
-      {
+    const { getByRole, findByPlaceholderText, queryByRole, findByRole, debug } =
+      render(Component, {
         preloadedState: {
           user: {
             user: {
@@ -48,13 +44,11 @@ describe("Header", () => {
             refreshToken: "refreshToken",
           },
         },
-        container: document.body.appendChild(portal),
-      }
-    );
+      });
 
-    return { getByRole, findByPlaceholderText, findByRole, debug };
+    return { getByRole, queryByRole, findByPlaceholderText, findByRole, debug };
   }
-  it("텍스트 로고 링크, 카테고리 메뉴 토글 버튼, 단어장 검색 버튼, 회원 관련 메뉴 드롭다운 버튼을 렌더링한다.", () => {
+  it("텍스트 로고 링크, 카테고리 메뉴 토글 버튼, 단어장 검색 버튼, 유저 아이콘 버튼을 렌더링한다.", () => {
     // given
     const { getByRole } = renderHeader();
 
@@ -63,7 +57,7 @@ describe("Header", () => {
     const categoryMenuToggleButton = getByRole("button", {
       name: "카테고리 메뉴 열기",
     });
-    const dropdownButton = getByRole("button", {
+    const userIconButton = getByRole("button", {
       name: "회원 관련 메뉴",
     });
 
@@ -71,7 +65,7 @@ describe("Header", () => {
     expect(textLogo).toBeInTheDocument();
     expect(showSearchFieldButton).toBeInTheDocument();
     expect(categoryMenuToggleButton).toBeInTheDocument();
-    expect(dropdownButton).toBeInTheDocument();
+    expect(userIconButton).toBeInTheDocument();
   });
 
   it('텍스트 로고 링크를 클릭하면 "/" url로 이동한다.', async () => {
@@ -99,5 +93,20 @@ describe("Header", () => {
     expect(
       await findByPlaceholderText("단어장명을 입력해주세요.")
     ).toBeInTheDocument();
+  });
+
+  it("유저 아이콘 버튼을 클릭하면 회원 관련 메뉴가 나타난다.", async () => {
+    // given
+    const { getByRole, queryByRole, findByRole } = renderHeader();
+    const userIconButton = getByRole("button", {
+      name: "회원 관련 메뉴",
+    });
+    expect(queryByRole("menu")).not.toBeInTheDocument();
+
+    // when
+    userEvent.click(userIconButton);
+
+    // then
+    expect(queryByRole("menu")).toBeInTheDocument();
   });
 });

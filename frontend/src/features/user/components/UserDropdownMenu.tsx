@@ -4,13 +4,13 @@ import { useNavigate } from "react-router";
 import { useAppDispatch } from "../../../app/hooks";
 import { logout } from "../../../app/store";
 import { DeleteAccountModal } from "./DeleteAccountModal";
-import { DropdownMenu } from "../../common/components/DropdownMenu";
+import { DropdownMenu } from "../../common/components/Dropdown/DropdownMenu";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { visibleVariant } from "../../common/utils/animation-variants";
-import { DropdownMenuButton } from "../../common/components/DropdownMenuButton";
-import { DropdownMenuList } from "../../common/components/DropdownMenuList";
-import { DropdownMenuItem } from "../../common/components/DropdownMenuItem";
+import { DropdownMenuButton } from "../../common/components/Dropdown/DropdownMenuButton";
+import { DropdownMenuList } from "../../common/components/Dropdown/DropdownMenuList";
+import { DropdownMenuItem } from "../../common/components/Dropdown/DropdownMenuItem";
 
 export const UserDropdownMenu: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -32,7 +32,7 @@ export const UserDropdownMenu: React.FC = () => {
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu className="w-[30px] h-[30px]">
         <DropdownMenuButton className="rounded-full border p-0.5 text-gray-400 hover:text-blue-500">
           <FaUserAlt className="w-[25px] h-[25px] p-0.5" />
           <span className="sr-only">회원 관련 메뉴</span>

@@ -6,8 +6,6 @@ import { CategoryDropdownMenu } from "../CategoryDropdownMenu";
 
 describe("CategoryDropdownMenu", () => {
   function renderCategoryDropdownMenu() {
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const category: CategoryDto = {
       id: 1,
       name: "토익",
@@ -27,9 +25,7 @@ describe("CategoryDropdownMenu", () => {
         </Routes>
       </BrowserRouter>
     );
-    const { getByRole, queryByRole, findByRole } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, queryByRole, findByRole } = render(Component);
 
     return {
       getByRole,

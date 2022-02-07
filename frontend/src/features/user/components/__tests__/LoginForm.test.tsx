@@ -1,12 +1,24 @@
 import { render, waitFor } from "../../../common/utils/test-utils";
 import userEvent from "@testing-library/user-event";
 import { LoginForm } from "../LoginForm";
+import { server } from "../../../../mocks/server";
+import { rest } from "msw";
+import { ToastContainer } from "../../../toast/components/ToastContainer";
 
 describe("LoginForm", () => {
-  const Component = <LoginForm />;
+  const Component = (
+    <>
+      <LoginForm />
+      <ToastContainer />
+    </>
+  );
 
   beforeEach(() => {
     window.history.replaceState({}, "", "/login");
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
   });
 
   it("로그인 폼을 렌더링한다.", () => {
@@ -114,6 +126,31 @@ describe("LoginForm", () => {
 
       expect(await findByRole("alert")).toHaveTextContent(
         "이메일 또는 비밀번호가 올바르지 않습니다."
+      );
+    });
+
+    it("서버 측 에러(5XX 에러)로 인해 로그인에 실패하면 에러 메시지를 Toast로 띄운다.", async () => {
+      server.use(
+        rest.post(
+          `${process.env.REACT_APP_API_URL}/auth/login`,
+          (req, res, ctx) => {
+            return res(ctx.status(500));
+          }
+        )
+      );
+      const { getByLabelText, findByRole, getByRole } = render(Component);
+
+      const emailField = getByLabelText("이메일");
+      const passwordField = getByLabelText("비밀번호");
+      const loginButton = getByRole("button", { name: "로그인" });
+
+      userEvent.type(emailField, "wrong@gmail.com");
+      userEvent.type(passwordField, "12345678");
+      userEvent.click(loginButton);
+
+      const alertMessage = await findByRole("alert");
+      expect(alertMessage).toHaveTextContent(
+        /로그인에 실패했습니다. 잠시 후에 다시 시도해주세요./g
       );
     });
   });

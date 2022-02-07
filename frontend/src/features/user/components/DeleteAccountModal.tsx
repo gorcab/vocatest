@@ -42,7 +42,7 @@ export const DeleteAccountModal: React.FC<DeleteAccoountModalProps> = ({
           "회원 탈퇴에 실패했습니다. 잠시 후에 다시 시도해주세요.",
       });
     }
-  }, [isSuccess, error, toast, reset, navigate]);
+  }, [isSuccess, error, toast, reset, navigate, onClose]);
 
   return (
     <Modal
@@ -68,6 +68,7 @@ export const DeleteAccountModal: React.FC<DeleteAccoountModalProps> = ({
           )}
         </button>
         <button
+          onClick={onClose}
           type="button"
           className="rounded-sm bg-gray-400 hover:bg-gray-400/80 outline-gray-400 focus:outline focus:outline-offset-2 focus:outline-2 py-1 px-3 w-20 flex justify-center"
         >

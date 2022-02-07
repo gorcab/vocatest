@@ -5,8 +5,8 @@ import React, {
   useReducer,
   useRef,
 } from "react";
-import { useDocumentEventHandler } from "../../category/hooks/useDocumentEventHandler";
-import { isFocusableElement } from "../utils/helper";
+import { useDocumentEventHandler } from "../../hooks/useDocumentEventHandler";
+import { isFocusableElement } from "../../utils/helper";
 
 type ItemState = {
   id: string;
@@ -205,7 +205,7 @@ const MenuContext =
 export function useMenuContext(componentName: string) {
   const menuContext = useContext(MenuContext);
   if (!menuContext) {
-    throw new Error(
+    throw new TypeError(
       `<${componentName}> must be within <DropdownMenu> component.`
     );
   }
@@ -221,7 +221,7 @@ const RefsConext =
 export function useRefsContext(componentName: string) {
   const refsContext = useContext(RefsConext);
   if (!refsContext) {
-    throw new Error(
+    throw new TypeError(
       `<${componentName}> must be within <DropdownMenu> component.`
     );
   }

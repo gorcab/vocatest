@@ -1,14 +1,8 @@
-import { Navigate, useNavigate } from "react-router";
-import { useAuth } from "../features/common/hooks/useAuth";
+import { useNavigate } from "react-router";
 import { ResetPasswordForm } from "../features/user/components/ResetPasswordForm";
 
 export const ResetPasswordPage: React.FC = () => {
-  const user = useAuth();
   const navigate = useNavigate();
-
-  if (user) {
-    return <Navigate to="/" />;
-  }
 
   const navigateToLoginPage = () => {
     navigate("/login");

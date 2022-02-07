@@ -24,6 +24,8 @@ import {
   PagedVocabularyListsRequest,
   EditCategoryResponse,
   EditCategoryRequest,
+  CreatedVocabularyListDto,
+  CreateVocabularyListDto,
 } from "../types";
 
 const baseQuery = fetchBaseQuery({
@@ -153,10 +155,10 @@ export const baseApi = createApi({
       PagedVocabularyListsResponse,
       PagedVocabularyListsRequest
     >({
-      query: ({ page, perPage, category, title }) => {
+      query: ({ page, perPage, categoryId, title }) => {
         let endPoint = `/vocabularies?page=${page}&perPage=${perPage}`;
-        if (category) {
-          endPoint += `&category=${category}`;
+        if (categoryId) {
+          endPoint += `&category=${categoryId}`;
         }
         if (title) {
           endPoint += `&title=${title}`;
@@ -183,6 +185,18 @@ export const baseApi = createApi({
         return error ? [] : [{ type: "vocabularyLists", id: vocabularyListId }];
       },
     }),
+    createVocabularyList: builder.mutation<
+      CreatedVocabularyListDto,
+      CreateVocabularyListDto
+    >({
+      query: (createVocabularyListDto) => ({
+        url: `/vocabularies`,
+        method: "POST",
+        body: createVocabularyListDto,
+      }),
+      invalidatesTags: (result, error) =>
+        result ? [{ type: "vocabularyLists", id: "LIST" }] : [],
+    }),
   }),
 });
 
@@ -199,4 +213,5 @@ export const {
   useDeleteCategoryMutation,
   useVocabularyListsQuery,
   useDeleteVocabularyListMutation,
+  useCreateVocabularyListMutation,
 } = baseApi;

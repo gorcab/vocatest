@@ -9,7 +9,7 @@ import { PagedVocabularyListsRequest } from "../../api/types";
 export const useVocabularyListsWithPagination = (
   pagedVocabularyListsRequest: PagedVocabularyListsRequest
 ) => {
-  const { page, perPage, title, category } = pagedVocabularyListsRequest;
+  const { perPage, title, categoryId } = pagedVocabularyListsRequest;
   const navigate = useNavigate();
   const location = useLocation();
   const deleteMutation = useDeleteCategoryMutation({
@@ -31,8 +31,8 @@ export const useVocabularyListsWithPagination = (
       if (title) {
         url += `&title=${title}`;
       }
-      if (category) {
-        url += `&category=${category}`;
+      if (categoryId) {
+        url += `&category=${categoryId}`;
       }
       navigate(url);
 
@@ -40,13 +40,11 @@ export const useVocabularyListsWithPagination = (
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
-    [location.pathname, navigate, title, perPage, category]
+    [location.pathname, navigate, title, perPage, categoryId]
   );
   const refetchHandler = () => refetch();
 
   return {
-    page,
-    perPage,
     isFetching,
     vocabularyLists,
     isError,

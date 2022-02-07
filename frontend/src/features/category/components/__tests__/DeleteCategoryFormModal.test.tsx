@@ -18,8 +18,6 @@ describe("DeleteCategoryFormModal", () => {
       name: "토익",
     };
     const onClose = jest.fn();
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const Component = (
       <BrowserRouter>
         <Routes>
@@ -40,9 +38,7 @@ describe("DeleteCategoryFormModal", () => {
       </BrowserRouter>
     );
 
-    const { getByRole, getByText } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, getByText } = render(Component);
 
     return {
       category,

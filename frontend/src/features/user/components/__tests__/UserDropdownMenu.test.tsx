@@ -7,8 +7,6 @@ import { UserDropdownMenu } from "../UserDropdownMenu";
 describe("UserDropdownMenu", () => {
   function renderUserDropdown() {
     window.history.replaceState({}, "", "/");
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const Component = (
       <BrowserRouter>
         <Routes>
@@ -34,7 +32,6 @@ describe("UserDropdownMenu", () => {
             refreshToken: "refreshToken",
           },
         },
-        container: document.body.appendChild(portal),
       }
     );
 

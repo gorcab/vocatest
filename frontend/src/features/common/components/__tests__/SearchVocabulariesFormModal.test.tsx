@@ -10,8 +10,6 @@ describe("SearchVocabulariesFormModal", () => {
   ) {
     window.history.replaceState({}, "", initialUrl);
     const closeModalHandler = jest.fn();
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const Component = (
       <BrowserRouter>
         <Routes>
@@ -28,9 +26,7 @@ describe("SearchVocabulariesFormModal", () => {
       </BrowserRouter>
     );
 
-    const { getByRole, getByPlaceholderText } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, getByPlaceholderText } = render(Component);
 
     return {
       getByRole,

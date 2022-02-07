@@ -19,8 +19,6 @@ describe("VocabularyListCard", () => {
     const createdAt = new Date().toISOString();
     const numOfVocabularies = 20;
 
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const Component = (
       <BrowserRouter>
         <Routes>
@@ -53,12 +51,8 @@ describe("VocabularyListCard", () => {
       </BrowserRouter>
     );
 
-    const { getByRole, getByText, findAllByRole, findByRole } = render(
-      Component,
-      {
-        container: document.body.appendChild(portal),
-      }
-    );
+    const { getByRole, getByText, findAllByRole, findByRole } =
+      render(Component);
 
     return {
       getByRole,

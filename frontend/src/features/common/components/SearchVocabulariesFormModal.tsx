@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { FaTimes } from "react-icons/fa";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useSearchUrl } from "../hooks/useSearchUrl";
 import { Modal } from "./Modal";
 
@@ -12,10 +12,9 @@ type SearchVocabulariesFormModalProps = {
 export const SearchVocabulariesFormModal: React.FC<SearchVocabulariesFormModalProps> =
   ({ isOpen, closeModalHandler }) => {
     const {
-      pagedVocabularyListsRequest: { perPage, category },
+      pagedVocabularyListsRequest: { perPage, categoryId },
     } = useSearchUrl();
     const navigate = useNavigate();
-    const location = useLocation();
     const searchFieldRef = useRef<HTMLInputElement>(null);
 
     const searchVocabulariesHandler: React.FormEventHandler = (event) => {
@@ -23,9 +22,9 @@ export const SearchVocabulariesFormModal: React.FC<SearchVocabulariesFormModalPr
       if (searchFieldRef.current) {
         const title = encodeURIComponent(searchFieldRef.current.value);
         if (title) {
-          let url = `${location.pathname}?`;
-          if (category) {
-            url += `category=${category}&`;
+          let url = `/?`;
+          if (categoryId) {
+            url += `category=${categoryId}&`;
           }
           url += `page=1&perPage=${perPage}&title=${title}`;
           navigate(url);

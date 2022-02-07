@@ -1,7 +1,7 @@
 import { AnimatePresence } from "framer-motion";
-import React, { MutableRefObject, useLayoutEffect } from "react";
-import { useId } from "../hooks/useId";
-import { Keyboard } from "../utils/constants";
+import React, { MutableRefObject, useEffect, useLayoutEffect } from "react";
+import { useId } from "../../hooks/useId";
+import { Keyboard } from "../../utils/constants";
 import { useMenuContext, useRefsContext } from "./DropdownMenu";
 
 type DropdownMenuListProps<TagType extends React.ElementType> = {
@@ -35,11 +35,19 @@ export function DropdownMenuList<TagType extends React.ElementType>({
     dispatch({ type: "REGISTER_ITEM_LIST", id: itemListId });
   }, [dispatch, itemsRef, itemListId, isOpen]);
 
+  useEffect(() => {
+    if (!itemsRef.current) return;
+    if (isOpen && activeItemIndex === null) {
+      itemsRef.current.focus();
+    }
+  }, [itemsRef, isOpen, activeItemIndex]);
+
   const keyDownHandler: React.KeyboardEventHandler<HTMLDivElement> = (
     event
   ) => {
     switch (event.key) {
-      case Keyboard.Enter: {
+      case Keyboard.Enter:
+      case Keyboard.Space: {
         event.preventDefault();
         event.stopPropagation();
         if (activeItemIndex !== null) {

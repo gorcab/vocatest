@@ -1,20 +1,25 @@
-type SkeletonType = {
-  width: string | number;
-  height: string | number;
+type SkeletonProps = {
+  width?: string | number;
+  height?: string | number;
   marginBottom?: string | number;
-  color: string;
+  color?: string;
+  className?: string;
 };
 
-export const Skeleton: React.FC<SkeletonType> = ({
-  width,
-  height,
-  color,
+export const Skeleton: React.FC<SkeletonProps> = ({
+  width = "auto",
+  height = "auto",
+  color = "#e7e7e7",
+  className,
   marginBottom,
 }) => {
+  let defaultClassName = "animate-pulse rounded-md";
   return (
     <div
       style={{ width, height, backgroundColor: color, marginBottom }}
-      className="animate-pulse mb-2 rounded-xl"
+      className={
+        className ? `${defaultClassName} ${className}` : defaultClassName
+      }
     />
   );
 };

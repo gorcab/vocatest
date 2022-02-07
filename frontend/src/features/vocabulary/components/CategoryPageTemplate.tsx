@@ -5,19 +5,24 @@ import { MainContainer } from "../../common/components/MainContainer";
 import { MainHeader } from "../../common/components/MainHeader";
 import { NotFoundPage } from "../../../pages/NotFoundPage";
 import { SkeletonCardList } from "../../common/components/SkeletonCardList";
-import { useSearchUrl } from "../../common/hooks/useSearchUrl";
 import { Skeleton } from "../../common/components/Skeleton";
-import { CategoryDropdownMenu } from "./CategoryDropdownMenu";
-import { VocabularyListSection } from "../../vocabulary/components/VocabularyListSection";
-import { useState } from "react";
-import { EditCategoryFormModal } from "./EditCategoryFormModal";
+import { CategoryDropdownMenu } from "../../category/components/CategoryDropdownMenu";
+import { VocabularyListCardListSection } from "./VocabularyListCardListSection";
 
-export const CategoryPageTemplate: React.FC = () => {
+type CategoryPageTemplateProps = {
+  page: number;
+  perPage: number;
+  categoryId: number;
+  title?: string;
+};
+
+export const CategoryPageTemplate: React.FC<CategoryPageTemplateProps> = ({
+  page,
+  perPage,
+  categoryId,
+  title,
+}) => {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const {
-    pagedVocabularyListsRequest: { perPage, category: categoryId },
-  } = useSearchUrl();
   const { data: categories, isFetching } = useCategoryQuery();
   const category = categories?.find((category) => category.id === categoryId);
 
@@ -42,15 +47,24 @@ export const CategoryPageTemplate: React.FC = () => {
   }
 
   const createVocabularyListHandler = () => {
-    navigate(`/create-vocabulary/?category=${category!.id}`);
+    if (category) {
+      navigate(`/create-vocabulary`, {
+        state: {
+          categoryId: category.id,
+          perPage,
+        },
+      });
+    }
   };
-
-  const editCategoryModalCloseHandler = () => setOpen(false);
 
   return (
     <MainContainer>
       <MainHeader
-        title={category.name}
+        title={
+          title
+            ? `${category.name} 카테고리 내 "${title}"에 대한 검색 결과`
+            : category.name
+        }
         rightElement={
           <div className="flex items-center">
             <CategoryDropdownMenu category={category} />
@@ -64,11 +78,11 @@ export const CategoryPageTemplate: React.FC = () => {
           </div>
         }
       />
-      <VocabularyListSection />
-      <EditCategoryFormModal
-        category={category}
-        isOpen={open}
-        modalCloseHandler={editCategoryModalCloseHandler}
+      <VocabularyListCardListSection
+        page={page}
+        perPage={perPage}
+        categoryId={categoryId}
+        title={title}
       />
     </MainContainer>
   );

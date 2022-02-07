@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { createContext, useState } from "react";
 import { Outlet } from "react-router";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
+
+export const CloseSidebarContext =
+  createContext<React.Dispatch<React.SetStateAction<boolean>> | null>(null);
 
 export const MainLayout: React.FC = () => {
   const [showSidebar, setShowSidebar] = useState<boolean>(false);
@@ -15,9 +18,11 @@ export const MainLayout: React.FC = () => {
         handleSidebarButton={handleSidebarButton}
         showSidebarOnMobile={showSidebar}
       />
-      <main className="md:container w-full md:w-auto md:mx-auto">
-        <Sidebar show={showSidebar} />
-        <section className={`ml-0 md:ml-[200px]`}>
+      <main className="md:container w-full lg:flex md:w-auto md:mx-auto">
+        <CloseSidebarContext.Provider value={setShowSidebar}>
+          <Sidebar show={showSidebar} />
+        </CloseSidebarContext.Provider>
+        <section className={`mt-[60px] ml-0 lg:grow`}>
           <Outlet />
         </section>
       </main>

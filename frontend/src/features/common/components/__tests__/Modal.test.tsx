@@ -6,8 +6,6 @@ import { Modal } from "../Modal";
 describe("Modal", () => {
   function renderModal() {
     window.history.replaceState({}, "", "/");
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const closeHandler = jest.fn();
 
     const Component = (
@@ -28,9 +26,7 @@ describe("Modal", () => {
       </BrowserRouter>
     );
 
-    const { getByRole, getByPlaceholderText, getByText } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, getByPlaceholderText, getByText } = render(Component);
 
     return {
       getByRole,

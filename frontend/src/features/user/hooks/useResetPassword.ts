@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useAuthCodeMutation, useResetPasswordMutation } from "../../api/slice";
-import { ErrorResponse } from "../../api/types";
 import { useTimeoutTrigger } from "../../common/hooks/useTimeoutTrigger";
 import { is4XXError, is5XXError } from "../../common/utils/helper";
+import { useToast } from "../../toast/hooks/useToast";
 
 type ResetPasswordDto = {
   email: string;
@@ -14,6 +14,7 @@ type ResetPasswordDto = {
 
 export const useResetPassword = (handleSuccess: () => void) => {
   const [serverError, setServerError] = useState<string | null>(null);
+  const toast = useToast();
   const {
     register,
     handleSubmit,
@@ -29,7 +30,6 @@ export const useResetPassword = (handleSuccess: () => void) => {
   const [
     requestResetPasswordAuthCode,
     {
-      isSuccess: isAuthCodeRequestSuccess,
       isLoading: isAuthCodeRequestLoading,
       error: authCodeError,
       data: authCodeData,
@@ -52,7 +52,12 @@ export const useResetPassword = (handleSuccess: () => void) => {
   useEffect(() => {
     if (authCodeError) {
       if (is5XXError(authCodeError)) {
-        setServerError(authCodeError.data.message);
+        toast({
+          type: "ERROR",
+          desc:
+            authCodeError.data?.message ||
+            "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.",
+        });
       } else if (is4XXError(authCodeError)) {
         const message = authCodeError.data.message;
         if (/이메일/.test(message)) {
@@ -64,18 +69,29 @@ export const useResetPassword = (handleSuccess: () => void) => {
           setServerError(message);
         }
       }
-    } else {
-      if (Boolean(serverError)) {
-        setServerError(null);
-      }
+      resetAuthCodeRequest();
+    } else if (isAuthCodeRequestLoading && serverError) {
+      setServerError(null);
     }
-  }, [authCodeError, setFormError]);
+  }, [
+    authCodeError,
+    serverError,
+    setFormError,
+    isAuthCodeRequestLoading,
+    resetAuthCodeRequest,
+    toast,
+  ]);
 
   // Reset password request error handling
   useEffect(() => {
     if (resetPasswordError) {
       if (is5XXError(resetPasswordError)) {
-        setServerError(resetPasswordError.data.message);
+        toast({
+          type: "ERROR",
+          desc:
+            resetPasswordError.data?.message ||
+            "비밀번호 재설정에 실패했습니다. 잠시 후에 다시 시도해주세요.",
+        });
       } else if (is4XXError(resetPasswordError)) {
         const message = resetPasswordError.data.message;
         if (/이메일/.test(message)) {
@@ -87,12 +103,18 @@ export const useResetPassword = (handleSuccess: () => void) => {
           setServerError(message);
         }
       }
-    } else {
-      if (Boolean(serverError)) {
-        setServerError(null);
-      }
+      resetPasswordReset();
+    } else if (isResetPasswordSuccess && serverError) {
+      setServerError(null);
     }
-  }, [resetPasswordError, setFormError]);
+  }, [
+    resetPasswordError,
+    setFormError,
+    serverError,
+    isResetPasswordSuccess,
+    toast,
+    resetPasswordReset,
+  ]);
 
   const authCodeTimeoutTrigger = () => {
     setFormError("resetPasswordAuthCode", {

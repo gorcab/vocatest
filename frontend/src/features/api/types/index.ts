@@ -91,8 +91,40 @@ export type PagedVocabularyListsResponse = {
 export type PagedVocabularyListsRequest = {
   page: number;
   perPage: number;
-  category?: number;
+  categoryId?: number;
   title?: string;
+};
+
+export type ExampleDto = {
+  sentence: string;
+  translation: string;
+};
+
+export type CreatedExampleDto = ExampleDto & { id: number };
+
+export type CreateVocabularyDto = {
+  english: string;
+  korean: string;
+  examples: Array<ExampleDto>;
+};
+
+export type CreatedVocabularyDto = Omit<CreateVocabularyDto, "examples"> & {
+  id: number;
+  examples: Array<CreatedExampleDto>;
+};
+
+export type CreateVocabularyListDto = {
+  categoryId: number;
+  title: string;
+  vocabularies: Array<CreateVocabularyDto>;
+};
+
+export type CreatedVocabularyListDto = Omit<
+  CreateVocabularyListDto,
+  "vocabularies"
+> & {
+  id: number;
+  numOfVocabularies: number;
 };
 
 // Error Response type

@@ -1,19 +1,23 @@
 import userEvent from "@testing-library/user-event";
 import { rest } from "msw";
 import { server } from "../../../../mocks/server";
-import { AuthCodeRequest } from "../../../api/types";
+import { AuthCodeRequest, ResetPasswordRequest } from "../../../api/types";
 import {
   render,
   waitFor,
   waitForElementToBeRemoved,
 } from "../../../common/utils/test-utils";
+import { ToastContainer } from "../../../toast/components/ToastContainer";
 import { ResetPasswordForm } from "../ResetPasswordForm";
 
 describe("ResetPasswordForm", () => {
   function renderAndGetFields() {
     const handleSuccess = jest.fn();
     const renderResult = render(
-      <ResetPasswordForm handleSuccess={handleSuccess} />
+      <>
+        <ResetPasswordForm handleSuccess={handleSuccess} />
+        <ToastContainer />
+      </>
     );
     const { getByLabelText, getByRole } = renderResult;
     const emailField = getByLabelText("이메일");
@@ -36,6 +40,10 @@ describe("ResetPasswordForm", () => {
       resetPasswordButton,
     };
   }
+
+  afterEach(() => {
+    server.resetHandlers();
+  });
 
   it("비밀번호 재설정 폼을 렌더링한다.", () => {
     const {
@@ -204,6 +212,21 @@ describe("ResetPasswordForm", () => {
 
   describe("서버로의 요청이 실패한 상태", () => {
     it('인증 번호 전송 요청이 실패하면 "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요." 메시지를 보여준다.', async () => {
+      server.use(
+        rest.post<ResetPasswordRequest>(
+          `${process.env.REACT_APP_API_URL}/users/password`,
+          (req, res, ctx) => {
+            return res(
+              ctx.status(503),
+              ctx.json({
+                status: 503,
+                message:
+                  "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.",
+              })
+            );
+          }
+        )
+      );
       const { renderResult, emailField, authCodeRequestButton } =
         renderAndGetFields();
       const { findByRole } = renderResult;

@@ -19,9 +19,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ show }) => {
   return (
     <>
       <aside
-        className={`w-full md:w-[200px] transform-gpu duration-100 md:transform-none z-50 ${
+        className={`w-full lg:w-[200px] overflow-y-auto transform-gpu duration-100 lg:transform-none z-50 ${
           show ? `translate-x-[0]` : `-translate-x-full`
-        } h-screen border-x px-2 pt-10 fixed bg-slate-100`}
+        } h-screen border-x px-2 pt-10 lg:pt-[calc(60px+2.5rem)] fixed left-0 lg:sticky lg:top-0 lg:h-[calc(100vh-60px)] bg-slate-100`}
       >
         <Button type="button" onClick={openCreateCategoryFormModal}>
           카테고리 생성

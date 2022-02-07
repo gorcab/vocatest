@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { useAuthCodeMutation, useSignUpMutation } from "../../api/slice";
-import { ErrorResponse } from "../../api/types";
 import { useTimeoutTrigger } from "../../common/hooks/useTimeoutTrigger";
 import { is4XXError, is5XXError } from "../../common/utils/helper";
+import { useToast } from "../../toast/hooks/useToast";
 
 type SignUpDto = {
   email: string;
@@ -14,6 +14,7 @@ type SignUpDto = {
 };
 
 export const useSignUp = () => {
+  const toast = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const {
     register,
@@ -28,60 +29,92 @@ export const useSignUp = () => {
   const [
     requestSignUpAuthCode,
     {
-      isSuccess: isAuthCodeRequestSuccess,
       isLoading: isAuthCodeRequestLoading,
       error: authCodeError,
       data: authCodeData,
-      reset: signUpAuthCodeRequestReset,
+      reset: resetSignUpAuthCodeRequest,
     },
   ] = useAuthCodeMutation();
 
   const [
     signUp,
     {
-      isSuccess: isSignUpSuccess,
       isLoading: isSignUpLoading,
       error: signUpError,
-      reset: signUpRequestReset,
+      reset: resetSignUpRequest,
     },
   ] = useSignUpMutation();
 
   // AuthCode request error handling
   useEffect(() => {
-    if (is4XXError(authCodeError)) {
-      if (/이메일/.test(authCodeError.data.message)) {
-        setFormError("email", {
-          type: "manual",
-          message: authCodeError.data.message,
+    if (authCodeError) {
+      if (is4XXError(authCodeError)) {
+        if (/이메일/.test(authCodeError.data.message)) {
+          setFormError("email", {
+            type: "manual",
+            message: authCodeError.data.message,
+          });
+        } else {
+          setServerError(authCodeError.data.message);
+        }
+      } else if (is5XXError(authCodeError)) {
+        toast({
+          type: "ERROR",
+          desc:
+            authCodeError.data?.message ||
+            "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.",
         });
-      } else {
-        setServerError(authCodeError.data.message);
       }
-    } else if (is5XXError(authCodeError)) {
-      setServerError(authCodeError.data.message);
+      resetSignUpAuthCodeRequest();
+    } else if (isAuthCodeRequestLoading && serverError) {
+      setServerError(null);
     }
-  }, [authCodeError, setFormError]);
+  }, [
+    authCodeError,
+    setFormError,
+    toast,
+    isAuthCodeRequestLoading,
+    serverError,
+    resetSignUpAuthCodeRequest,
+  ]);
 
   // Sign Up request error handling
   useEffect(() => {
-    if (is4XXError(signUpError)) {
-      if (/이메일/.test(signUpError.data.message)) {
-        setFormError("email", {
-          type: "manual",
-          message: signUpError.data.message,
+    if (signUpError) {
+      if (is4XXError(signUpError)) {
+        if (/이메일/.test(signUpError.data.message)) {
+          setFormError("email", {
+            type: "manual",
+            message: signUpError.data.message,
+          });
+        } else if (/인증 번호/.test(signUpError.data.message)) {
+          setFormError("signUpAuthCode", {
+            type: "manual",
+            message: signUpError.data.message,
+          });
+        } else {
+          setServerError(signUpError.data.message);
+        }
+      } else if (is5XXError(signUpError)) {
+        toast({
+          type: "ERROR",
+          desc:
+            signUpError.data?.message ||
+            "회원 가입에 실패했습니다. 잠시 후에 다시 시도해주세요.",
         });
-      } else if (/인증 번호/.test(signUpError.data.message)) {
-        setFormError("signUpAuthCode", {
-          type: "manual",
-          message: signUpError.data.message,
-        });
-      } else {
-        setServerError(signUpError.data.message);
       }
-    } else if (is5XXError(signUpError)) {
-      setServerError(signUpError.data.message);
+      resetSignUpRequest();
+    } else if (isSignUpLoading && serverError) {
+      setServerError(null);
     }
-  }, [signUpError, setFormError]);
+  }, [
+    signUpError,
+    setFormError,
+    toast,
+    isSignUpLoading,
+    serverError,
+    resetSignUpRequest,
+  ]);
 
   const onSubmit: SubmitHandler<SignUpDto> = ({
     email,
@@ -90,7 +123,7 @@ export const useSignUp = () => {
     signUpAuthCode,
   }) => {
     if (signUpError) {
-      signUpRequestReset();
+      resetSignUpRequest();
     }
 
     signUp({
@@ -111,7 +144,7 @@ export const useSignUp = () => {
     if (Boolean(serverError)) {
       setServerError(null);
     }
-    signUpAuthCodeRequestReset();
+    resetSignUpAuthCodeRequest();
   };
 
   const { ttl, isSet } = useTimeoutTrigger(
@@ -128,7 +161,7 @@ export const useSignUp = () => {
 
     if (Boolean(serverError)) {
       setServerError(null);
-      signUpAuthCodeRequestReset();
+      resetSignUpAuthCodeRequest();
     }
 
     if (!errors.email) {

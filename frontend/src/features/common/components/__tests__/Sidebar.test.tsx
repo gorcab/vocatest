@@ -13,8 +13,6 @@ describe("Sidebar", () => {
 
   function renderSidebar() {
     const show = true;
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const Component = (
       <BrowserRouter>
         <Routes>
@@ -39,9 +37,7 @@ describe("Sidebar", () => {
       </BrowserRouter>
     );
 
-    const { getByRole, findByRole, findAllByRole, debug } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, findByRole, findAllByRole, debug } = render(Component);
 
     return {
       getByRole,

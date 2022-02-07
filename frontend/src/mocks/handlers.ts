@@ -1,8 +1,13 @@
 import { PathParams, rest, RestRequest } from "msw";
+import faker from "@faker-js/faker";
 import {
   AuthCodeRequest,
   CategoryDto,
   CreateCategoryRequest,
+  CreatedExampleDto,
+  CreatedVocabularyDto,
+  CreateVocabularyDto,
+  CreateVocabularyListDto,
   EditCategoryRequest,
   LoginRequest,
   PagedVocabularyListsResponse,
@@ -36,7 +41,7 @@ const validUsers = [
 ];
 
 let nextCategoryId = 4;
-let categories: Array<CategoryDto> = [
+export let categories: Array<CategoryDto> = [
   { id: 1, name: "토익" },
   { id: 2, name: "텝스" },
   { id: 3, name: "토플" },
@@ -58,41 +63,141 @@ export const getQueryParamsFromRestRequest = (
   } as const;
 };
 
+export function createVocabularies(): Array<CreatedVocabularyDto>;
+export function createVocabularies(
+  vocabularies: Array<CreateVocabularyDto>
+): Array<CreatedVocabularyDto>;
+export function createVocabularies(
+  vocabularies?: Array<CreateVocabularyDto>
+): Array<CreatedVocabularyDto> {
+  let vocabularyId = 1;
+  if (vocabularies) {
+    const createdVocabularies = vocabularies.map(
+      ({ english, examples, korean }) => {
+        let exampleId = 1;
+        const createdExamples = examples.map(({ sentence, translation }) => ({
+          id: exampleId++,
+          sentence,
+          translation,
+        }));
+        return {
+          id: vocabularyId++,
+          english,
+          korean,
+          examples: createdExamples,
+        };
+      }
+    );
+
+    return createdVocabularies;
+  } else {
+    const numOfVocabularies = Math.floor(Math.random() * 50);
+    const vocabularies: Array<CreatedVocabularyDto> = Array.from({
+      length: numOfVocabularies,
+    }).map(() => {
+      const createExample = Math.random() > 0.4 ? true : false;
+      const examples: Array<CreatedExampleDto> = [];
+      if (createExample) {
+        let exampleId = 1;
+        const numOfExamples = Math.floor(Math.random() * 5);
+        for (let i = 0; i < numOfExamples; i++) {
+          faker.setLocale("en");
+          const sentence = faker.lorem.sentence();
+          faker.setLocale("ko");
+          const translation = faker.lorem.sentence();
+          examples.push({
+            id: exampleId++,
+            sentence,
+            translation,
+          });
+        }
+      }
+      faker.setLocale("en");
+      const english = faker.word.noun();
+      faker.setLocale("ko");
+      const korean = faker.word.noun();
+      const vocabulary: CreatedVocabularyDto = {
+        id: vocabularyId++,
+        english,
+        korean,
+        examples,
+      };
+
+      return vocabulary;
+    });
+
+    return vocabularies;
+  }
+}
+
+type CategoryDetails = Array<
+  VocabularyListDto & {
+    vocabularies: Array<CreatedVocabularyDto>;
+  }
+>;
+
 export const createMockVocabularyListsInEachCategory = () => {
   let curId = 1;
   const result: {
-    [key in typeof categories[number]["id"]]: Array<VocabularyListDto>;
-  } = categories.reduce((acc, cur, categoryIndex, categories) => {
-    const vocabularyLists: Array<VocabularyListDto> = Array.from({
-      length: (categoryIndex + 1) * (10 + Math.floor(Math.random() * 5)),
-    })
-      .map((_, index) => ({
-        id: curId++,
-        title: `${categories[categoryIndex].name} DAY-${index + 1}`,
-        createdAt: new Date(
-          2021,
-          12,
-          1 + index,
-          Math.floor(Math.random() * 24),
-          Math.floor(Math.random() * 60)
-        ).toISOString(),
-        numOfVocabularies: 10 + Math.floor(Math.random() * 20),
-        category: categories[categoryIndex],
-      }))
-      .sort((elem1, elem2) => {
-        const elem1Date = new Date(elem1.createdAt);
-        const elem2Date = new Date(elem2.createdAt);
-        if (elem1Date < elem2Date) return 1;
-        else if (elem1Date === elem2Date) return 0;
-        else return -1;
-      });
+    [key in typeof categories[number]["id"]]: CategoryDetails;
+  } = categories.reduce(
+    (acc, cur, categoryIndex, categories) => {
+      const vocabularyLists: CategoryDetails = Array.from({
+        length: (categoryIndex + 1) * (10 + Math.floor(Math.random() * 2)),
+      })
+        .map((_, index) => {
+          const vocabularies = createVocabularies();
+          return {
+            id: curId++,
+            title: `${categories[categoryIndex].name} DAY-${index + 1}`,
+            createdAt: new Date(
+              2021,
+              12,
+              1 + index,
+              Math.floor(Math.random() * 24),
+              Math.floor(Math.random() * 60)
+            ).toISOString(),
+            vocabularies,
+            numOfVocabularies: vocabularies.length,
+            category: categories[categoryIndex],
+          };
+        })
+        .sort((elem1, elem2) => {
+          const elem1Date = new Date(elem1.createdAt);
+          const elem2Date = new Date(elem2.createdAt);
+          if (elem1Date < elem2Date) return 1;
+          else if (elem1Date === elem2Date) return 0;
+          else return -1;
+        });
 
-    acc[cur.id] = vocabularyLists;
+      acc[cur.id] = vocabularyLists;
 
-    return acc;
-  }, {} as { [key in typeof categories[number]["id"]]: Array<VocabularyListDto> });
+      return acc;
+    },
+    {} as {
+      [key in typeof categories[number]["id"]]: CategoryDetails;
+    }
+  );
 
   return result;
+};
+
+const addVocabularyListInCategory = (
+  detailedCategory: CategoryDetails,
+  createVocabularyListDto: Omit<CreateVocabularyListDto, "vocabularies"> & {
+    vocabularies: Array<CreatedVocabularyDto>;
+  }
+) => {
+  const lastVoccabularyList = detailedCategory[0];
+  const id = lastVoccabularyList.id + 1;
+  detailedCategory.unshift({
+    id,
+    createdAt: new Date().toISOString(),
+    category: lastVoccabularyList.category,
+    numOfVocabularies: createVocabularyListDto.vocabularies.length,
+    title: createVocabularyListDto.title,
+    vocabularies: createVocabularyListDto.vocabularies,
+  });
 };
 
 export const createEntireVocabularyLists = (
@@ -408,13 +513,23 @@ const createHandlers = () => {
     rest.post<ResetPasswordRequest>(
       `${process.env.REACT_APP_API_URL}/users/password`,
       (req, res, ctx) => {
-        const { resetPasswordAuthCode } = req.body;
-        if (resetPasswordAuthCode === 444444) {
+        const { resetPasswordAuthCode, email } = req.body;
+        if (Number(resetPasswordAuthCode) === 444444) {
           return res(
             ctx.status(400),
             ctx.json({
               status: 400,
               message: "인증 번호가 올바르지 않습니다.",
+            })
+          );
+        } else if (email === "wrong@gmail.com") {
+          return res(
+            ctx.delay(500),
+            ctx.status(503),
+            ctx.json({
+              status: 503,
+              message:
+                "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.",
             })
           );
         } else {
@@ -425,7 +540,7 @@ const createHandlers = () => {
 
     // 카테고리 조회 요청 핸들러
     rest.get(`${process.env.REACT_APP_API_URL}/categories`, (req, res, ctx) => {
-      const isFailed = Math.random() > 0.9;
+      const isFailed = Math.random() > 0.99;
       if (isFailed) {
         return res(
           ctx.delay(500),
@@ -438,7 +553,7 @@ const createHandlers = () => {
       }
 
       return res(
-        ctx.delay(500),
+        ctx.delay(1000),
         ctx.status(200),
         ctx.json({
           categories,
@@ -654,6 +769,49 @@ const createHandlers = () => {
           createEntireVocabularyLists(mockVocabularyLists);
 
         return res(ctx.delay(500), ctx.status(201));
+      }
+    ),
+
+    // 단어장 생성 핸들러
+    rest.post<CreateVocabularyListDto>(
+      `${process.env.REACT_APP_API_URL}/vocabularies`,
+      (req, res, ctx) => {
+        const isFailed = Math.random() > 0.8;
+        if (isFailed) {
+          return res(
+            ctx.delay(500),
+            ctx.status(500),
+            ctx.json({
+              status: 500,
+              message: "Internal Server Error",
+            })
+          );
+        }
+        const { categoryId, title, vocabularies } = req.body;
+        const isAlreadyExistTitle = mockVocabularyLists[categoryId].find(
+          (vocabularyList) => vocabularyList.title === title
+        );
+        if (isAlreadyExistTitle) {
+          return res(
+            ctx.delay(500),
+            ctx.status(400),
+            ctx.json({
+              status: 400,
+              message: "동일한 이름의 단어장이 카테고리 내에 존재합니다.",
+            })
+          );
+        }
+
+        const createdVocabularies = createVocabularies(vocabularies);
+        addVocabularyListInCategory(mockVocabularyLists[categoryId], {
+          categoryId: req.body.categoryId,
+          title: req.body.title,
+          vocabularies: createdVocabularies,
+        });
+
+        const { vocabularies: newVocabularies, ...response } =
+          mockVocabularyLists[categoryId][0];
+        return res(ctx.delay(500), ctx.status(201), ctx.json(response));
       }
     ),
   ];

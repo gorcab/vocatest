@@ -10,8 +10,6 @@ describe("VocabularyListCardDropdownMenu", () => {
       vocabularyListId: 1,
       vocabularyListTitle: "토익 DAY-10",
     };
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const Component = (
       <BrowserRouter>
         <Routes>
@@ -36,9 +34,7 @@ describe("VocabularyListCardDropdownMenu", () => {
       </BrowserRouter>
     );
 
-    const { getByRole, findByRole } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, findByRole } = render(Component);
 
     return {
       ...vocabularyListCardDropdownMenuProps,

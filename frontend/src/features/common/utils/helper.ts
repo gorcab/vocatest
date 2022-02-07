@@ -8,6 +8,23 @@ export const getFormattedDate = (date: Date) => {
   return `${date.getFullYear()}. ${date.getMonth() + 1}. ${date.getDate()}`;
 };
 
+export function debounce<P extends unknown[]>(
+  cb: (...args: P) => unknown,
+  wait: number
+) {
+  let timerId: ReturnType<typeof setTimeout> | null = null;
+  function fn(this: unknown, ...args: P) {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+    timerId = setTimeout(() => {
+      cb.apply(this, args);
+    }, wait);
+  }
+
+  return fn;
+}
+
 export function is5XXError(
   error: FetchBaseQueryError | SerializedError | undefined
 ): error is FetchBaseQueryError & { status: number; data: ErrorResponse } {

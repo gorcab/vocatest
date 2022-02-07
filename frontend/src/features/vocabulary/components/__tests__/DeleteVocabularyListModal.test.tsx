@@ -9,44 +9,24 @@ import { DeleteVocabularyListModal } from "../DeleteVocabularyListModal";
 describe("DeleteVocabularyListModal", () => {
   function renderDeleteVocabularyListModal() {
     window.history.replaceState({}, "", "/");
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const isOpen = true;
     const title = "토익 DAY-10";
     const vocabularyListId = 1;
     const onClose = jest.fn();
 
     const Component = (
-      <BrowserRouter>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <ToastContainer />
-                <Outlet />
-              </>
-            }
-          >
-            <Route
-              index
-              element={
-                <DeleteVocabularyListModal
-                  isOpen={isOpen}
-                  title={title}
-                  vocabularyListId={vocabularyListId}
-                  onClose={onClose}
-                />
-              }
-            />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <>
+        <DeleteVocabularyListModal
+          isOpen={isOpen}
+          title={title}
+          vocabularyListId={vocabularyListId}
+          onClose={onClose}
+        />
+        <ToastContainer />
+      </>
     );
 
-    const { getByRole, getByText, findByRole } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, getByText, findByRole } = render(Component);
 
     return {
       title,

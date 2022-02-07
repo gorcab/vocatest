@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef } from "react";
-import { useId } from "../hooks/useId";
-import { callAllEventHandlers } from "../utils/helper";
+import { useId } from "../../hooks/useId";
+import { callAllEventHandlers } from "../../utils/helper";
 import { useMenuContext, useRefsContext } from "./DropdownMenu";
 
 type DropdownItemProps<TagType extends React.ElementType> = {
@@ -52,7 +52,7 @@ export function DropdownMenuItem<TagType extends React.ElementType>({
 
   const clickHandlers = callAllEventHandlers(clickHandler, onClick);
 
-  const keyDownHandlers = callAllEventHandlers(onKeyDown);
+  const keyDownHandlers = onKeyDown ? callAllEventHandlers(onKeyDown) : null;
 
   const focusHandler: React.FocusEventHandler<HTMLElement> = () => {
     if (activeItemIndex && items[activeItemIndex].id === itemId) return;

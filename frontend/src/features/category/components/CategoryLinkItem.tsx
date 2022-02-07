@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useSearchUrl } from "../../common/hooks/useSearchUrl";
+import { useCloseSidebar } from "../../common/hooks/useToggleSidebar";
 
 type CategoryLinkItemProps = {
   id: number;
@@ -13,12 +14,13 @@ export const CategoryLinkItem: React.FC<CategoryLinkItemProps> = ({
   path,
 }) => {
   const {
-    pagedVocabularyListsRequest: { category },
+    pagedVocabularyListsRequest: { categoryId },
   } = useSearchUrl();
-  const isActive = category === id;
+  const closSidebar = useCloseSidebar();
+  const isActive = categoryId === id;
 
   return (
-    <li className="flex items-center">
+    <li className="flex items-center" onClick={closSidebar}>
       <NavLink
         to={path}
         className={`${

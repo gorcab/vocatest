@@ -12,8 +12,6 @@ describe("EditCategoryFormModal", () => {
       name: "토익",
     };
     const onClose = jest.fn();
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
     const Component = (
       <EditCategoryFormModal
         isOpen={true}
@@ -21,9 +19,7 @@ describe("EditCategoryFormModal", () => {
         modalCloseHandler={onClose}
       />
     );
-    const { getByRole, getByLabelText, findByRole } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, getByLabelText, findByRole } = render(Component);
 
     return {
       onClose,

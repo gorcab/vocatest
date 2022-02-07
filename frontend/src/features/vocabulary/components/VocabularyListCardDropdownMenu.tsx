@@ -2,11 +2,10 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
 import { useNavigate } from "react-router";
-import { Link } from "react-router-dom";
-import { DropdownMenu } from "../../common/components/DropdownMenu";
-import { DropdownMenuButton } from "../../common/components/DropdownMenuButton";
-import { DropdownMenuItem } from "../../common/components/DropdownMenuItem";
-import { DropdownMenuList } from "../../common/components/DropdownMenuList";
+import { DropdownMenu } from "../../common/components/Dropdown/DropdownMenu";
+import { DropdownMenuButton } from "../../common/components/Dropdown/DropdownMenuButton";
+import { DropdownMenuItem } from "../../common/components/Dropdown/DropdownMenuItem";
+import { DropdownMenuList } from "../../common/components/Dropdown/DropdownMenuList";
 import { visibleVariant } from "../../common/utils/animation-variants";
 import { DeleteVocabularyListModal } from "./DeleteVocabularyListModal";
 

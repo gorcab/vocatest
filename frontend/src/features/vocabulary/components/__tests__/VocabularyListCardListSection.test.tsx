@@ -12,20 +12,23 @@ import {
   render,
   waitForElementToBeRemoved,
 } from "../../../common/utils/test-utils";
-import { VocabularyListSection } from "../VocabularyListSection";
+import { VocabularyListCardListSection } from "../VocabularyListCardListSection";
 
-describe("VocabularyListSection", () => {
-  function renderVocabularyListSection(
-    initialUrl: string,
-    isBadRequest: boolean = false
-  ) {
-    const errorMessage = "Bad Request";
-    window.history.replaceState({}, "", initialUrl);
+describe("VocabularyListCardListSection", () => {
+  function setServerResponse(isBadRequest: boolean = false) {
+    const searchParams = new URLSearchParams(window.location.search);
+    const page = Number(searchParams.get("page")) || 1;
+    const perPage = Number(searchParams.get("perPage")) || DEFAULT_PER_PAGE;
+    const title = searchParams.get("title") ?? undefined;
+    const categoryId = Number(searchParams.get("category")) ?? undefined;
+
     const mockVocabularyListsInEachCategory =
       createMockVocabularyListsInEachCategory();
     const entireVocabularyLists = createEntireVocabularyLists(
       mockVocabularyListsInEachCategory
     );
+    const errorMessage = "Bad Request";
+
     server.use(
       rest.get(
         `${process.env.REACT_APP_API_URL}/vocabularies`,
@@ -54,19 +57,50 @@ describe("VocabularyListSection", () => {
         }
       )
     );
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
+
+    return {
+      page,
+      perPage,
+      title,
+      categoryId,
+      errorMessage,
+      entireVocabularyLists,
+    };
+  }
+
+  function renderVocabularyListCardListSection(
+    initialUrl: string = "/?page=1&perPage=12",
+    isBadRequest: boolean = false
+  ) {
+    window.history.replaceState({}, "", initialUrl);
+    const {
+      page,
+      perPage,
+      title,
+      categoryId,
+      errorMessage,
+      entireVocabularyLists,
+    } = setServerResponse(isBadRequest);
+
     const Component = (
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<VocabularyListSection />} />
+          <Route
+            path="/"
+            element={
+              <VocabularyListCardListSection
+                page={page}
+                perPage={perPage}
+                title={title}
+                categoryId={categoryId}
+              />
+            }
+          />
         </Routes>
       </BrowserRouter>
     );
 
-    const { getByRole, getAllByRole } = render(Component, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, getAllByRole } = render(Component);
 
     return {
       getByRole,
@@ -75,18 +109,11 @@ describe("VocabularyListSection", () => {
       entireVocabularyLists,
     };
   }
-  it("`/` url로 접속하면 `/?page=1&perPage=12`(default page, perPage) url로 리다이렉션된다.", () => {
-    renderVocabularyListSection("/");
 
-    const { pathname, search } = window.location;
-
-    expect(pathname + search).toBe("/?page=1&perPage=12");
-  });
-
-  it("`perPage`만큼의 단어장들과 페이지네이션이 렌더링된다.", async () => {
+  it("서버로부터 응답으로 받은 `perPage`만큼의 단어장들과 Pagination이 렌더링된다.", async () => {
     // given
     const { getAllByRole, entireVocabularyLists } =
-      renderVocabularyListSection("/");
+      renderVocabularyListCardListSection();
     const renderedVocabularyLists = entireVocabularyLists.slice(
       0,
       DEFAULT_PER_PAGE
@@ -108,10 +135,8 @@ describe("VocabularyListSection", () => {
   });
 
   it("단어장 조회 요청에 실패헀을 경우 서버 측 에러 메시지와 `재요청` 버튼을 렌더링한다.", async () => {
-    const { getByRole, errorMessage: message } = renderVocabularyListSection(
-      "/",
-      true
-    );
+    const { getByRole, errorMessage: message } =
+      renderVocabularyListCardListSection("/", true);
 
     await waitForElementToBeRemoved(document.querySelector(".animate-pulse"));
 

@@ -6,9 +6,6 @@ import { ToastContainer } from "../ToastContainer";
 
 describe("ToastContainer", () => {
   function renderToastContainer() {
-    const portal = document.createElement("div");
-    portal.classList.add("portal");
-
     const Component: React.FC = () => {
       const toast = useToast();
       const createToast = () =>
@@ -26,9 +23,7 @@ describe("ToastContainer", () => {
       );
     };
 
-    const { getByRole, findByRole, debug } = render(<Component />, {
-      container: document.body.appendChild(portal),
-    });
+    const { getByRole, findByRole, debug } = render(<Component />);
 
     return {
       getByRole,
@@ -40,21 +35,21 @@ describe("ToastContainer", () => {
     const { getByRole, findByRole } = renderToastContainer();
     const createToastButton = getByRole("button", { name: "토스트 생성하기" });
 
-    const toastList = getByRole("list");
     userEvent.click(createToastButton);
 
+    const toastList = await findByRole("list");
     const toast = await within(toastList).findByRole("alert");
 
     expect(toast).toHaveTextContent("토스트 생성");
   });
 
   it("Toast의 `닫기` 아이콘 버튼을 클릭하면 해당 Toast가 닫힌다.", async () => {
-    const { getByRole, findByRole, debug } = renderToastContainer();
+    const { getByRole, findByRole } = renderToastContainer();
     const createToastButton = getByRole("button", { name: "토스트 생성하기" });
 
-    const toastList = getByRole("list");
     userEvent.click(createToastButton);
 
+    const toastList = await findByRole("list");
     const toast = await within(toastList).findByRole("alert");
     expect(toast).toBeInTheDocument();
 

@@ -7,10 +7,9 @@ import { Spinner } from "../../common/components/Spinner";
 import { Label } from "../../common/components/Label";
 import { InputErrorMessage } from "../../common/components/InputErrorMessage";
 import { InputGroup } from "../../common/components/InputGroup";
-import { ErrorResponse } from "../../api/types";
-import { useLayoutEffect } from "react";
-import { CustomError } from "../../common/utils/CustomError";
 import { is4XXError, is5XXError } from "../../common/utils/helper";
+import { useEffect } from "react";
+import { useToast } from "../../toast/hooks/useToast";
 
 type LoginDto = {
   email: string;
@@ -23,17 +22,23 @@ export const LoginForm: React.FC = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginDto>();
-  const [login, { isLoading, error }] = useLoginMutation();
+  const [login, { isLoading, error, reset }] = useLoginMutation();
+  const toast = useToast();
   const onSubmit: SubmitHandler<LoginDto> = (data) => {
     login(data);
   };
 
-  if (is5XXError(error)) {
-    throw new CustomError({
-      statusCode: error.status,
-      message: error.data.message,
-    });
-  }
+  useEffect(() => {
+    if (error && is5XXError(error)) {
+      toast({
+        type: "ERROR",
+        desc:
+          error.data?.message ||
+          "로그인에 실패했습니다. 잠시 후에 다시 시도해주세요.",
+      });
+      reset();
+    }
+  }, [error, reset, toast]);
 
   return (
     <BasicForm onSubmit={handleSubmit(onSubmit)}>

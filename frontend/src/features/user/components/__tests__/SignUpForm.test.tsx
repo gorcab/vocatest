@@ -7,11 +7,17 @@ import {
   waitFor,
   waitForElementToBeRemoved,
 } from "../../../common/utils/test-utils";
+import { ToastContainer } from "../../../toast/components/ToastContainer";
 import { SignUpForm } from "../SignUpForm";
 
 describe("SignUpForm", () => {
   function renderAndGetFields() {
-    const renderResult = render(<SignUpForm />);
+    const renderResult = render(
+      <>
+        <SignUpForm />
+        <ToastContainer />
+      </>
+    );
     const { getByLabelText, getByRole } = renderResult;
     const emailField = getByLabelText("이메일");
     const authCodeRequestButton = getByRole("button", { name: "인증 요청" });
