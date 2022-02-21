@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../../../app/store";
-import { baseApi } from "../../api/slice";
+import { RootState } from "app/store";
+import { baseApi } from "features/api/slice";
 
 export type User = {
   id: number;

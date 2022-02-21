@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
+import { DEFAULT_PER_PAGE } from "features/common/utils/constants";
+import { render } from "features/common/utils/test-utils";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { DEFAULT_PER_PAGE } from "../../utils/constants";
-import { render } from "../../utils/test-utils";
 import { SearchVocabulariesFormModal } from "../SearchVocabulariesFormModal";
 
 describe("SearchVocabulariesFormModal", () => {

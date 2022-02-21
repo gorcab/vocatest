@@ -1,4 +1,9 @@
 import userEvent from "@testing-library/user-event";
+import { server } from "mocks/test/server";
+import {
+  successResetPasswordResponse,
+  successSendingAuthCodeResponse,
+} from "mocks/test/user.mock";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
 import {
   render,
@@ -27,6 +32,7 @@ describe("ResetPasswordPage", () => {
   );
 
   beforeEach(() => {
+    server.use(successSendingAuthCodeResponse);
     window.history.replaceState({}, "", "/reset-password");
   });
 
@@ -42,6 +48,7 @@ describe("ResetPasswordPage", () => {
 
   it('비밀번호 재설정에 성공하면 "/login" url로 이동한다.', async () => {
     // given
+    server.use(successResetPasswordResponse);
     const { getByRole, getByLabelText } = render(Component);
     const emailField = getByLabelText("이메일");
     const authCodeRequestButton = getByRole("button", {
@@ -64,11 +71,8 @@ describe("ResetPasswordPage", () => {
     userEvent.click(resetPasswordButton);
 
     // then
-    await waitFor(
-      () => {
-        expect(window.location.pathname).toBe("/login");
-      },
-      { timeout: 2000 }
-    );
+    await waitFor(() => {
+      expect(window.location.pathname).toBe("/login");
+    });
   });
 });

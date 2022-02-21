@@ -1,9 +1,9 @@
+import { useCreateCategoryMutation } from "features/api/slice";
+import { CreateCategoryRequest } from "features/api/types";
+import { is4XXError, is5XXError } from "features/common/utils/helper";
+import { useToast } from "features/toast/hooks/useToast";
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useCreateCategoryMutation } from "../../api/slice";
-import { CreateCategoryRequest } from "../../api/types";
-import { is4XXError, is5XXError } from "../../common/utils/helper";
-import { useToast } from "../../toast/hooks/useToast";
 
 type CreateCategoryDto = CreateCategoryRequest;
 
@@ -62,6 +62,7 @@ export const useCreateCategoryForm = (
           message,
         });
       } else {
+        mutationReset();
         toast({
           type: "ERROR",
           desc: "카테고리 생성에 실패했습니다. 잠시 후에 다시 시도해주세요.",
@@ -70,8 +71,9 @@ export const useCreateCategoryForm = (
     } else if (is5XXError(mutationError)) {
       toast({
         type: "ERROR",
-        desc: mutationError.data.message,
+        desc: "서버 측 에러로 인해 카테고리 생성에 실패했습니다. 잠시 후에 다시 시도해주세요.",
       });
+      mutationReset();
     }
   }, [
     mutationError,

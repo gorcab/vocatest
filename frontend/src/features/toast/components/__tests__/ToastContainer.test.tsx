@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
+import { render, waitFor, within } from "features/common/utils/test-utils";
+import { useToast } from "features/toast/hooks/useToast";
 import React from "react";
-import { render, waitFor, within } from "../../../common/utils/test-utils";
-import { useToast } from "../../hooks/useToast";
 import { ToastContainer } from "../ToastContainer";
 
 describe("ToastContainer", () => {

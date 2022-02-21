@@ -1,8 +1,8 @@
 import { useSelector } from "react-redux";
 import { AnimatePresence } from "framer-motion";
 import { selectToasts } from "../slice";
+import { Portal } from "features/common/components/Portal";
 import { Toast } from "./Toast";
-import { Portal } from "../../common/components/Portal";
 
 export const ToastContainer: React.FC = () => {
   const toasts = useSelector(selectToasts);

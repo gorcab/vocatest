@@ -2,10 +2,9 @@ import React from "react";
 import { render as rtlRender, RenderOptions } from "@testing-library/react";
 import { configureStore, DeepPartial } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
-import { logout, RootState, store } from "../../../app/store";
-import { combinedReducer } from "../../../app/store";
-import { baseApi } from "../../api/slice";
-import { authTokenMiddleware } from "../../../app/middlewares/authTokenMiddleware";
+import { combinedReducer, logout, RootState, store } from "app/store";
+import { baseApi } from "features/api/slice";
+import { authTokenMiddleware } from "app/middlewares/authTokenMiddleware";
 
 type RenderType = (
   ui: React.ReactElement,

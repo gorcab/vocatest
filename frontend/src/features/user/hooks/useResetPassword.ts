@@ -1,9 +1,12 @@
+import {
+  useAuthCodeMutation,
+  useResetPasswordMutation,
+} from "features/api/slice";
+import { useTimeoutTrigger } from "features/common/hooks/useTimeoutTrigger";
+import { is4XXError, is5XXError } from "features/common/utils/helper";
+import { useToast } from "features/toast/hooks/useToast";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useAuthCodeMutation, useResetPasswordMutation } from "../../api/slice";
-import { useTimeoutTrigger } from "../../common/hooks/useTimeoutTrigger";
-import { is4XXError, is5XXError } from "../../common/utils/helper";
-import { useToast } from "../../toast/hooks/useToast";
 
 type ResetPasswordDto = {
   email: string;
@@ -55,7 +58,7 @@ export const useResetPassword = (handleSuccess: () => void) => {
         toast({
           type: "ERROR",
           desc:
-            authCodeError.data?.message ||
+            authCodeError.data.message ||
             "이메일 전송에 실패했습니다. 잠시 후에 다시 시도해주세요.",
         });
       } else if (is4XXError(authCodeError)) {

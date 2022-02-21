@@ -1,6 +1,8 @@
+import { render } from "features/common/utils/test-utils";
+import { UserState } from "features/user/slice";
+import { server } from "mocks/test/server";
+import { successToGetUserProfileResponse } from "mocks/test/user.mock";
 import { BrowserRouter, MemoryRouter } from "react-router-dom";
-import { render } from "../../../features/common/utils/test-utils";
-import { UserState } from "../../../features/user/slice";
 import { AuthenticatedApp } from "../AuthenticatedApp";
 
 describe("AuthenticatedApp", () => {
@@ -29,6 +31,14 @@ describe("AuthenticatedApp", () => {
       debug,
     };
   }
+
+  beforeEach(() => {
+    server.use(successToGetUserProfileResponse);
+  });
+
+  afterEach(() => {
+    server.resetHandlers();
+  });
 
   it("현재 url이 UnauthenticatedApp에서 관리하는 route라면 state.from 속성을 확인하여 있다면 해당 url로 redirect한다.", async () => {
     const { getByRole } = render(

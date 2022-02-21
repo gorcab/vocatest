@@ -1,4 +1,4 @@
-import { render } from "../../../common/utils/test-utils";
+import { render } from "features/common/utils/test-utils";
 import { Toast } from "../Toast";
 
 describe("Toast", () => {

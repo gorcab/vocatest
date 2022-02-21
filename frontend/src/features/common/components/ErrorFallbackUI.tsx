@@ -1,32 +1,36 @@
 import { Button } from "./Button";
 
-type ErrorFallbackProps = {
-  status?: number;
+type MessageUIProps = {
+  type: "message";
+  wrapperClassName?: string;
   message: string;
-  onReset?: () => void;
 };
 
-export const ErrorFallbackUI: React.FC<ErrorFallbackProps> = ({
-  status,
-  message,
-  onReset,
-}) => {
+type ResetUIProps = Omit<MessageUIProps, "type"> & {
+  type: "reset";
+  onReset: () => void;
+  resetButtonText: string;
+};
+
+type ErrorFallbackProps = ResetUIProps | MessageUIProps;
+
+export const ErrorFallbackUI: React.FC<ErrorFallbackProps> = (props) => {
+  const { message, wrapperClassName } = props;
   return (
-    <div role="alert" className="flex items-center flex-col">
-      {status && (
-        <h1 className="text-neutral-900 text-center mb-2 font-extrabold text-7xl">
-          {status}
-        </h1>
-      )}
-      <h2 className="text-xl text-slate-500 mb-5 text-center">{message}</h2>
-      {onReset ? (
-        <Button
-          type="button"
-          onClick={onReset}
-          className="!w-48 !bg-red-600 text-white"
-        >
-          재요청
-        </Button>
+    <div role="alert" className={wrapperClassName}>
+      <h1 className="text-xl text-slate-500 mb-5 text-center whitespace-normal">
+        {message}
+      </h1>
+      {props.type === "reset" ? (
+        <div>
+          <Button
+            type="button"
+            onClick={props.onReset}
+            className="!w-48 !bg-red-600 text-white"
+          >
+            {props.resetButtonText}
+          </Button>
+        </div>
       ) : null}
     </div>
   );

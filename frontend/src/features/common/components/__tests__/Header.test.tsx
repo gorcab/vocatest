@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
+import { render } from "features/common/utils/test-utils";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
-import { render } from "../../utils/test-utils";
 import { Header } from "../Header";
 
 describe("Header", () => {

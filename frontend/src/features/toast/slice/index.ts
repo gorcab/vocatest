@@ -1,5 +1,5 @@
 import { createSlice, nanoid, PayloadAction } from "@reduxjs/toolkit";
-import { RootState } from "../../../app/store";
+import { RootState } from "app/store";
 
 export type ToastType = {
   id: string;

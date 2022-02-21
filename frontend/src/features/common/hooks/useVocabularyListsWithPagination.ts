@@ -3,8 +3,8 @@ import { useLocation, useNavigate } from "react-router";
 import {
   useDeleteCategoryMutation,
   useVocabularyListsQuery,
-} from "../../api/slice";
-import { PagedVocabularyListsRequest } from "../../api/types";
+} from "features/api/slice";
+import { PagedVocabularyListsRequest } from "features/api/types";
 
 export const useVocabularyListsWithPagination = (
   pagedVocabularyListsRequest: PagedVocabularyListsRequest

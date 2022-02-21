@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
+import { render } from "features/common/utils/test-utils";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { render } from "../../utils/test-utils";
 import { Modal } from "../Modal";
 
 describe("Modal", () => {

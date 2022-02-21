@@ -1,7 +1,7 @@
+import { useId } from "features/common/hooks/useId";
+import { callAllEventHandlers } from "features/common/utils/helper";
 import React, { useLayoutEffect, useRef } from "react";
-import { useId } from "../../hooks/useId";
-import { callAllEventHandlers } from "../../utils/helper";
-import { useMenuContext, useRefsContext } from "./DropdownMenu";
+import { useMenuContext, useRefsContext } from "./context";
 
 type DropdownItemProps<TagType extends React.ElementType> = {
   as: TagType;

@@ -1,8 +1,8 @@
 import { Navigate } from "react-router-dom";
-import { CategoryPageTemplate } from "../features/vocabulary/components/CategoryPageTemplate";
-import { MainPageTemplate } from "../features/vocabulary/components/MainPageTemplate";
 import { useSearchUrl } from "../features/common/hooks/useSearchUrl";
 import { getVocabularyListSearchUrl } from "../features/common/utils/helper";
+import { CategoryPageTemplate } from "../features/vocabulary/show/components/CategoryPageTemplate";
+import { MainPageTemplate } from "../features/vocabulary/show/components/MainPageTemplate";
 
 export const MainPage: React.FC = () => {
   const {

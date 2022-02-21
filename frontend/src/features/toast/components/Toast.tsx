@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import { deleteToast, ToastType } from "../slice";
-import { useAppDispatch } from "../../../app/hooks";
 import { FaCheckCircle, FaExclamationCircle, FaTimes } from "react-icons/fa";
+import { useAppDispatch } from "app/hooks";
+import { deleteToast, ToastType } from "../slice";
 
 type ToastProps = ToastType;
 

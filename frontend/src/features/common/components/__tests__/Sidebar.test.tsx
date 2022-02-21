@@ -1,8 +1,9 @@
+import { waitForElementToBeRemoved } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
+import { render } from "features/common/utils/test-utils";
+import { server } from "mocks/test/server";
 import { rest } from "msw";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
-import { server } from "../../../../mocks/server";
-import { render, waitForElementToBeRemoved } from "../../utils/test-utils";
 import { Sidebar } from "../Sidebar";
 
 describe("Sidebar", () => {

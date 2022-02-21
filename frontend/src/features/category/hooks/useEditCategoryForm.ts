@@ -1,9 +1,9 @@
+import { useEditCategoryMutation } from "features/api/slice";
+import { CategoryDto, EditCategoryRequest } from "features/api/types";
+import { is4XXError, is5XXError } from "features/common/utils/helper";
+import { useToast } from "features/toast/hooks/useToast";
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useEditCategoryMutation } from "../../api/slice";
-import { CategoryDto, EditCategoryRequest } from "../../api/types";
-import { is4XXError, is5XXError } from "../../common/utils/helper";
-import { useToast } from "../../toast/hooks/useToast";
 
 export type EditCategoryDto = Omit<EditCategoryRequest, "id">;
 
@@ -77,6 +77,7 @@ export const useEditCategoryForm = (
             message ||
             "카테고리 수정에 실패했습니다. 잠시 후에 다시 시도해주세요.",
         });
+        mutationReset();
       }
     }
   }, [

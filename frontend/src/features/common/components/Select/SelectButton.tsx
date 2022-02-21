@@ -1,55 +1,64 @@
-import { useLayoutEffect } from "react";
-import { useId } from "../../hooks/useId";
-import { Keyboard } from "../../utils/constants";
-import { debounce } from "../../utils/helper";
-import { useSelectContext, useSelectRefsContext } from "./Select";
+import { useId } from "features/common/hooks/useId";
+import { Keyboard } from "features/common/utils/constants";
+import { debounce } from "features/common/utils/helper";
+import { PropsWithChildren, useCallback, useEffect } from "react";
+import { useSelectContext } from "./context/selectContext";
 
 type SelectButtonProps<ValueType extends string | number> = {
-  onBlur: (value: ValueType extends string ? string : number) => void;
-  children: React.ReactNode;
+  className?: string;
+  onBlur?: (value: ValueType) => void;
 };
 
 export function SelectButton<ValueType extends string | number>({
+  className,
   onBlur,
   children,
-}: SelectButtonProps<ValueType>) {
-  const buttonId = useId("select-button", 2);
-  const [state, dispatch] = useSelectContext(SelectButton.name);
-  const { selectLabelId, isOpenListBox, selectedOptionId, options } = state;
-  const { selectButtonRef } = useSelectRefsContext(SelectButton.name);
+}: PropsWithChildren<SelectButtonProps<ValueType>>) {
+  const buttonId = useId("select-button", 4);
+  const {
+    selectButtonRef,
+    selectState: { selectedValue, isOpenListBox, focusButton, labelId },
+    dispatch,
+  } = useSelectContext(SelectButton.name);
 
-  useLayoutEffect(() => {
-    const getSelectButtonRect = () => {
-      if (!selectButtonRef.current) return;
-      const { top, right, bottom, left, width, height } =
-        selectButtonRef.current.getBoundingClientRect();
-      dispatch({
-        type: "GET_BUTTON_RECT",
-        rect: {
-          top,
-          right,
-          bottom,
-          left,
-          width,
-          height,
-        },
-      });
-    };
-    getSelectButtonRect();
-    const debouncedGetSelectButtonRect = debounce(getSelectButtonRect, 200);
-    window.addEventListener("resize", debouncedGetSelectButtonRect);
-
-    return () => {
-      window.removeEventListener("resize", debouncedGetSelectButtonRect);
-    };
-  }, [dispatch, selectButtonRef]);
-
-  const focusHandler = () => {
-    if (!selectedOptionId) {
-      dispatch({ type: "FOCUS_FIRST" });
-    } else {
-      dispatch({ type: "FOCUS_SPECIFIC", id: selectedOptionId });
+  useEffect(() => {
+    if (!selectButtonRef.current) return;
+    if (focusButton) {
+      selectButtonRef.current.focus();
     }
+  }, [focusButton, selectButtonRef]);
+
+  const getRect = useCallback(() => {
+    if (!selectButtonRef.current) return;
+    const { top, right, bottom, left, width, height } =
+      selectButtonRef.current.getBoundingClientRect();
+    dispatch({
+      type: "GET_BUTTON_RECT",
+      rect: {
+        top,
+        right,
+        bottom,
+        left,
+        width,
+        height,
+      },
+    });
+  }, [selectButtonRef, dispatch]);
+
+  useEffect(() => {
+    const debouncedGetRect = debounce(getRect, 100, true);
+    debouncedGetRect();
+    window.addEventListener("resize", debouncedGetRect);
+    return () => {
+      debouncedGetRect.cancel();
+      window.removeEventListener("resize", debouncedGetRect);
+    };
+  }, [getRect]);
+
+  const openListBox = () => {
+    getRect();
+    dispatch({ type: "OPEN_LIST_BOX" });
+    dispatch({ type: "FOCUS_SPECIFIC_VALUE", value: selectedValue });
   };
 
   const keyDownHandler: React.KeyboardEventHandler<HTMLDivElement> = (
@@ -62,50 +71,37 @@ export function SelectButton<ValueType extends string | number>({
       case Keyboard.ArrowDown: {
         event.preventDefault();
         event.stopPropagation();
-        dispatch({ type: "OPEN_LIST_BOX" });
-        focusHandler();
-        return;
+        openListBox();
       }
     }
   };
 
-  const toggleListBoxHandler = () => {
+  const toggleListBoxVisibility = () => {
     if (isOpenListBox) {
       dispatch({ type: "CLOSE_LIST_BOX" });
+      dispatch({ type: "FOCUS_SELECT_BUTTON" });
     } else {
-      dispatch({ type: "OPEN_LIST_BOX" });
-      focusHandler();
+      openListBox();
     }
   };
 
-  const blurHandler: React.FocusEventHandler = () => {
-    if (!selectedOptionId) return;
-    const selectedOption = options.find(
-      (option) => option.id === selectedOptionId
-    );
-    if (selectedOption) {
-      onBlur(
-        selectedOption.value as ValueType extends string ? string : number
-      );
-    }
+  const blurHandler = () => {
+    if (!selectedValue && isOpenListBox) return;
+    onBlur?.(selectedValue as ValueType);
   };
 
   return (
     <div
-      className={`border-b border-slate-400 flex ${
-        selectedOptionId === null ? "justify-end" : "justify-between"
-      } items-center w-full h-6 text-left outline-none focus:border-b-blue-500 ${
-        selectedOptionId === null ? "text-gray-500" : "text-black"
-      }`}
-      aria-labelledby={`${selectLabelId} ${buttonId}`}
+      ref={selectButtonRef}
+      className={className}
       role="button"
       tabIndex={0}
-      ref={selectButtonRef}
-      onClick={toggleListBoxHandler}
+      onClick={toggleListBoxVisibility}
       onKeyDown={keyDownHandler}
       onBlur={blurHandler}
       aria-haspopup="listbox"
       aria-expanded={isOpenListBox}
+      aria-labelledby={`${labelId} ${buttonId}`}
     >
       {children}
     </div>

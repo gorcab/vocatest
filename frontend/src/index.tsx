@@ -4,12 +4,12 @@ import { Provider } from "react-redux";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
+import { worker } from "mocks/browser/browser";
 import { store } from "./app/store";
 import { BrowserRouter } from "react-router-dom";
 import { ToastContainer } from "./features/toast/components/ToastContainer";
 
 if (process.env.NODE_ENV === "development") {
-  const { worker } = require("./mocks/browser");
   worker.start({
     onUnhandledRequest: "bypass",
   });

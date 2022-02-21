@@ -1,51 +1,54 @@
 import { useEffect } from "react";
 import { Keyboard } from "../../utils/constants";
 import { Portal } from "../Portal";
-import { useSelectContext, useSelectRefsContext } from "./Select";
+import { useSelectContext } from "./context/selectContext";
 
-export const SelectListBox: React.FC = ({ children }) => {
-  const [state, dispatch] = useSelectContext(SelectListBox.name);
-  const { selectButtonRef, listBoxRef } = useSelectRefsContext(
-    SelectListBox.name
-  );
+type SelectListBoxProps = {
+  className?: string;
+};
+
+export const SelectListBox: React.FC<SelectListBoxProps> = ({
+  className,
+  children,
+}) => {
   const {
-    selectLabelId,
-    isOpenListBox,
-    focusedOptionId,
-    buttonRect: { width, top, height, left },
-  } = state;
-  const topOfListBox = top + height + 10;
-  const widthOfListBox = width;
+    dispatch,
+    listBoxRef,
+    selectState: { buttonRect, isOpenListBox, focusedValue, values, labelId },
+  } = useSelectContext(SelectListBox.name);
 
   useEffect(() => {
     if (!listBoxRef.current) return;
-    if (isOpenListBox && focusedOptionId === null) {
+    if (values.length === 0) return;
+    if (isOpenListBox && focusedValue === null) {
       listBoxRef.current.focus();
     }
-  }, [isOpenListBox, focusedOptionId, listBoxRef]);
+  }, [isOpenListBox, focusedValue, values, listBoxRef]);
 
   const keyDownHandler: React.KeyboardEventHandler<HTMLUListElement> = (
     event
   ) => {
+    const stopPropagationAndPreventDefaultEvent = (
+      event: React.KeyboardEvent<HTMLUListElement>
+    ) => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
     switch (event.key) {
       case Keyboard.Tab: {
-        event.preventDefault();
-        event.stopPropagation();
+        stopPropagationAndPreventDefaultEvent(event);
         return;
       }
       case Keyboard.Escape: {
-        event.preventDefault();
-        event.stopPropagation();
+        stopPropagationAndPreventDefaultEvent(event);
         dispatch({ type: "CLOSE_LIST_BOX" });
-        requestAnimationFrame(() => {
-          selectButtonRef.current?.focus();
-        });
+        dispatch({ type: "FOCUS_SELECT_BUTTON" });
         return;
       }
       case Keyboard.ArrowUp: {
-        event.preventDefault();
-        event.stopPropagation();
-        if (focusedOptionId) {
+        stopPropagationAndPreventDefaultEvent(event);
+        if (focusedValue) {
           dispatch({ type: "FOCUS_PREV" });
         } else {
           dispatch({ type: "FOCUS_LAST" });
@@ -53,9 +56,8 @@ export const SelectListBox: React.FC = ({ children }) => {
         return;
       }
       case Keyboard.ArrowDown: {
-        event.preventDefault();
-        event.stopPropagation();
-        if (focusedOptionId) {
+        stopPropagationAndPreventDefaultEvent(event);
+        if (focusedValue) {
           dispatch({ type: "FOCUS_NEXT" });
         } else {
           dispatch({ type: "FOCUS_FIRST" });
@@ -64,40 +66,42 @@ export const SelectListBox: React.FC = ({ children }) => {
       }
       case Keyboard.Enter:
       case Keyboard.Space: {
-        event.preventDefault();
-        event.stopPropagation();
-        if (focusedOptionId) {
-          dispatch({ type: "SELECT_OPTION", id: focusedOptionId });
+        stopPropagationAndPreventDefaultEvent(event);
+        if (focusedValue) {
+          dispatch({ type: "SELECT_OPTION", value: focusedValue });
         } else {
           dispatch({ type: "CLOSE_LIST_BOX" });
         }
-        requestAnimationFrame(() => {
-          selectButtonRef.current?.focus();
-        });
+        dispatch({ type: "FOCUS_SELECT_BUTTON" });
         return;
       }
     }
   };
 
-  return (
+  const defaultClassName = "absolute";
+  const finalClassName = className
+    ? `${className} ${defaultClassName}`
+    : defaultClassName;
+  const topPosition = window.pageYOffset + buttonRect.bottom + 10;
+  const widthOfListBox = buttonRect.width;
+
+  return isOpenListBox ? (
     <Portal>
       <ul
-        tabIndex={0}
-        aria-labelledby={selectLabelId}
-        onKeyDown={keyDownHandler}
-        ref={listBoxRef}
-        style={{
-          top: topOfListBox,
-          width: widthOfListBox,
-          left: left,
-        }}
         role="listbox"
-        className={`bg-white absolute py-1 shadow-lg rounded-md z-10 outline-none truncate ${
-          isOpenListBox ? "visible" : "invisible"
-        }`}
+        ref={listBoxRef}
+        aria-labelledby={labelId ?? undefined}
+        onKeyDown={keyDownHandler}
+        style={{
+          top: topPosition,
+          width: widthOfListBox,
+          left: buttonRect.left,
+        }}
+        className={finalClassName}
+        tabIndex={0}
       >
         {children}
       </ul>
     </Portal>
-  );
+  ) : null;
 };

@@ -1,6 +1,7 @@
-import { fireEvent } from "@testing-library/react";
-import { render } from "../../utils/test-utils";
+import userEvent from "@testing-library/user-event";
+import { render } from "features/common/utils/test-utils";
 import { Button } from "../Button";
+
 describe("Button", () => {
   it("버튼을 렌더링한다.", () => {
     const { getByRole } = render(<Button type="submit">버튼</Button>);
@@ -20,7 +21,7 @@ describe("Button", () => {
 
     const button = getByRole("button", { name: "버튼" });
 
-    fireEvent.click(button);
+    userEvent.click(button);
 
     expect(handleClick).toBeCalled();
   });

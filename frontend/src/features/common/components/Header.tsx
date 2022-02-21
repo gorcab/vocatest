@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { FaBars, FaSearch, FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { UserDropdownMenu } from "../../user/components/UserDropdownMenu";
+import { UserDropdownMenu } from "features/user/components/UserDropdownMenu";
 import { SearchVocabulariesFormModal } from "./SearchVocabulariesFormModal";
 
 type HeaderProps = {

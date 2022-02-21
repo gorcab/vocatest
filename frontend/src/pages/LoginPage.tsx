@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LoginForm } from "../features/user/components/LoginForm";
+import { LoginForm } from "../features/user/login/components/LoginForm";
 
 export const LoginPage: React.FC = () => {
   return (

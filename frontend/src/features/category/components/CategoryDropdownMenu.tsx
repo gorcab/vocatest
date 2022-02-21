@@ -1,14 +1,14 @@
+import { CategoryDto } from "features/api/types";
+import { DropdownMenu } from "features/common/components/Dropdown/DropdownMenu";
+import { DropdownMenuButton } from "features/common/components/Dropdown/DropdownMenuButton";
+import { DropdownMenuItem } from "features/common/components/Dropdown/DropdownMenuItem";
+import { DropdownMenuList } from "features/common/components/Dropdown/DropdownMenuList";
+import { visibleVariant } from "features/common/utils/animation-variants";
+import { motion } from "framer-motion";
 import { useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
-import { CategoryDto } from "../../api/types";
-import { DropdownMenu } from "../../common/components/Dropdown/DropdownMenu";
-import { EditCategoryFormModal } from "./EditCategoryFormModal";
-import { motion } from "framer-motion";
-import { visibleVariant } from "../../common/utils/animation-variants";
-import { DeleteCategoryFormModal } from "./DeleteCategoryFormModal";
-import { DropdownMenuButton } from "../../common/components/Dropdown/DropdownMenuButton";
-import { DropdownMenuList } from "../../common/components/Dropdown/DropdownMenuList";
-import { DropdownMenuItem } from "../../common/components/Dropdown/DropdownMenuItem";
+import { DeleteCategoryFormModal } from "../delete/components/DeleteCategoryFormModal";
+import { EditCategoryFormModal } from "../edit/components/EditCategoryFormModal";
 
 type CategoryDropdownProps = {
   category: CategoryDto;

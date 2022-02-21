@@ -1,5 +1,5 @@
 import { useSearchParams } from "react-router-dom";
-import { PagedVocabularyListsRequest } from "../../api/types";
+import { PagedVocabularyListsRequest } from "features/api/types";
 import { DEFAULT_PER_PAGE } from "../utils/constants";
 
 export const useSearchUrl = () => {

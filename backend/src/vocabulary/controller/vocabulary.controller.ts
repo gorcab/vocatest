@@ -60,6 +60,7 @@ export class VocabularyController {
     });
   }
 
+  // TODO: 사용자가 자신의 단어장을 조회 요청했는지 체크하고 반환하기
   @Get(':id')
   public async getOne(
     @Param('id') vocabularyListId: number,

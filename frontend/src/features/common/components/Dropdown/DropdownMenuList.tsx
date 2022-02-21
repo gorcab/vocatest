@@ -1,8 +1,8 @@
-import { AnimatePresence } from "framer-motion";
 import React, { MutableRefObject, useEffect, useLayoutEffect } from "react";
-import { useId } from "../../hooks/useId";
-import { Keyboard } from "../../utils/constants";
-import { useMenuContext, useRefsContext } from "./DropdownMenu";
+import { AnimatePresence } from "framer-motion";
+import { useId } from "features/common/hooks/useId";
+import { Keyboard } from "features/common/utils/constants";
+import { useMenuContext, useRefsContext } from "./context";
 
 type DropdownMenuListProps<TagType extends React.ElementType> = {
   as?: TagType;

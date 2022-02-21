@@ -1,5 +1,6 @@
 import { createContext, useState } from "react";
-import { Outlet } from "react-router";
+import { Outlet, useNavigate } from "react-router";
+import { ErrorBoundary } from "./ErrorBoundary";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
@@ -11,6 +12,9 @@ export const MainLayout: React.FC = () => {
   const handleSidebarButton = () => {
     setShowSidebar((prev) => !prev);
   };
+  const navigate = useNavigate();
+
+  const navigateToMainPage = () => navigate("/");
 
   return (
     <>
@@ -18,12 +22,19 @@ export const MainLayout: React.FC = () => {
         handleSidebarButton={handleSidebarButton}
         showSidebarOnMobile={showSidebar}
       />
-      <main className="md:container w-full lg:flex md:w-auto md:mx-auto">
+      <main className="w-full md:container relative lg:flex md:w-auto md:mx-auto">
         <CloseSidebarContext.Provider value={setShowSidebar}>
           <Sidebar show={showSidebar} />
         </CloseSidebarContext.Provider>
-        <section className={`mt-[60px] ml-0 lg:grow`}>
-          <Outlet />
+        <section
+          className={`mt-[60px] min-h-[calc(100vh-60px)] lg:min-h-0 ml-0 lg:grow mb-5 pt-10 px-10 lg:px-6`}
+        >
+          <ErrorBoundary
+            onReset={navigateToMainPage}
+            fallbackUIWrapperClassName="flex flex-col justify-center items-center h-[70vh]"
+          >
+            <Outlet />
+          </ErrorBoundary>
         </section>
       </main>
     </>

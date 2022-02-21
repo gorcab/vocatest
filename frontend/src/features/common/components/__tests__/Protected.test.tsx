@@ -1,5 +1,5 @@
+import { render } from "features/common/utils/test-utils";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { render, waitFor } from "../../utils/test-utils";
 import { Protected } from "../Protected";
 
 describe("Protected", () => {
@@ -39,10 +39,10 @@ describe("Protected", () => {
             user: {
               id: 1,
               email: "tester@gmail.com",
-              password: "test1234",
-              accessToken: "accesstoken",
-              refreshToken: "refreshtoken",
+              nickname: "tester",
             },
+            accessToken: "accesstoken",
+            refreshToken: "refreshtoken",
           },
         },
       });

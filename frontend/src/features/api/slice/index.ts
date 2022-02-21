@@ -5,27 +5,28 @@ import {
   fetchBaseQuery,
   FetchBaseQueryError,
 } from "@reduxjs/toolkit/query/react";
-import { RootState } from "../../../app/store";
-import { saveTokens, TokenState } from "../../user/slice";
+import { RootState } from "app/store";
+import { saveTokens, TokenState } from "features/user/slice";
 import {
-  LoginRequest,
-  LoginResponse,
-  SignUpResponse,
-  SignUpRequest,
-  UserResponse,
-  AuthCodeResponse,
   AuthCodeRequest,
-  ResetPasswordRequest,
-  CategoryResponse,
+  AuthCodeResponse,
   CategoryDto,
-  CreateCategoryResponse,
+  CategoryResponse,
   CreateCategoryRequest,
-  PagedVocabularyListsResponse,
-  PagedVocabularyListsRequest,
-  EditCategoryResponse,
-  EditCategoryRequest,
+  CreateCategoryResponse,
   CreatedVocabularyListDto,
   CreateVocabularyListDto,
+  DetailedVocabularyListDto,
+  EditCategoryRequest,
+  EditCategoryResponse,
+  LoginRequest,
+  LoginResponse,
+  PagedVocabularyListsRequest,
+  PagedVocabularyListsResponse,
+  ResetPasswordRequest,
+  SignUpRequest,
+  SignUpResponse,
+  UserResponse,
 } from "../types";
 
 const baseQuery = fetchBaseQuery({
@@ -197,6 +198,11 @@ export const baseApi = createApi({
       invalidatesTags: (result, error) =>
         result ? [{ type: "vocabularyLists", id: "LIST" }] : [],
     }),
+    vocabularyList: builder.query<DetailedVocabularyListDto, number>({
+      query: (id) => `/vocabularies/${id}`,
+      providesTags: (result) =>
+        result ? [{ type: "vocabularyLists" as const, id: result.id }] : [],
+    }),
   }),
 });
 
@@ -214,4 +220,5 @@ export const {
   useVocabularyListsQuery,
   useDeleteVocabularyListMutation,
   useCreateVocabularyListMutation,
+  useVocabularyListQuery,
 } = baseApi;

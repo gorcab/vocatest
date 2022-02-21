@@ -7,8 +7,8 @@ type SkeletonProps = {
 };
 
 export const Skeleton: React.FC<SkeletonProps> = ({
-  width = "auto",
-  height = "auto",
+  width,
+  height,
   color = "#e7e7e7",
   className,
   marginBottom,
@@ -16,7 +16,12 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   let defaultClassName = "animate-pulse rounded-md";
   return (
     <div
-      style={{ width, height, backgroundColor: color, marginBottom }}
+      style={{
+        ...(width && { width }),
+        ...(height && { height }),
+        backgroundColor: color,
+        marginBottom,
+      }}
       className={
         className ? `${defaultClassName} ${className}` : defaultClassName
       }

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { ResetPasswordForm } from "../features/user/components/ResetPasswordForm";
+import { ResetPasswordForm } from "../features/user/reset-password/components/ResetPasswordForm";
 
 export const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();

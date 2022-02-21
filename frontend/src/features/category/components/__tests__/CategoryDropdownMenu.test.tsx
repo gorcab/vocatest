@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
+import { CategoryDto } from "features/api/types";
+import { render, waitFor, within } from "features/common/utils/test-utils";
 import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
-import { CategoryDto } from "../../../api/types";
-import { render, waitFor, within } from "../../../common/utils/test-utils";
 import { CategoryDropdownMenu } from "../CategoryDropdownMenu";
 
 describe("CategoryDropdownMenu", () => {

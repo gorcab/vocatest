@@ -1,7 +1,7 @@
 import { SerializedError } from "@reduxjs/toolkit";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
+import { ErrorResponse } from "features/api/types";
 import React from "react";
-import { ErrorResponse } from "../../api/types";
 import { DEFAULT_PER_PAGE } from "./constants";
 
 export const getFormattedDate = (date: Date) => {
@@ -10,17 +10,29 @@ export const getFormattedDate = (date: Date) => {
 
 export function debounce<P extends unknown[]>(
   cb: (...args: P) => unknown,
-  wait: number
+  wait: number,
+  immediate: boolean = false
 ) {
   let timerId: ReturnType<typeof setTimeout> | null = null;
-  function fn(this: unknown, ...args: P) {
+  function fn(this: ThisParameterType<typeof cb>, ...args: P) {
+    if (timerId === null && immediate) {
+      cb.apply(this, args);
+    }
+
     if (timerId) {
       clearTimeout(timerId);
     }
+
     timerId = setTimeout(() => {
       cb.apply(this, args);
     }, wait);
   }
+
+  fn.cancel = () => {
+    if (timerId) {
+      clearTimeout(timerId);
+    }
+  };
 
   return fn;
 }
@@ -126,7 +138,7 @@ export const isFocusableElement = (element: HTMLElement | null): boolean => {
 export const callAllEventHandlers =
   (...funcs: (Function | undefined)[]) =>
   (event: React.SyntheticEvent<any, Event>, ...args: any) => {
-    funcs.forEach((func) =>
-      typeof func === "function" ? func(event, ...args) : void 0
-    );
+    funcs.forEach((func) => {
+      typeof func === "function" && func(event, ...args);
+    });
   };

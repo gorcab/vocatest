@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
+import { render, within } from "features/common/utils/test-utils";
+import { localStorageMock } from "mocks/lib/localStorage.mock";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { localStorageMock } from "../../../../mocks/storageMocks";
-import { render, within } from "../../../common/utils/test-utils";
 import { UserDropdownMenu } from "../UserDropdownMenu";
 
 describe("UserDropdownMenu", () => {

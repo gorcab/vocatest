@@ -1,9 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { visibleVariant } from "../utils/animation-variants";
-import { useModal } from "../hooks/useModal";
 import React, { MutableRefObject } from "react";
+import { useModal } from "../hooks/useModal";
 import { FaTimes } from "react-icons/fa";
 import { Portal } from "./Portal";
+import { visibleVariant } from "../utils/animation-variants";
 
 type ModalProps = {
   onClose: () => void;

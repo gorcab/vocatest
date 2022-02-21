@@ -1,53 +1,46 @@
-import { useLayoutEffect, useRef } from "react";
-import { useId } from "../../hooks/useId";
-import { useSelectContext, useSelectRefsContext } from "./Select";
+import { useEffect, useRef } from "react";
+import { useSelectContext } from "./context/selectContext";
 
 type SelectOptionProps = {
+  className?: string;
   value: string | number;
-  label: string;
 };
 
-export const SelectOption: React.FC<SelectOptionProps> = ({ value, label }) => {
-  const id = useId();
+export const SelectOption: React.FC<SelectOptionProps> = ({
+  className,
+  value,
+  children,
+}) => {
+  const { selectState, dispatch } = useSelectContext(SelectOption.name);
   const optionRef = useRef<HTMLLIElement | null>(null);
-  const [state, dispatch] = useSelectContext(SelectOption.name);
-  const { selectButtonRef } = useSelectRefsContext(SelectOption.name);
-  const { isOpenListBox, selectedOptionId, focusedOptionId, initialValue } =
-    state;
+  const { selectedValue, isOpenListBox, focusedValue } = selectState;
+  const isFocused = focusedValue ? value === focusedValue : false;
+  const isSelected = selectedValue ? value === selectedValue : false;
 
-  useLayoutEffect(() => {
-    dispatch({ type: "REGISTER_OPTION", id, value, label });
-    if (initialValue && value === initialValue) {
-      dispatch({ type: "SELECT_OPTION", id });
+  useEffect(() => {
+    dispatch({ type: "REGISTER_SELECT_OPTION", value });
+    return () => dispatch({ type: "UNREGISTER_SELECT_OPTION", value });
+  }, [dispatch, value]);
+
+  useEffect(() => {
+    if (!optionRef.current) return;
+    if (isOpenListBox && isFocused) {
+      optionRef.current.focus();
     }
-    return () => {
-      dispatch({ type: "UNREGISTER_OPTION", id });
-    };
-  }, [id, dispatch, label, value, initialValue]);
+  }, [isOpenListBox, isFocused]);
 
-  useLayoutEffect(() => {
-    if (isOpenListBox && focusedOptionId === id) {
-      optionRef.current?.focus();
-    }
-  }, [isOpenListBox, focusedOptionId, id]);
-
-  const clickHandler = () => {
-    dispatch({ type: "SELECT_OPTION", id });
-    requestAnimationFrame(() => {
-      selectButtonRef.current?.focus();
-    });
+  const selectOption = () => {
+    dispatch({ type: "SELECT_OPTION", value });
   };
 
-  const mouseMoveHandler: React.MouseEventHandler<HTMLLIElement> = () => {
-    if (focusedOptionId !== id) {
-      dispatch({ type: "FOCUS_SPECIFIC", id });
+  const mouseMoveHandler = () => {
+    if (!isFocused) {
+      dispatch({ type: "FOCUS_SPECIFIC_VALUE", value });
     }
   };
 
-  const mouseLeaveHandler: React.MouseEventHandler<HTMLLIElement> = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (focusedOptionId === id) {
+  const mouseLeaveHandler = () => {
+    if (isFocused) {
       dispatch({ type: "UNFOCUS" });
     }
   };
@@ -55,15 +48,15 @@ export const SelectOption: React.FC<SelectOptionProps> = ({ value, label }) => {
   return (
     <li
       ref={optionRef}
-      className="cursor-pointer px-1 py-3 text-gray-600 outline-none focus:bg-gray-200 hover:bg-gray-100"
       role="option"
       tabIndex={-1}
-      aria-selected={id === selectedOptionId}
-      onClick={clickHandler}
-      onMouseLeave={mouseLeaveHandler}
+      className={className}
+      aria-selected={isSelected}
+      onClick={selectOption}
       onMouseMove={mouseMoveHandler}
+      onMouseLeave={mouseLeaveHandler}
     >
-      {label}
+      {children}
     </li>
   );
 };

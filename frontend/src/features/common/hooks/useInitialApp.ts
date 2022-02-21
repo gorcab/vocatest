@@ -1,6 +1,6 @@
-import { useAppSelector } from "../../../app/hooks";
-import { useUserQuery } from "../../api/slice";
-import { selectUserAndAccessToken } from "../../user/slice";
+import { useAppSelector } from "app/hooks";
+import { useUserQuery } from "features/api/slice";
+import { selectUserAndAccessToken } from "features/user/slice";
 
 export const useInitialApp = () => {
   // 최초 앱이 마운팅됐을 때, user와 accessToken이 전역 스토어에 저장되어 있는지를 확인한다.

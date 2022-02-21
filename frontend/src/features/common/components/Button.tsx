@@ -22,7 +22,7 @@ export const Button: React.FC<ButtonProps> = ({
   children,
 }) => {
   const defaultClassName =
-    "bg-blue-600/95 hover:opacity-90 focus:opacity-90 text-white rounded p-1 flex justify-center items-center w-full disabled:opacity-70 focus:outline focus:outline-offset-2 focus:outline-2";
+    "bg-blue-600/95 hover:opacity-90 focus:opacity-90 text-white rounded p-1 flex justify-center items-center w-full disabled:opacity-70 focus:outline focus:outline-offset-1 focus:outline-2";
   let finalClassName = className
     ? `${defaultClassName} ${className}`
     : defaultClassName;

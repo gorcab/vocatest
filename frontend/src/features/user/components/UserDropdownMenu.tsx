@@ -1,28 +1,29 @@
+import { motion } from "framer-motion";
 import { useState } from "react";
 import { FaUserAlt } from "react-icons/fa";
 import { useNavigate } from "react-router";
-import { useAppDispatch } from "../../../app/hooks";
-import { logout } from "../../../app/store";
-import { DeleteAccountModal } from "./DeleteAccountModal";
-import { DropdownMenu } from "../../common/components/Dropdown/DropdownMenu";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { visibleVariant } from "../../common/utils/animation-variants";
-import { DropdownMenuButton } from "../../common/components/Dropdown/DropdownMenuButton";
-import { DropdownMenuList } from "../../common/components/Dropdown/DropdownMenuList";
-import { DropdownMenuItem } from "../../common/components/Dropdown/DropdownMenuItem";
+import { useAppDispatch } from "app/hooks";
+import { logout } from "app/store";
+import { DropdownMenu } from "features/common/components/Dropdown/DropdownMenu";
+import { DropdownMenuButton } from "features/common/components/Dropdown/DropdownMenuButton";
+import { DropdownMenuItem } from "features/common/components/Dropdown/DropdownMenuItem";
+import { DropdownMenuList } from "features/common/components/Dropdown/DropdownMenuList";
+import { visibleVariant } from "features/common/utils/animation-variants";
+import { UnregisterAccountModal } from "../unregister/components/UnregisterAccountModal";
 
 export const UserDropdownMenu: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [openDeleteAccountModal, setOpenDeleteAccountModal] = useState(false);
+  const [openUnregisterAccountModal, setOpenUnregisterAccountModal] =
+    useState(false);
 
-  const openDeleteAcoountModalHandler = () => {
-    setOpenDeleteAccountModal(true);
+  const openUnregisterAccountModalHandler = () => {
+    setOpenUnregisterAccountModal(true);
   };
 
-  const closeDeleteAccountModalHandler = () => {
-    setOpenDeleteAccountModal(false);
+  const closeUnregisterAccountModalHandler = () => {
+    setOpenUnregisterAccountModal(false);
   };
 
   const logoutHandler = () => {
@@ -47,7 +48,10 @@ export const UserDropdownMenu: React.FC = () => {
           <DropdownMenuItem as={Link} to="/profile">
             내 프로필
           </DropdownMenuItem>
-          <DropdownMenuItem as="button" onClick={openDeleteAcoountModalHandler}>
+          <DropdownMenuItem
+            as="button"
+            onClick={openUnregisterAccountModalHandler}
+          >
             회원 탈퇴
           </DropdownMenuItem>
           <DropdownMenuItem as="button" onClick={logoutHandler}>
@@ -55,10 +59,10 @@ export const UserDropdownMenu: React.FC = () => {
           </DropdownMenuItem>
         </DropdownMenuList>
       </DropdownMenu>
-      {openDeleteAccountModal && (
-        <DeleteAccountModal
-          isOpen={openDeleteAccountModal}
-          onClose={closeDeleteAccountModalHandler}
+      {openUnregisterAccountModal && (
+        <UnregisterAccountModal
+          isOpen={openUnregisterAccountModal}
+          onClose={closeUnregisterAccountModalHandler}
         />
       )}
     </>

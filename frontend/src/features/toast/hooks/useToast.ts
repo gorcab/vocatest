@@ -1,5 +1,5 @@
+import { useAppDispatch } from "app/hooks";
 import { useCallback } from "react";
-import { useAppDispatch } from "../../../app/hooks";
 import { createToast, ToastWithoutIdType } from "../slice";
 
 export const useToast = () => {

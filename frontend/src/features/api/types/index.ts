@@ -1,4 +1,5 @@
-import { User } from "../../user/slice";
+import { User } from "features/user/slice";
+
 // Login Types
 export type LoginRequest = {
   email: string;
@@ -110,7 +111,7 @@ export type CreateVocabularyDto = {
 
 export type CreatedVocabularyDto = Omit<CreateVocabularyDto, "examples"> & {
   id: number;
-  examples: Array<CreatedExampleDto>;
+  examples?: Array<CreatedExampleDto>;
 };
 
 export type CreateVocabularyListDto = {
@@ -125,6 +126,14 @@ export type CreatedVocabularyListDto = Omit<
 > & {
   id: number;
   numOfVocabularies: number;
+};
+
+export type DetailedVocabularyListDto = {
+  id: number;
+  title: string;
+  category: CategoryDto;
+  createdAt: string;
+  vocabularies: Array<CreatedVocabularyDto>;
 };
 
 // Error Response type
