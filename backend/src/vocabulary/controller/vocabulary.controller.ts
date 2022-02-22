@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -60,12 +61,19 @@ export class VocabularyController {
     });
   }
 
-  // TODO: 사용자가 자신의 단어장을 조회 요청했는지 체크하고 반환하기
   @Get(':id')
-  public async getOne(
+  public async getOneByIdAndUser(
     @Param('id') vocabularyListId: number,
+    @User() user: UserEntity,
   ): Promise<DetailedVocabularyListDto> {
-    return this.vocabularyService.findById(vocabularyListId);
+    const data = await this.vocabularyService.findByUserAndId(
+      user,
+      vocabularyListId,
+    );
+    if (!data) {
+      throw new ForbiddenException();
+    }
+    return data;
   }
 
   @Put(':id')

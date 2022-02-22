@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Category } from 'src/category/entities/category.entity';
 import { CategoryService } from 'src/category/service/category.service';
@@ -59,6 +59,8 @@ describe('VocabularyController', () => {
       save: async () =>
         VocabularyListDto.create(vocabularyList, vocabularies.length),
       findById: async (vocabularyListId: number) =>
+        DetailedVocabularyListDto.create(vocabularyList),
+      findByUserAndId: async (user: User, vocabularyListId) =>
         DetailedVocabularyListDto.create(vocabularyList),
       deleteById: jest.fn(),
       update: async (
@@ -167,8 +169,8 @@ describe('VocabularyController', () => {
     });
   });
 
-  it('특정 단어장의 id를 통해 단어장을 조회하면 DetailedVocabularyListDto를 반환한다.', async () => {
-    const result = await controller.getOne(vocabularyList.id);
+  it('사용자 정보와 특정 단어장의 id를 통해 단어장을 조회하면 DetailedVocabularyListDto를 반환한다.', async () => {
+    const result = await controller.getOneByIdAndUser(vocabularyList.id, user);
 
     const examples = await vocabularies[0].examples;
 
@@ -205,6 +207,13 @@ describe('VocabularyController', () => {
         },
       ],
     });
+  });
+
+  it('사용자가 특정 단어장 id를 가진 단어장이 존재하지 않는다면 ForbiddenException 에러가 발생한다.', async () => {
+    vocabularyService.findByUserAndId = () => null;
+    await expect(
+      controller.getOneByIdAndUser(vocabularyList.id, user),
+    ).rejects.toThrow(new ForbiddenException());
   });
 
   it('단어장을 수정하면 수정된 단어장 정보를 반환한다.', async () => {

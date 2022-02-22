@@ -206,17 +206,22 @@ export class VocabularyService {
   public async findByUserAndId(
     user: User,
     vocabularyListId: number,
-  ): Promise<VocabularyList> {
-    const vocabularyList = this.vocabularyListRepository
+  ): Promise<DetailedVocabularyListDto | null> {
+    const vocabularyList = await this.vocabularyListRepository
       .createQueryBuilder('vocabularyList')
       .where('vocabularyList.id = :id', { id: vocabularyListId })
-      .innerJoin('vocabularyList.category', 'category')
+      .innerJoinAndSelect('vocabularyList.vocabularies', 'vocabularies')
+      .innerJoinAndSelect('vocabularyList.category', 'category')
       .innerJoin('category.user', 'user', 'user.id = :userId', {
         userId: user.id,
       })
       .getOne();
 
-    return vocabularyList;
+    if (vocabularyList) {
+      return DetailedVocabularyListDto.create(vocabularyList);
+    }
+
+    return null;
   }
 
   public async deleteById(vocabularyListId: number): Promise<void> {
