@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { FaEllipsisV } from "react-icons/fa";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { DropdownMenu } from "features/common/components/Dropdown/DropdownMenu";
 import { DropdownMenuButton } from "features/common/components/Dropdown/DropdownMenuButton";
 import { DropdownMenuItem } from "features/common/components/Dropdown/DropdownMenuItem";
@@ -17,6 +17,7 @@ type VocabularyListCardDropdownMenuProps = {
 export const VocabularyListCardDropdownMenu: React.FC<VocabularyListCardDropdownMenuProps> =
   ({ vocabularyListId, vocabularyListTitle }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const openModalHandler: React.MouseEventHandler<HTMLButtonElement> = (
       event
@@ -33,7 +34,11 @@ export const VocabularyListCardDropdownMenu: React.FC<VocabularyListCardDropdown
     const navigateToEditVocabularyListPage: React.MouseEventHandler<HTMLButtonElement> =
       (event) => {
         event.preventDefault();
-        navigate(`/edit-vocabulary/${vocabularyListId}`);
+        navigate(`/edit-vocabulary/${vocabularyListId}`, {
+          state: {
+            from: `${location.pathname}${location.search}`,
+          },
+        });
       };
     return (
       <>

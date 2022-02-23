@@ -9,6 +9,7 @@ type ToastProps = ToastType;
 const BG_COLOR: Record<ToastProps["type"], string> = {
   ERROR: "bg-red-600/90",
   SUCCESS: "bg-green-600/90",
+  INFO: "bg-gray-800/90",
 };
 
 export const Toast = motion(
@@ -64,7 +65,7 @@ export const Toast = motion(
             <span className="sr-only">닫기</span>
           </button>
           <div className="flex items-center px-3">
-            <div className="mr-3">{Icon}</div>
+            {Icon && <div className="mr-3">{Icon}</div>}
             <div>{desc}</div>
           </div>
         </li>

@@ -3,7 +3,7 @@ import { RootState } from "app/store";
 
 export type ToastType = {
   id: string;
-  type: "ERROR" | "SUCCESS";
+  type: "ERROR" | "SUCCESS" | "INFO";
   desc: string;
   duration?: number;
 };

@@ -6,6 +6,7 @@ import {
   CreateVocabularyDto,
   CreateVocabularyListDto,
   DetailedVocabularyListDto,
+  EditVocabularyListDto,
   ExampleDto,
   PagedVocabularyListsResponse,
   VocabularyListDto,
@@ -98,6 +99,14 @@ type VocabularyListDtoWithVocabularies = VocabularyListDto & {
   vocabularies: Array<CreatedVocabularyDto>;
 };
 
+function sortByDateDesc<T extends { createdAt: string }>(obj1: T, obj2: T) {
+  const createdAt1 = new Date(obj1.createdAt);
+  const createdAt2 = new Date(obj2.createdAt);
+  if (createdAt1 < createdAt2) return 1;
+  else if (createdAt1 === createdAt2) return 0;
+  else return -1;
+}
+
 export function createMockVocabularyListsInEachCategory() {
   function createVocabularyListDtoWithVocabularies({
     category,
@@ -145,13 +154,7 @@ export function createMockVocabularyListsInEachCategory() {
         category: categories[categoryIndex],
         vocabularies: createVocabularies(),
         startId,
-      }).sort((list1, list2) => {
-        const createdAt1 = new Date(list1.createdAt);
-        const createdAt2 = new Date(list2.createdAt);
-        if (createdAt1 < createdAt2) return 1;
-        else if (createdAt1 === createdAt2) return 0;
-        else return -1;
-      });
+      }).sort(sortByDateDesc);
 
       acc[cur.id] = result;
       return acc;
@@ -175,13 +178,7 @@ export function getEntireVocabularyLists(
       (acc, cur) => [...acc, ...vocabularyListsRecord[Number(cur)]],
       [] as Array<VocabularyListDtoWithVocabularies>
     )
-    .sort((elem1, elem2) => {
-      const elem1Date = new Date(elem1.createdAt);
-      const elem2Date = new Date(elem2.createdAt);
-      if (elem1Date < elem2Date) return 1;
-      else if (elem1Date === elem2Date) return 0;
-      else return -1;
-    });
+    .sort(sortByDateDesc);
 }
 
 export function deleteVocabularyListById(
@@ -199,6 +196,70 @@ export function deleteVocabularyListById(
     result[categoryId] = newVocaLists;
   }
   return result;
+}
+
+export function editMockVocabularyListsRecord(
+  vocabularyListsRecord: Record<
+    string,
+    Array<VocabularyListDtoWithVocabularies>
+  >,
+  vocabularyListToEdit: EditVocabularyListDto & { vocabularyListId: number },
+  categories: Array<CategoryDto>
+): {
+  vocabularyListsRecord: Record<
+    string,
+    Array<VocabularyListDtoWithVocabularies>
+  >;
+  editedVocabularyList: VocabularyListDtoWithVocabularies;
+} {
+  const newVocabularyListsRecord = { ...vocabularyListsRecord };
+  const {
+    categoryId,
+    vocabularies,
+    title: newVocaListTitle,
+    vocabularyListId,
+  } = vocabularyListToEdit;
+  const newCategory = categories.find((category) => category.id === categoryId);
+
+  if (!newCategory) {
+    throw new Error("Invalid new category id");
+  }
+
+  const prevCategoryId = Object.keys(newVocabularyListsRecord).find(
+    (categoryId) => {
+      return newVocabularyListsRecord[categoryId].find(
+        (vocaList) => vocaList.id === vocabularyListId
+      );
+    }
+  );
+
+  if (!prevCategoryId) {
+    throw new Error("Invalid new vocabluaryList id");
+  }
+
+  const vocaListIndex = newVocabularyListsRecord[prevCategoryId].findIndex(
+    (vocaList) => vocaList.id === vocabularyListId
+  );
+  const { createdAt, id } =
+    newVocabularyListsRecord[prevCategoryId][vocaListIndex];
+  const newVocabularies = createVocabularies(vocabularies);
+  const editedVocabularyList: VocabularyListDtoWithVocabularies = {
+    category: newCategory,
+    createdAt,
+    id,
+    title: newVocaListTitle,
+    vocabularies: newVocabularies,
+    numOfVocabularies: newVocabularies.length,
+  };
+
+  newVocabularyListsRecord[prevCategoryId].splice(vocaListIndex, 1);
+  newVocabularyListsRecord[categoryId].push(editedVocabularyList);
+  newVocabularyListsRecord[categoryId].sort(sortByDateDesc);
+
+  return {
+    vocabularyListsRecord: newVocabularyListsRecord,
+    editedVocabularyList: editedVocabularyList,
+  };
 }
 
 export function getPageBasedVocabularyLists(

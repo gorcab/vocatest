@@ -19,8 +19,9 @@ export const CreateVocabularyCard: React.FC<CreateVocabularyCardProps> = ({
   const {
     register,
     control,
-    formState: { errors },
+    formState: { errors, isDirty, dirtyFields },
   } = useFormContext<CreateVocabularyListFormDto>();
+  console.log("CreateVocabularyCard rendered", isDirty, dirtyFields);
   const {
     append,
     remove,

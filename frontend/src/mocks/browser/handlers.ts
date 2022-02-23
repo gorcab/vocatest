@@ -4,6 +4,7 @@ import {
   createMockVocabularyListsInEachCategory,
   createVocabularies,
   deleteVocabularyListById,
+  editMockVocabularyListsRecord,
   getEntireVocabularyLists,
   getPageBasedVocabularyLists,
 } from "mocks/lib/vocabulary.factory";
@@ -12,6 +13,7 @@ import {
   CreateCategoryRequest,
   CreateVocabularyListDto,
   EditCategoryRequest,
+  EditVocabularyListDto,
   LoginRequest,
   ResetPasswordRequest,
   SignUpRequest,
@@ -229,7 +231,7 @@ const createHandlers = () => {
 
     // 카테고리 조회 요청 핸들러
     rest.get(`${process.env.REACT_APP_API_URL}/categories`, (req, res, ctx) => {
-      const isFailed = Math.random() > 0.1;
+      const isFailed = Math.random() > 0.99;
       if (isFailed) {
         return res(
           ctx.delay(500),
@@ -351,10 +353,13 @@ const createHandlers = () => {
         }
 
         categories = deleteCategory(categories, Number(id));
+        delete vocabularyListsRecord[Number(id)];
+        entireVocabularyLists = getEntireVocabularyLists(vocabularyListsRecord);
 
         return res(ctx.delay(500), ctx.status(201));
       }
     ),
+
     // 단어장 리스트 조회 핸들러
     rest.get(
       `${process.env.REACT_APP_API_URL}/vocabularies`,
@@ -520,6 +525,64 @@ const createHandlers = () => {
           ctx.status(200),
           ctx.json({
             ...vocabularyList,
+          })
+        );
+      }
+    ),
+
+    // 단어장 수정 핸들러
+    rest.put<EditVocabularyListDto>(
+      `${process.env.REACT_APP_API_URL}/vocabularies/:id`,
+      (req, res, ctx) => {
+        const id = Number(req.params.id);
+        const vocabularyListDto = req.body;
+        console.log("put: ", id, vocabularyListDto);
+        if (Number.isNaN(id)) {
+          return res(
+            ctx.delay(1000),
+            ctx.status(400),
+            ctx.json({
+              status: 400,
+              message: "Bad Request",
+            })
+          );
+        }
+
+        const vocabularyList = entireVocabularyLists.find(
+          (vocaList) => vocaList.id === Number(id)
+        );
+        if (!vocabularyList) {
+          return res(
+            ctx.delay(1000),
+            ctx.status(403),
+            ctx.json({
+              status: 403,
+              message: "Forbidden",
+            })
+          );
+        }
+
+        const {
+          editedVocabularyList,
+          vocabularyListsRecord: newVocabularyListsRecord,
+        } = editMockVocabularyListsRecord(
+          vocabularyListsRecord,
+          {
+            vocabularyListId: id,
+            ...vocabularyListDto,
+          },
+          categories
+        );
+        vocabularyListsRecord = newVocabularyListsRecord;
+        console.log("newVocaListsRecord: ", vocabularyListsRecord);
+        entireVocabularyLists = getEntireVocabularyLists(vocabularyListsRecord);
+
+        console.log("editedVoca: ", editedVocabularyList);
+        return res(
+          ctx.delay(1000),
+          ctx.status(201),
+          ctx.json({
+            ...editedVocabularyList,
           })
         );
       }

@@ -136,6 +136,8 @@ export type DetailedVocabularyListDto = {
   vocabularies: Array<CreatedVocabularyDto>;
 };
 
+export type EditVocabularyListDto = CreateVocabularyListDto;
+
 // Error Response type
 export type ErrorResponse = {
   status: number;

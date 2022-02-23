@@ -1,3 +1,4 @@
+import { EditVocabularyListPage } from "pages/EditVocabularyListPage";
 import { Navigate, Route, Routes, useLocation } from "react-router";
 import { useUserQuery } from "../../features/api/slice";
 import { CenterLayout } from "../../features/common/components/CenterLayout";
@@ -49,6 +50,10 @@ export const AuthenticatedApp: React.FC = () => {
         <Route
           path="vocabularies/:id"
           element={<VocabularyProblemListPage />}
+        />
+        <Route
+          path="edit-vocabulary/:id"
+          element={<EditVocabularyListPage />}
         />
         <Route path="profile" element={<h2>내 프로필</h2>} />
       </Route>

@@ -19,6 +19,7 @@ import {
   DetailedVocabularyListDto,
   EditCategoryRequest,
   EditCategoryResponse,
+  EditVocabularyListDto,
   LoginRequest,
   LoginResponse,
   PagedVocabularyListsRequest,
@@ -203,6 +204,21 @@ export const baseApi = createApi({
       providesTags: (result) =>
         result ? [{ type: "vocabularyLists" as const, id: result.id }] : [],
     }),
+    editVocabularyList: builder.mutation<
+      DetailedVocabularyListDto,
+      {
+        vocabularyId: number;
+        editVocabularyListDto: EditVocabularyListDto;
+      }
+    >({
+      query: ({ vocabularyId, editVocabularyListDto }) => ({
+        url: `/vocabularies/${vocabularyId}`,
+        method: "PUT",
+        body: editVocabularyListDto,
+      }),
+      invalidatesTags: (result, error) =>
+        result ? [{ type: "vocabularyLists", id: result.id }] : [],
+    }),
   }),
 });
 
@@ -221,4 +237,5 @@ export const {
   useDeleteVocabularyListMutation,
   useCreateVocabularyListMutation,
   useVocabularyListQuery,
+  useEditVocabularyListMutation,
 } = baseApi;
