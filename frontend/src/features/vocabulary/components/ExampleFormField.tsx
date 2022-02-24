@@ -2,24 +2,25 @@ import { InputErrorMessage } from "features/common/components/InputErrorMessage"
 import { Tooltip } from "features/common/components/Tooltip/Tooltip";
 import { useFormContext } from "react-hook-form";
 import { FaTimes } from "react-icons/fa";
-import { CreateVocabularyListFormDto } from "./CreateVocabularyListTemplate";
+import { VocabularyListFormDto } from "./VocabularyListForm";
 
-type CreateExamplesFieldsProps = {
+type ExampleFieldProps = {
   vocabularyIndex: number;
   exampleIndex: number;
   onRemove: (index: number) => void;
 };
 
-export const CreateExampleFields: React.FC<CreateExamplesFieldsProps> = ({
-  vocabularyIndex,
+export const ExampleFormField: React.FC<ExampleFieldProps> = ({
   exampleIndex,
   onRemove,
+  vocabularyIndex,
 }) => {
   const {
     register,
     formState: { errors },
-  } = useFormContext<CreateVocabularyListFormDto>();
-  const removeExampleHandler = () => onRemove(exampleIndex);
+  } = useFormContext<VocabularyListFormDto>();
+
+  const onRemoveHandler = () => onRemove(exampleIndex);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 relative px-4 py-3 border-t border-dotted">
@@ -42,18 +43,18 @@ export const CreateExampleFields: React.FC<CreateExamplesFieldsProps> = ({
           )}
         />
         {errors.vocabularies &&
-        errors.vocabularies[vocabularyIndex] &&
-        errors.vocabularies[vocabularyIndex].examples &&
-        errors.vocabularies[vocabularyIndex].examples?.[exampleIndex] &&
-        errors.vocabularies[vocabularyIndex].examples?.[exampleIndex]
-          .sentence ? (
-          <InputErrorMessage as="span" style={{ marginTop: "0.3rem" }}>
-            {
-              errors.vocabularies[vocabularyIndex].examples?.[exampleIndex]
-                ?.sentence?.message
-            }
-          </InputErrorMessage>
-        ) : null}
+          errors.vocabularies[vocabularyIndex] &&
+          errors.vocabularies[vocabularyIndex].examples &&
+          errors.vocabularies[vocabularyIndex].examples?.[exampleIndex] &&
+          errors.vocabularies[vocabularyIndex].examples?.[exampleIndex]
+            .sentence && (
+            <InputErrorMessage as="span" style={{ marginTop: "0.3rem" }}>
+              {
+                errors.vocabularies[vocabularyIndex].examples?.[exampleIndex]
+                  ?.sentence?.message
+              }
+            </InputErrorMessage>
+          )}
       </div>
       <div className="grid grid-cols-2">
         <div className="flex flex-col col-span-2">
@@ -90,7 +91,7 @@ export const CreateExampleFields: React.FC<CreateExamplesFieldsProps> = ({
           <Tooltip title="예문 삭제">
             <button
               type="button"
-              onClick={removeExampleHandler}
+              onClick={onRemoveHandler}
               className="col-auto absolute top-3 right-4"
             >
               <FaTimes />

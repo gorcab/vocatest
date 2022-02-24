@@ -7,7 +7,6 @@ import {
   createMockVocabularyListsInEachCategory,
   getEntireVocabularyLists,
   getPageBasedVocabularyLists,
-  createMockVocabularyList,
 } from "mocks/lib/vocabulary.factory";
 
 export const serverErrorForCreatingVocabularyResponse = createMockResponse(
@@ -233,3 +232,45 @@ export const clientErrorForGetDetailedVocabularyListResponse =
     },
     { method: "GET" }
   );
+
+export const successToEditVocabularyListResponse = createMockResponse(
+  "/vocabularies/:id",
+  (req, res, ctx) => {
+    return res(ctx.status(201));
+  },
+  {
+    method: "PUT",
+  }
+);
+
+export const clientErrorForEditingVocabularyListResponse = createMockResponse(
+  "/vocabularies/:id",
+  (req, res, ctx) => {
+    return res(
+      ctx.status(401),
+      ctx.json({
+        status: 401,
+        message: "올바르지 않은 단어장입니다.",
+      })
+    );
+  },
+  {
+    method: "PUT",
+  }
+);
+
+export const serverErrorForEditingVocabularyListResponse = createMockResponse(
+  "/vocabularies/:id",
+  (req, res, ctx) => {
+    return res(
+      ctx.status(500),
+      ctx.json({
+        status: 500,
+        message: "Internal Server Error",
+      })
+    );
+  },
+  {
+    method: "PUT",
+  }
+);

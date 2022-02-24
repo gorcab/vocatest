@@ -1,5 +1,5 @@
 import { Skeleton } from "features/common/components/Skeleton";
-import { CreateVocabularySkeletonCard } from "./CreateVocabularySkeletonCard";
+import { CreateVocabularySkeletonCard } from "./VocabularyFormFieldSkeleton";
 
 export const CreateVocabularySkeletonTemplate = () => {
   return (

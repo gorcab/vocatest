@@ -3,12 +3,11 @@ import { ErrorFallbackUI } from "features/common/components/ErrorFallbackUI";
 import { MainHeader } from "features/common/components/MainHeader";
 import { is4XXError, is5XXError } from "features/common/utils/helper";
 import { HttpError } from "features/common/utils/HttpError";
-import { CreateVocabularySkeletonTemplate } from "features/vocabulary/create/components/CreateVocabularySkeletonTemplate";
+import { CreateVocabularySkeletonTemplate } from "features/vocabulary/components/VocabularyListFormSkeletonTemplate";
 import { EditVocabularyListTemplate } from "features/vocabulary/edit/components/EditVocabularyListTemplate";
 import { Navigate, useParams } from "react-router";
 
 export const EditVocabularyListPage: React.FC = () => {
-  console.log("EditVocabularyListPage rendered");
   const title = "단어장 수정";
   const params = useParams<{ id: string }>();
   const id = Number(params.id);
@@ -77,7 +76,7 @@ export const EditVocabularyListPage: React.FC = () => {
     throw categoriesQueryError;
   }
 
-  if (vocabularyList && categories) {
+  if (vocabularyList && categories && categories.length > 0) {
     return (
       <>
         <MainHeader title={title} />

@@ -366,7 +366,7 @@ const createHandlers = () => {
       (req, res, ctx) => {
         const { page, perPage, categoryId, title } =
           getQueryParamsFromRestRequest(req);
-        const isFailed = Math.random() > 0.9;
+        const isFailed = Math.random() > 0.95;
 
         if (isNaN(page) || isNaN(perPage) || perPage > 20 || isFailed) {
           return res(
@@ -462,7 +462,7 @@ const createHandlers = () => {
     rest.post<CreateVocabularyListDto>(
       `${process.env.REACT_APP_API_URL}/vocabularies`,
       (req, res, ctx) => {
-        const isFailed = Math.random() > 0.8;
+        const isFailed = Math.random() > 0.9;
         if (isFailed) {
           return res(
             ctx.delay(500),

@@ -3,9 +3,9 @@ import { ErrorFallbackUI } from "../features/common/components/ErrorFallbackUI";
 import { MainHeader } from "../features/common/components/MainHeader";
 import { is4XXError, is5XXError } from "../features/common/utils/helper";
 import { Navigate } from "react-router";
-import { CreateVocabularySkeletonTemplate } from "../features/vocabulary/create/components/CreateVocabularySkeletonTemplate";
-import { CreateVocabularyListTemplate } from "../features/vocabulary/create/components/CreateVocabularyListTemplate";
+import { CreateVocabularySkeletonTemplate } from "../features/vocabulary/components/VocabularyListFormSkeletonTemplate";
 import { HttpError } from "../features/common/utils/HttpError";
+import { CreateVocabularyListTemplate } from "features/vocabulary/create/components/CreateVocabularyListTemplate";
 
 export const CreateVocabularyListPage: React.FC = () => {
   const { data: categories, isFetching, error, refetch } = useCategoryQuery();
