@@ -26,11 +26,13 @@ describe('VocabularyController', () => {
   let categoryService: Partial<CategoryService>;
   let user: User;
   let category: Category;
+  let categories: Array<Category>;
   let vocabularies: Array<Vocabulary>;
   let vocabularyList: VocabularyList;
 
   beforeEach(async () => {
     user = createUser();
+    categories = Array.from({ length: 3 }).map((_) => createCategory(user));
     category = createCategory(user);
     categoryService = {
       findByUserAndId: async () => category,
@@ -67,8 +69,12 @@ describe('VocabularyController', () => {
         vocabularyListId: number,
         updateVocabularyListDto: UpdateVocabularyListDto,
       ) => {
+        const newCategory = categories.find(
+          (category) => category.id === updateVocabularyListDto.categoryId,
+        );
         const newVocabularyList: VocabularyList = { ...vocabularyList };
         newVocabularyList.title = updateVocabularyListDto.title;
+        newVocabularyList.category = newCategory;
         newVocabularyList.vocabularies =
           updateVocabularyListDto.vocabularies.map((vocabulary, index) => ({
             id: index + 1,
@@ -217,8 +223,10 @@ describe('VocabularyController', () => {
   });
 
   it('단어장을 수정하면 수정된 단어장 정보를 반환한다.', async () => {
+    const newCategory = categories[1];
     const updateVocabularyListDto: UpdateVocabularyListDto = {
       title: 'updatedVocabularyList',
+      categoryId: newCategory.id,
       vocabularies: vocabularyList.vocabularies.map((vocabulary) => ({
         english: vocabulary.english,
         korean: vocabulary.korean,
@@ -231,8 +239,8 @@ describe('VocabularyController', () => {
       id: vocabularyList.id,
       title: updateVocabularyListDto.title,
       category: {
-        id: category.id,
-        name: category.name,
+        id: newCategory.id,
+        name: newCategory.name,
       },
       createdAt: vocabularyList.createdAt,
       vocabularies: [

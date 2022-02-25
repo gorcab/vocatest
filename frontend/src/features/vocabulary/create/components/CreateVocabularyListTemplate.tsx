@@ -1,8 +1,6 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import { SubmitHandler } from "react-hook-form";
 import { Navigate, useLocation } from "react-router";
-import { SerializedError } from "@reduxjs/toolkit";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
 import { useCreateVocabularyListMutation } from "features/api/slice";
 import { CategoryDto, CreateVocabularyDto } from "features/api/types";
 import { is4XXError, is5XXError } from "features/common/utils/helper";

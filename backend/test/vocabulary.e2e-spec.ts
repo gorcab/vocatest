@@ -919,6 +919,7 @@ describe('VocabularyController (e2e)', () => {
 
       const updateVocabularyListDto: UpdateVocabularyListDto = {
         title: createVocabularyListDto.title,
+        categoryId: category.id,
         vocabularies: createVocabularyListDto.vocabularies,
       };
       updateVocabularyListDto.title = 'updatedVocaList1';
@@ -1030,6 +1031,7 @@ describe('VocabularyController (e2e)', () => {
 
       const updateVocabularyListDto: UpdateVocabularyListDto = {
         title: createVocabularyListDto.title,
+        categoryId: categoryDto.id,
         vocabularies: createVocabularyListDto.vocabularies,
       };
       updateVocabularyListDto.title = 'updatedVocabularyList';

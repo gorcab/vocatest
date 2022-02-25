@@ -1,16 +1,8 @@
-import { SerializedError } from "@reduxjs/toolkit";
-import { useEffect } from "react";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
-import {
-  useCreateVocabularyListMutation,
-  useEditVocabularyListMutation,
-} from "features/api/slice";
 import { CategoryDto, CreateVocabularyDto } from "features/api/types";
 import { Button } from "features/common/components/Button";
 import { InputErrorMessage } from "features/common/components/InputErrorMessage";
 import { Spinner } from "features/common/components/Spinner";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
-import { Navigate, useLocation } from "react-router";
 import { CategorySelect } from "./CategorySelect";
 import { VocabularyFormFieldList } from "./VocabularyFormFieldList";
 

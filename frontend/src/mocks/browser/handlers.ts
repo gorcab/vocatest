@@ -536,7 +536,6 @@ const createHandlers = () => {
       (req, res, ctx) => {
         const id = Number(req.params.id);
         const vocabularyListDto = req.body;
-        console.log("put: ", id, vocabularyListDto);
         if (Number.isNaN(id)) {
           return res(
             ctx.delay(1000),
@@ -574,10 +573,8 @@ const createHandlers = () => {
           categories
         );
         vocabularyListsRecord = newVocabularyListsRecord;
-        console.log("newVocaListsRecord: ", vocabularyListsRecord);
         entireVocabularyLists = getEntireVocabularyLists(vocabularyListsRecord);
 
-        console.log("editedVoca: ", editedVocabularyList);
         return res(
           ctx.delay(1000),
           ctx.status(201),

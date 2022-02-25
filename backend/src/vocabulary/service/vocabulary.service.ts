@@ -27,7 +27,6 @@ export class VocabularyService {
     createVocabularyListDto: CreateVocabularyListDto,
   ): Promise<VocabularyListDto> {
     const queryRunner = this.connection.createQueryRunner();
-
     await queryRunner.connect();
 
     const vocabularyListRepository =
@@ -35,7 +34,6 @@ export class VocabularyService {
     const vocabularyRepository = queryRunner.manager.getRepository(Vocabulary);
     const exampleRepository = queryRunner.manager.getRepository(Example);
     const categoryRepository = queryRunner.manager.getRepository(Category);
-
     await queryRunner.startTransaction();
 
     try {
@@ -236,6 +234,7 @@ export class VocabularyService {
 
     await queryRunner.connect();
 
+    const categoryRepository = queryRunner.manager.getRepository(Category);
     const vocabularyListRepository =
       queryRunner.manager.getRepository(VocabularyList);
     const vocabularyRepository = queryRunner.manager.getRepository(Vocabulary);
@@ -245,9 +244,12 @@ export class VocabularyService {
 
     try {
       vocabularyRepository.delete({ vocabularyListId: id });
-
+      const newCategory = await categoryRepository.findOne(
+        updateVocabularyListDto.categoryId,
+      );
       let vocabularyList = await vocabularyListRepository.findOne(id);
       vocabularyList.title = updateVocabularyListDto.title;
+      vocabularyList.category = newCategory;
       await vocabularyListRepository.save(vocabularyList);
 
       const vocabularies: Array<Vocabulary> = [];

@@ -76,9 +76,9 @@ export class VocabularyController {
     return data;
   }
 
-  // TODO: UpdateVocabularyListDto에서 categoryId도 받아야 함. 받지 않으면 category를 변경 시 처리할 수 없음
   @Put(':id')
   @UseGuards(UsersVocabularyListGuard)
+  @UseGuards(UsersCategoryGuard)
   public async updateOne(
     @Param('id') vocabularyListId: number,
     @Body() updateVocabularyListDto: UpdateVocabularyListDto,

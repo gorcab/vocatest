@@ -29,12 +29,14 @@ describe('VocabularyService', () => {
   let vocabularyListRepository: DeepPartial<Repository<VocabularyList>>;
   let user: User;
   let category: Category;
+  let categories: Array<Category>;
   let vocabularies: Array<Vocabulary>;
   let vocabularyList: VocabularyList;
   let queryRunner: DeepPartial<QueryRunner>;
 
   beforeEach(async () => {
     user = createUser();
+    categories = Array.from({ length: 5 }).map((_) => createCategory(user));
     category = createCategory(user);
     vocabularies = [
       createVocabulary([createExample(), createExample()]),
@@ -43,7 +45,10 @@ describe('VocabularyService', () => {
     vocabularyList = createVocabularyList(category, vocabularies);
 
     categoryRepository = {
-      findOne: jest.fn().mockReturnValue(category),
+      findOne: jest.fn().mockImplementation((id: number) => {
+        const category = categories.find((category) => category.id === id);
+        return category;
+      }),
     };
 
     exampleRepository = {
@@ -85,12 +90,19 @@ describe('VocabularyService', () => {
     queryRunner = {
       connect: jest.fn(),
       manager: {
-        getRepository: jest
-          .fn()
-          .mockReturnValueOnce(vocabularyListRepository)
-          .mockReturnValueOnce(vocabularyRepository)
-          .mockReturnValueOnce(exampleRepository)
-          .mockReturnValueOnce(categoryRepository),
+        getRepository: jest.fn().mockImplementation((entity: unknown) => {
+          if (entity === Category) {
+            return categoryRepository;
+          } else if (entity === VocabularyList) {
+            return vocabularyListRepository;
+          } else if (entity === Vocabulary) {
+            return vocabularyRepository;
+          } else if (entity === Example) {
+            return exampleRepository;
+          } else {
+            throw new TypeError('Invalid Entity type');
+          }
+        }),
       },
       startTransaction: jest.fn(),
       commitTransaction: jest.fn(),
@@ -280,8 +292,10 @@ describe('VocabularyService', () => {
 
   it('단어장을 수정하면 수정된 단어장 정보를 반환한다.', async () => {
     // given
+    const newCategory = categories[2];
     const updateVocabularyListDto: UpdateVocabularyListDto = {
       title: 'updatedVocabularyList',
+      categoryId: newCategory.id,
       vocabularies: [
         {
           english: vocabularyList.vocabularies[0].english,
@@ -307,8 +321,8 @@ describe('VocabularyService', () => {
       id: vocabularyList.id,
       title: updateVocabularyListDto.title,
       category: {
-        id: category.id,
-        name: category.name,
+        id: newCategory.id,
+        name: newCategory.name,
       },
       createdAt: vocabularyList.createdAt,
       vocabularies: [

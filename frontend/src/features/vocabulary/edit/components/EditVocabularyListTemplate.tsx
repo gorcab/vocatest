@@ -1,5 +1,6 @@
-import { SerializedError } from "@reduxjs/toolkit";
-import { FetchBaseQueryError } from "@reduxjs/toolkit/dist/query";
+import { useEffect } from "react";
+import { SubmitHandler } from "react-hook-form";
+import { Navigate, useLocation } from "react-router";
 import { useEditVocabularyListMutation } from "features/api/slice";
 import {
   CategoryDto,
@@ -12,9 +13,6 @@ import {
   VocabularyListForm,
   VocabularyListFormDto,
 } from "features/vocabulary/components/VocabularyListForm";
-import { useCallback, useEffect } from "react";
-import { SubmitHandler } from "react-hook-form";
-import { Navigate, useLocation } from "react-router";
 
 type EditVocabularyListFormDto = {
   title: string;
