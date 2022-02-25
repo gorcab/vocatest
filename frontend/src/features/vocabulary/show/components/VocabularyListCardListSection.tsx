@@ -68,7 +68,7 @@ export const VocabularyListCardListSection: React.FC<VocabularyListCardListProps
             ))}
           </ul>
           {page <= vocabularyLists.totalPage && (
-            <div className="flex flex-row-reverse">
+            <div className="flex flex-row-reverse mb-10">
               <Pagination
                 currentPage={page}
                 numOfItemsPerPage={vocabularyLists.perPage}

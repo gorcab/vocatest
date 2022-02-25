@@ -23,7 +23,7 @@ export const SignUpForm: React.FC = () => {
   } = useSignUp();
 
   return (
-    <BasicForm onSubmit={submitHandler}>
+    <BasicForm formLabel="회원가입 폼" onSubmit={submitHandler}>
       {serverError ? (
         <InputErrorMessage
           as="h2"

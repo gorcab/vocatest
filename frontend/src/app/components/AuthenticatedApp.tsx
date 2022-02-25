@@ -1,15 +1,16 @@
-import { EditVocabularyListPage } from "pages/EditVocabularyListPage";
 import { Navigate, Route, Routes, useLocation } from "react-router";
-import { useUserQuery } from "../../features/api/slice";
-import { CenterLayout } from "../../features/common/components/CenterLayout";
-import { MainLayout } from "../../features/common/components/MainLayout";
-import { Protected } from "../../features/common/components/Protected";
-import { Spinner } from "../../features/common/components/Spinner";
-import { CreateVocabularyListPage } from "../../pages/CreateVocabularyListPage";
-import { MainPage } from "../../pages/MainPage";
-import { NotFoundPage } from "../../pages/NotFoundPage";
-import { VocabularyProblemListPage } from "../../pages/VocabularyProblemListPage";
+import { EditUserProfilePage } from "pages/EditUserProfilePage";
 import { unAuthenticatedRoutes } from "./UnauthenticatedApp";
+import { useUserQuery } from "features/api/slice";
+import { CenterLayout } from "features/common/components/CenterLayout";
+import { Spinner } from "features/common/components/Spinner";
+import { Protected } from "features/common/components/Protected";
+import { MainLayout } from "features/common/components/MainLayout";
+import { MainPage } from "pages/MainPage";
+import { CreateVocabularyListPage } from "pages/CreateVocabularyListPage";
+import { EditVocabularyListPage } from "pages/EditVocabularyListPage";
+import { NotFoundPage } from "pages/NotFoundPage";
+import { VocabularyProblemListPage } from "pages/VocabularyProblemListPage";
 
 export const AuthenticatedApp: React.FC = () => {
   const { isLoading } = useUserQuery();
@@ -55,7 +56,7 @@ export const AuthenticatedApp: React.FC = () => {
           path="edit-vocabulary/:id"
           element={<EditVocabularyListPage />}
         />
-        <Route path="profile" element={<h2>내 프로필</h2>} />
+        <Route path="profile" element={<EditUserProfilePage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

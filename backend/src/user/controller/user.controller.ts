@@ -51,7 +51,6 @@ export class UserController {
   @UseGuards(SameUserIdInTokenAndParamGuard)
   @UseGuards(JwtAuthGuard)
   public async update(
-    @Param('id') userId: number,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UpdatedUserResponseDto> {
     const user = await this.userService.findOneByEmailAndPassword(

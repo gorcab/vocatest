@@ -27,7 +27,7 @@ export const MainLayout: React.FC = () => {
           <Sidebar show={showSidebar} />
         </CloseSidebarContext.Provider>
         <section
-          className={`mt-[60px] min-h-[calc(100vh-60px)] lg:min-h-0 ml-0 lg:grow mb-5 pt-10 px-10 lg:px-6`}
+          className={`mt-[60px] min-h-[calc(100vh-60px)] lg:min-h-0 ml-0 lg:grow pt-10 px-10 lg:px-6`}
         >
           <ErrorBoundary
             onReset={navigateToMainPage}

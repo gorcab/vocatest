@@ -1,4 +1,8 @@
-import { SignUpRequest, SignUpResponse } from "features/api/types";
+import {
+  SignUpRequest,
+  SignUpResponse,
+  UpdateUserRequest,
+} from "features/api/types";
 
 const users: Array<SignUpResponse> = [
   {
@@ -24,6 +28,10 @@ const users: Array<SignUpResponse> = [
   },
 ];
 
+export function getInitialUsers(): Array<SignUpResponse> {
+  return users;
+}
+
 function registerUser(users: Array<SignUpResponse>, signUpDto: SignUpRequest) {
   const id = users[users.length - 1].id + 1;
   const { signUpAuthCode, password, ...rest } = signUpDto;
@@ -45,6 +53,29 @@ function unregisterUser(users: Array<SignUpResponse>, idToUnregister: number) {
   }
 
   return newUsers;
+}
+
+export function updateUser(
+  users: Array<SignUpResponse>,
+  updateUserDto: UpdateUserRequest
+) {
+  const newUsers = [...users];
+  let userIndex = newUsers.findIndex(
+    (user) => user.email === updateUserDto.email
+  );
+  if (userIndex !== -1) {
+    const { newNickname, newPassword } = updateUserDto;
+    newUsers[userIndex] = {
+      ...newUsers[userIndex],
+      ...(newNickname && { nickname: newNickname }),
+      ...(newPassword && { password: newPassword }),
+    };
+  }
+
+  return {
+    newUsers,
+    updatedUser: newUsers[userIndex],
+  };
 }
 
 export { users, registerUser, unregisterUser };

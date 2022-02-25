@@ -41,7 +41,7 @@ export const LoginForm: React.FC = () => {
   }, [error, reset, toast]);
 
   return (
-    <BasicForm onSubmit={handleSubmit(onSubmit)}>
+    <BasicForm formLabel="로그인 폼" onSubmit={handleSubmit(onSubmit)}>
       {is4XXError(error) ? (
         <InputErrorMessage
           as="h2"

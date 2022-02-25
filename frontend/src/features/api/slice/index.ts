@@ -27,6 +27,8 @@ import {
   ResetPasswordRequest,
   SignUpRequest,
   SignUpResponse,
+  UpdateUserRequest,
+  UpdateUserResponse,
   UserResponse,
 } from "../types";
 
@@ -86,6 +88,16 @@ export const baseApi = createApi({
         method: "POST",
         body: signUpDto,
       }),
+    }),
+    updateUser: builder.mutation<
+      UpdateUserResponse,
+      UpdateUserRequest & { id: number }
+    >({
+      query: (updateUserDto) => {
+        const { id, ...body } = updateUserDto;
+        return { url: `/users/${id}`, method: "PATCH", body };
+      },
+      invalidatesTags: (result, error) => (result ? ["user"] : []),
     }),
     deleteUser: builder.mutation<void, number>({
       query: (userId) => ({
@@ -228,6 +240,7 @@ export const {
   useAuthCodeMutation,
   useSignUpMutation,
   useDeleteUserMutation,
+  useUpdateUserMutation,
   useResetPasswordMutation,
   useCategoryQuery,
   useCreateCategoryMutation,

@@ -17,11 +17,13 @@ import {
   LoginRequest,
   ResetPasswordRequest,
   SignUpRequest,
+  UpdateUserRequest,
 } from "../../features/api/types";
 import {
+  getInitialUsers,
   registerUser,
   unregisterUser,
-  users as mockUsers,
+  updateUser,
 } from "mocks/lib/user.factory";
 import {
   createCategory,
@@ -33,7 +35,7 @@ import {
 import { getQueryParamsFromRestRequest } from "mocks/lib/networkMockUtils.factory";
 
 const createHandlers = () => {
-  let users = mockUsers;
+  let users = getInitialUsers();
   let categories = mockCategories;
   let vocabularyListsRecord = createMockVocabularyListsInEachCategory();
   let entireVocabularyLists = getEntireVocabularyLists(vocabularyListsRecord);
@@ -157,6 +159,24 @@ const createHandlers = () => {
           ctx.status(401),
           ctx.json({
             message: "이메일 또는 비밀번호가 올바르지 않습니다.",
+          })
+        );
+      }
+    ),
+
+    // 프로필 수정
+    rest.patch<UpdateUserRequest>(
+      `${process.env.REACT_APP_API_URL}/users/:id`,
+      (req, res, ctx) => {
+        const { newUsers, updatedUser } = updateUser(users, req.body);
+        users = newUsers;
+
+        // return res.networkError("Failed to connect");
+        return res(
+          ctx.delay(500),
+          ctx.status(201),
+          ctx.json({
+            ...updatedUser,
           })
         );
       }

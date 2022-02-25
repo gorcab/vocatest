@@ -35,7 +35,7 @@ export const EditCategoryFormModal: React.FC<EditCategoryFormModalProps> = ({
       initialFocusRef={categoryNameFieldRef}
       backgroundColorclassName="bg-white"
     >
-      <BasicForm onSubmit={submitHandler}>
+      <BasicForm formLabel="카테고리 수정 폼" onSubmit={submitHandler}>
         <Label label="카테고리명" name="name" />
         <InputGroup>
           <input

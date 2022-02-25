@@ -46,6 +46,20 @@ export type ResetPasswordRequest = {
   resetPasswordAuthCode: number;
 };
 
+// UpdateUser Types
+export type UpdateUserRequest = {
+  email: string;
+  password: string;
+  newPassword?: string;
+  newNickname?: string;
+};
+
+export type UpdateUserResponse = {
+  id: number;
+  email: string;
+  nickname: string;
+};
+
 // User Types
 export type UserResponse = User;
 

@@ -29,7 +29,7 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   } = useResetPassword(handleSuccess);
 
   return (
-    <BasicForm onSubmit={submitHandler}>
+    <BasicForm formLabel="비밀번호 재설정 폼" onSubmit={submitHandler}>
       {serverError ? (
         <InputErrorMessage
           as="h2"

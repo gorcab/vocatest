@@ -200,3 +200,33 @@ export const serverErrorForLoginResponse = createMockResponse<LoginRequest>(
     method: "POST",
   }
 );
+
+export const successToEditProfileResponse = createMockResponse(
+  "/users/:id",
+  (req, res, ctx) => {
+    return res(ctx.json(201));
+  },
+  { method: "PATCH" }
+);
+
+export const failToEditProfileResponse = createMockResponse(
+  "/users/:id",
+  (req, res, ctx) => {
+    return res(
+      ctx.status(401),
+      ctx.json({
+        status: 401,
+        message: "비밀번호가 올바르지 않습니다.",
+      })
+    );
+  },
+  { method: "PATCH" }
+);
+
+export const networkConnectionFailForEditProfileResponse = createMockResponse(
+  "/users/:id",
+  (req, res, ctx) => {
+    return res.networkError("Failed to connect");
+  },
+  { method: "PATCH" }
+);
